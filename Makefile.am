@@ -4,9 +4,9 @@
 # Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.24 2002/05/04 17:24:11 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.25 2002/05/04 19:35:05 woods Exp $"
 
-AUTOMAKE_OPTIONS = gnu no-define no-dependencies 1.6
+AUTOMAKE_OPTIONS = gnu no-dependencies 1.6
 MAINT_CHARSET = latin1
 
 bin_PROGRAMS = newsyslog
@@ -47,13 +47,27 @@ PATH_CONFIG = @path_config@
 
 PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 
+# Mention here files which are created using 'auto*' tools and which
+# can be re-created by re-running them again.
+#
+# NOTE: these files were removed automatically y past automake's.
+# 
+GNU_AUTO_MADE_FILES = Makefile.in \
+			aclocal.m4 aclocal.m4~ \
+			configure configure.lineno \
+			config.h.in config.h.in~
+
 # Mention here files which are created using '--add-missing', as well
 # as files created during 'make dist' and which can be re-created.
 # (We don't mention Makefile.BSD-dist because it should be a virgin
 # copy, never locally edited)
 #
 MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL \
+			$(GNU_AUTO_MADE_FILES)
 			$(catman_MANS_dist) $(psman_MANS) $(htmlman_MANS)
+
+maintainer-clean-local:
+	rm -rf autom4te.cache
 
 CLEANFILES = $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
 
