@@ -100,8 +100,8 @@ GNU Auto* commands detailed above):
 	cvs export -kv -r ${PACKAGE}-${tag} -d ${PACKAGE}-${VERSION}-export $PACKAGE
 	cd ${PACKAGE}-${VERSION}-export
 	aclocal
-	autoheader
-	automake --gnu --add-missing
+	autoheader && touch config.h.in
+	automake --gnu --add-missing --copy
 	autoreconf --force
 	sh ${PACKAGE}2netbsd.sh		# configures best default paths...
 	rm -rf import.d			# clean up after ${PACKAGE}2netbsd.sh
@@ -390,4 +390,4 @@ to use branches for patch releases, let alone minor releases.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.14 2003/07/08 16:49:01 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.15 2003/07/08 20:03:18 woods Exp $"
