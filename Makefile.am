@@ -3,7 +3,7 @@
 #
 # Copyright (C) 1997 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.11 2000/04/04 02:51:48 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.12 2000/11/27 00:34:16 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
 MAINT_CHARSET = latin1
@@ -25,7 +25,7 @@ EXTRA_DIST = $(DIST_OTHER) $(DIST_MAKE)
 
 PATH_CONFIG = @path_config@
 
-PATH_SYSLOG_PIDFILE = @syslog_pidfile@
+PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 
 # Mention here files which are created using '--add-missing'
 MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL README.developers
