@@ -6,6 +6,32 @@ This file:  Copyright (C) 1997,1998,1999 Planix, Inc.
 Please send bug reports to bugs@robohack.planix.com
 
 
+* User-visible changes new in newsyslog-1.0.98.
+
+- the log roll-over interval may now be specified as a "trim time",
+  either as an hour of the day, day of the week, or day of the month,
+  and the latter two may also specify the hour of the day, but default
+  to midnight.
+
+- new command-line option '-i' to specify the interval at which
+  newsyslog is called by cron so that it can figure out whether or not a
+  "trim time" specification matches the current time closley enough.
+
+- processing can be restricted to specific log files by specifying their
+  names on the command line -- the control information is still taken
+  from the default or specified configuration file.
+
+- signalling for "binary" log files now works.
+
+- new flag 'D' will prevent log file from being created.
+
+- we don't look for a timestamp in the first record if there's no
+  interval specified, which will prevent complaints about unparsable
+  timestamps in files that will never have parsable timestamps.
+
+- the configuration file is locked (with open(O_EXLOCK), aka flock(2))
+  to prevent simultaneous executions from fouling each other up.
+
 * User-visible changes new in newsyslog-1.0.97.
 
 - improved error messages by including line numbers.
@@ -78,4 +104,4 @@ from being rolled over unnecessarily).
 - separated out newsyslog.conf.5 manual page
 - improved documentation
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.10 2000/07/07 17:30:02 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.11 2000/12/01 20:05:34 woods Exp $"
