@@ -9,7 +9,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.12 2003/07/08 17:24:32 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.13 2003/08/02 17:30:51 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -25,7 +25,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd July 3, 2003
+.Dd July 31, 2003
 .Dt NEWSYSLOG 8
 .Os BSD
 .\"
@@ -35,6 +35,8 @@
 .\"
 .Sh SYNOPSIS
 .Nm newsyslog
+.Op Fl V
+.Li |
 .Oo
 .Fl m
 .Li |
@@ -56,11 +58,11 @@ When it is executed it archives log files if necessary.  If a log file
 is determined to require archiving, 
 .Nm
 rearranges the files so that
-.Dq Pa logfile
+.Dq Pa log_file
 is empty,
-.Dq Pa logfile.0
+.Dq Pa log_file.0
 has the last period's logs in it,
-.Dq Pa logfile.1
+.Dq Pa log_file.1
 has the next to last period's logs in it, and so on, up to a
 user-specified number of archived logs.  The archived logs may also be
 compressed to save space.  After all file operations are done
@@ -78,10 +80,9 @@ hours may have elapsed since the last log archive.  The granularity of
 is dependent on how often it is scheduled to run by
 .Nm cron .
 Since the program is quite fast, it may be scheduled to run at least
-every hour without any ill effects, which will match the granularity of
-elapsed time specifications.  However more frequent runs may be
-necessary to catch extremely fast growing log files when files are
-trimmed by size, and
+every ten minutes without any ill effects.  However even more frequent
+runs may be necessary to catch extremely fast growing log files when
+files are trimmed by size, and
 .Nm
 may be run as often as every minute without harm to facilitate this need.
 .Pp
