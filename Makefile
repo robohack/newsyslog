@@ -1,4 +1,4 @@
-#	$Id: Makefile,v 1.2 1997/09/26 21:21:11 woods Exp $
+#	$Id: Makefile,v 1.3 1997/10/28 06:57:04 woods Exp $
 
 SHELL=	/bin/sh
 
@@ -8,10 +8,13 @@ OBJS=	newsyslog.o
 
 DEFS=	-DCONF=\"/etc/newsyslog.conf\" \
 	-DPIDFILE=\"/etc/syslog.pid\" \
-	-DCOMPRESS=\"/usr/ucb/gzip\" \
+	-DCOMPRESS_PATH=\"/usr/ucb/compress\" \
+	-DCOMPRESS_PROG=\"compress\" \
 	-DCOMPRESS_POSTFIX=\".Z\"
 
-CFLAGS=	-O ${DEFS}
+SDB=#	-g
+OPTIM=	-O
+CFLAGS=	${SDB} ${OPTIM} ${DEFS} ${INCDIROPTS}
 
 LIBS=#	-lnsl
 
