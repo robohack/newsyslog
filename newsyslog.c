@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.29 2000/12/01 20:05:22 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.30 2000/12/01 20:39:50 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -465,16 +465,26 @@ parse_file(files )
 	} else {
 		int	fd;
 
+#ifdef HAVE_FLOCK
+		/*
+		 * flock(2) is preferred because it works with vi
+		 */
 		if ((fd = open(config_file, O_RDONLY, (mode_t) 0)) != -1) {
-#ifdef HAVE_FLOCK 	/*
-			 * flock(2) is preferred because it works with vi
-			 */
 			if (flock(fd, LOCK_EX | LOCK_NB) != -1)
-				fd = fdopen(fd, "r");
-#else			/*
-			 * fcntl locking is almost standard so assume it is
-			 * there if flock() is not available.
-			 */
+				fp = fdopen(fd, "r");
+		}
+#else
+		/*
+		 * fcntl locking is almost standard so assume it is
+		 * there if flock() is not available.
+		 */
+		/*
+		 * NOTE: because we want an  exclusive lock, we have to ask for
+		 * a "write"  lock, and on  some systems (eg.  some/all 4.4BSD)
+		 * this  means we  need to  open the  file in  read/write mode.
+		 * This is really stupid, but that's the way of POSIX!  :-/
+		 */
+		if ((fd = open(config_file, O_RDWR, (mode_t) 0)) != -1) {
 			struct flock	lock;
 
 			lock.l_type = F_WRLCK;	/* exclusive */
@@ -483,8 +493,8 @@ parse_file(files )
 			lock.l_len = 0;
 			if (fcntl(fd, F_SETLK, &lock) != -1)
 				fp = fdopen(fd, "r");
-#endif
 		}
+#endif
 	}
 	if (!fp) {
 		fprintf(stderr,
