@@ -1,0 +1,12 @@
+# -*- sh -*-
+#
+# a tiny script to set up the VERSION Id for ./configure
+#
+#ident "@(#)newsyslog:$Name:  $:$Id: VERSION,v 1.1 2001/02/23 01:08:22 woods Exp $"
+
+# NOTE:  only place simply variable assignments in here, using only
+# the most basic Bourne-shell compatible syntax possible under the
+# assumption that /bin/sh might not be the only interpreter that will
+# read this file.
+
+VERSION="1.0.99-Preview"
