@@ -1,5 +1,8 @@
 NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
 
+Patches to close any of these items will be gratefully accepted!  Other
+suggestions and comments are also encouraged.
+
 - Add one more optional field:  the format of the turnover message, with
   the default to be the "syslog" style:
 
@@ -22,6 +25,12 @@ NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
   with the archive copies, and more accurate for the first go-around on
   non-syslog format log files.
 
+  Perhaps this should only be done for files archived at 24hr multiples
+  (i.e. '-m'), and in these cases the turnover message should also be
+  entered immediately in the new log file too.  This will ensure that
+  age determination does not rely on when the daemon writes its first
+  log entry.  It may make parsing the first entry easier too.
+
   One possible limitation here is that the timestamp may have to appear
   at the beginning of the line (with only constant characters before and
   within it).  The only way around this might be to iterate strptime()
@@ -42,4 +51,4 @@ NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
 	"%Y/%m/%d:%T] \""
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.1 1998/03/15 20:45:39 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.2 1998/03/15 21:16:55 woods Exp $"
