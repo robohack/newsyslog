@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.32 2000/12/08 20:45:32 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.33 2001/02/23 00:49:01 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -163,7 +163,7 @@ struct conf_entry {
 	int             hours;		/* maximum hours between log trimming */
 	time_t          trim_at;	/* time to trim log at */
 	int             permissions;	/* File permissions on the log */
-	int             flags;		/* Flags (CE_*)  */
+	unsigned int    flags;		/* Flags (CE_*)  */
 	int             signum;		/* Signal to send to daemon (SIG*) */
 	struct conf_entry *next;	/* Linked list pointer */
 };
@@ -217,6 +217,7 @@ static char            *missing_field __P((char *, int, char *));
 static void             do_entry __P((struct conf_entry *));
 static void             parse_options __P((int, char **));
 static void             usage __P((void));
+static void             help __P((void));
 static void             do_trim __P((struct conf_entry *));
 static int              note_trim __P((char *));
 static void             compress_log __P((char *));
@@ -228,6 +229,7 @@ static int              isnumber __P((char *));
 static int              getsig __P((char *));
 static int              parse_dwm __P((char *, time_t *));
 
+extern int              opterr;
 extern int              optind;
 extern char            *optarg;
 
@@ -236,11 +238,26 @@ main(argc, argv)
 	int             argc;
 	char           *argv[];
 {
+	char           *s;
 	struct conf_entry *p, *q;
 
-	argv0 = (argv0 = strrchr(argv[0], '/')) ? argv0 + 1 : argv[0];
+	timenow = time((time_t *) 0);
+
+	/* Let's get our hostname */
+	(void) gethostname(hostname, sizeof(hostname));
+
+	/* and truncate the domain part off */
+	if ((s = strchr(hostname, '.'))) {
+		*s++ = '\0';
+		localdomain = s;
+	} else
+		localdomain = "";
 
 	parse_options(argc, argv);
+
+	/* timenow may be changed in parse_options() by -T */
+	daytime = ctime(&timenow) + 4;		/* trim the day name off */
+	daytime[15] = '\0';			/* trim the year off too */
 
 	if (needroot && getuid() && geteuid()) {
 		fprintf(stderr, "%s: you do not have root privileges\n", argv0);
@@ -269,6 +286,7 @@ do_entry(ent)
 	int             size;			/* in kbytes */
 	int             modtime = 0;		/* in hours */
 
+	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 	if (verbose) {
 		printf("%s <#%d,%s%s%s%s%s>: ", ent->log, ent->numlogs,
 		       (ent->flags & CE_NOCREATE) ? "C" : "",
@@ -276,6 +294,8 @@ do_entry(ent)
 		       (ent->flags & CE_BINARY) ? "b" : "",
 		       (ent->flags & CE_NOSIGNAL) ? "n" : "",
 		       (ent->flags & CE_PLAIN0) ? "0" : "");
+		if (ent->flags & CE_TRIMAT)
+			printf("(T:%ld) ", (long) ent->trim_at);
 	}
 	size = check_file_size(ent->log);
 	if (size < 0 && verbose)
@@ -294,35 +314,28 @@ do_entry(ent)
 			/* always trim if timestamp FUBAR */
 			if (modtime >= ent->hours || modtime < 0)
 				we_trim_it = 1;
-		} else if (ent->flags & CE_TRIMAT) {
+		}
+		if (ent->flags & CE_TRIMAT && domidnight == -1) {
 			/*
 			 * if there was no interval, but just a trim time spec
 			 * then check to see if it's time to trim it now...
 			 */
 			if ((timenow >= ent->trim_at) &&
-			    (difftime(timenow, ent->trim_at) <= 60 * (run_interval - 1))) {
-				printf("(time to trim) ");
-				we_trim_it = 1;
-			}
-		}
-	}
-	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
-	if (domidnight == -1) {
-		if (verbose)
-			printf("(regular, no -m/-M) ");
-		if (ent->flags & CE_TRIMAT) {
-			/*
-			 * if there was a trim time spec, make sure we're
-			 * within the valid time interval
-			 */
-			if ((timenow < ent->trim_at) ||
-			    (difftime(timenow, ent->trim_at) > 60 * (run_interval - 1))) {
+			    (difftime(timenow, ent->trim_at) < 60 * run_interval)) {
 				if (verbose)
-					printf("(not time to trim) ");
+					printf("(time to trim) ");
+				we_trim_it = 1;
+			} else {
+				if (verbose)
+					printf("(but not time to trim) ");
 				we_trim_it = 0;
 			}
 		}
-	} if (domidnight == 1 && (ent->hours % 24) == 0) {
+	}
+	if (domidnight == -1 ) {
+		if (verbose && !(ent->flags & CE_TRIMAT))
+			printf("(no -m/-M/trimtime) ");
+	} else if (domidnight == 1 && (ent->hours % 24) == 0) {
 		/*
 		 * we've already set we_trim_it above if the file is as old or
 		 * older than ent->hours
@@ -331,7 +344,7 @@ do_entry(ent)
 			printf("(daily with -m) ");
 	} else if (domidnight == 0 && (ent->hours % 24) == 0) {
 		if (verbose && !force)
-			printf("(not the daily trim) ");
+			printf("(not the daily trim, -M set) ");
 		we_trim_it = 0;
 	}
 	if (force & !we_trim_it) {
@@ -361,28 +374,44 @@ parse_options(argc, argv)
 	int             c;
 	long            l;
 	char           *p;
+	struct tm       tms;
 
-	timenow = time((time_t *) 0);
-	daytime = ctime(&timenow) + 4;
-	daytime[15] = '\0';
+	argv0 = (argv0 = strrchr(argv[0], '/')) ? argv0 + 1 : argv[0];
 
-	/* Let's get our hostname */
-	(void) gethostname(hostname, sizeof(hostname));
-
-	/* and truncate the domain part off */
-	if ((p = strchr(hostname, '.'))) {
-		*p++ = '\0';
-		localdomain = p;
-	} else
-		localdomain = "";
 	optind = 1;		/* Start options parsing */
-	while ((c = getopt(argc, argv, "FMVf:i:mnp:rt:v")) != -1)
+	opterr = 0;
+	while ((c = getopt(argc, argv, "FMT:Vf:hi:mnp:rt:v")) != -1) {
 		switch (c) {
 		case 'F':
 			force = 1;
 			break;
 		case 'M':		/* NOT the midnight run */
 			domidnight = 0;
+			break;
+		case 'T':		/* reset current time, mostly for testing */
+			tms = *localtime(&timenow);
+			p = strptime(optarg, "%H:%M", &tms);
+			if (!p || (p && *p)) {	/* should point to '\0' */
+				fprintf(stderr,
+					"%s: time of '%s' is not parsable (use HH:MM)\n",
+					argv0,
+					optarg);
+				exit(2);
+			}
+			/*
+			 * XXX mktime() has a broken API....
+			 */
+			if ((timenow = mktime(&tms)) == (time_t) -1) {
+				fprintf(stderr,
+					"%s: time of '%s' is cannot be converted\n",
+					argv0,
+					optarg);
+				exit(2);
+			}
+			if (timenow < time((time_t *) NULL))
+				timenow += 24*60*60; /* go to tomorrow */
+			if (verbose)
+				printf("%s: have adjusted timenow to: %s", argv0, ctime(&timenow));
 			break;
 		case 'V':
 			printf("%s: version %s-%s.\n", argv0, package, version);
@@ -391,6 +420,9 @@ parse_options(argc, argv)
 		case 'f':
 			config_file = optarg;
 			break;
+		case 'h':
+			help();
+			/* NOTREACHED */
 		case 'i':		/* run interval in minutes */
 			l = strtol(optarg, (char **) NULL, 10);
 			if (l == LONG_MIN || l == LONG_MAX) {
@@ -424,18 +456,48 @@ parse_options(argc, argv)
 		case 'v':
 			verbose++;
 			break;
-		default:
+		case '?':
 			usage();
+			/* NOTREACHED */
+		default:
+			warnx("illegal option -- %c", c);
+			usage();
+			/* NOTREACHED */
 		}
+	}
 }
+
+#define USAGE_FMT	"Usage: %s [-V] [-T hh:mm] [-M|-m|-i interval] [-Fnrv] [-f config-file] [-p syslogd-pidfile] [file ...]\n"
 
 static void
 usage()
 {
-	fprintf(stderr,
-		"Usage: %s [-V] [-M|-m] [-FInrv] [-f config-file] [-p syslogd-pidfile] [file ...]\n",
-		argv0);
-	exit(1);
+	fprintf(stderr, USAGE_FMT, argv0);
+	exit(2);
+	/* NOTREACHED */
+}
+
+static void
+help()
+{
+	printf(USAGE_FMT, argv0);
+	printf("\n");
+	printf("	-F		force immediate trimming\n");
+	printf("	-M		select normal periodic processing [opposite of -m]\n");
+	printf("	-T hh:mm	adjust current time\n");
+	printf("	-V		display version and exit\n");
+	printf("	-f config_fn	configuration file [default: %s]\n", config_file);
+	printf("	-h		print this help and exit\n");
+	printf("	-i minutes	specify how often %s is invoked\n", argv0);
+	printf("	-m		select 'midnight' processing [opposite of -M]\n");
+	printf("	-n		don't actually do anything -- just show script\n");
+	printf("	-p syslogd-pid	syslogd PID file [default: %s]\n", syslogd_pidfile);
+	printf("	-r		remove restriction to superuser\n");
+	printf("	-v		show verbose (debugging) messages\n");
+	printf("\n");
+	printf("	file		only trim specified file(s)\n");
+	exit(0);
+	/* NOTREACHED */
 }
 
 /* Parse a configuration file and return a linked list of all the logs
@@ -676,6 +738,7 @@ parse_file(files )
 
 		working->hours = -1;
 		working->trim_at = -1;
+		working->flags = 0;
 
 		if (*q != '*') {
 			u_long ul;
@@ -699,7 +762,7 @@ parse_file(files )
 			if ((*q == '-') || (working->hours == -1)) {
 				if (domidnight != -1) {
 					fprintf(stderr,
-						"%s: trim time nonsensical with %s: '%s' in line\n%6d:\t'%s'\n",
+						"%s: a trim time is nonsensical with %s: '%s' in line\n%6d:\t'%s'\n",
 						argv0,
 						(domidnight == 0) ? "-M" : "-m",
 						q,
@@ -751,7 +814,6 @@ parse_file(files )
 				eol = 1;
 			*parse = '\0';
 		}
-		working->flags = 0;
 		while (q && *q && !isspace(*q)) {
 			if ((*q == 'D') || (*q == 'd'))
 				working->flags |= CE_NOCREATE;
@@ -1404,101 +1466,124 @@ parse_dwm(s, trim_at)
 	time_t *trim_at;
 {
 	char *t;
-	struct tm tm;
-	struct tm *tmp;
+	struct tm tms;
+	struct tm *tmsp;
 	u_long ul;
 	int nd;
 	static int mtab[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 	int WMseen = 0;
 	int Dseen = 0;
 
-	tmp = localtime(&timenow);
-	tm = *tmp;
+	tmsp = localtime(&timenow);
+	tms = *tmsp;
 
 	/* set up the no. of days per month */
 
-	nd = mtab[tm.tm_mon];
+	nd = mtab[tms.tm_mon];
 
-	if (tm.tm_mon == 1) {
-		if (((tm.tm_year + 1900) % 4 == 0) &&
-		    ((tm.tm_year + 1900) % 100 != 0) &&
-		    ((tm.tm_year + 1900) % 400 == 0)) {
+	if (tms.tm_mon == 1) {
+		if (((tms.tm_year + 1900) % 4 == 0) &&
+		    ((tms.tm_year + 1900) % 100 != 0) &&
+		    ((tms.tm_year + 1900) % 400 == 0)) {
 			nd++;   /* leap year, 29 days in february */
 		}
 	}
-	tm.tm_hour = tm.tm_min = tm.tm_sec = 0;
+	tms.tm_hour = tms.tm_min = tms.tm_sec = 0;
 
 	for (;;) {
 		switch (*s) {
 		case '-':
-			/* this is primarily to skip any optional first hyphen,
-			 * but also allows sub-fields to be hyphen separated
+			/* this is primarily just to skip any optional initial
+			 * hyphen, but also allows sub-fields in the time spec
+			 * to be hyphen separated...
 			 */
 			s++;			
 			break;
 
 		case 'd':
 		case 'D':
-			if (Dseen)
+			if (Dseen) {
+				if (verbose)
+					fprintf(stderr, "%s: already saw a 'D' in trimtime!\n", argv0);
 				return (-1);
+			}
 			Dseen++;
 			s++;
 			ul = strtoul(s, &t, 10);
-			if (ul < 0 || ul > 23)
+			if (ul < 0 || ul > 23) {
+				if (verbose)
+					fprintf(stderr, "%s: nonsensical hour-of-the-day (D) value: %lu!\n", argv0, ul);
 				return (-1);
-			tm.tm_hour = ul;
+			}
+			tms.tm_hour = ul;
 			break;
 
 		case 'w':
 		case 'W':
-			if (WMseen)
+			if (WMseen) {
+				if (verbose)
+					fprintf(stderr, "%s: already saw a 'W' in trimtime!\n", argv0);
 				return (-1);
+			}
 			WMseen++;
 			s++;
 			ul = strtoul(s, &t, 10);
-			if (ul < 0 || ul > 6)
+			if (ul < 0 || ul > 6) {
+				if (verbose)
+					fprintf(stderr, "%s: nonsensical day-of-the-week (W) value: %lu!\n", argv0, ul);
 				return (-1);
-			if (ul != tm.tm_wday) {
+			}
+			if (ul != tms.tm_wday) {
 				int save;
 
-				if (ul < tm.tm_wday) {
-					save = 6 - tm.tm_wday;
+				if (ul < tms.tm_wday) {
+					save = 6 - tms.tm_wday;
 					save += (ul + 1);
 				} else {
-					save = ul - tm.tm_wday;
+					save = ul - tms.tm_wday;
 				}
 
-				tm.tm_mday += save;
+				tms.tm_mday += save;
 
-				if (tm.tm_mday > nd) {
-					tm.tm_mon++;
-					tm.tm_mday = tm.tm_mday - nd;
+				if (tms.tm_mday > nd) {
+					tms.tm_mon++;
+					tms.tm_mday = tms.tm_mday - nd;
 				}
 			}
 			break;
 
 		case 'm':
 		case 'M':
-			if (WMseen)
+			if (WMseen) {
+				if (verbose)
+					fprintf(stderr, "%s: already saw a 'M' in trimtime!\n", argv0);
 				return (-1);
+			}
 			WMseen++;
 			s++;
 			if (tolower(*s) == 'l') {
-				tm.tm_mday = nd;
+				tms.tm_mday = nd;
 				s++;
 				t = s;
 			} else {
 				ul = strtoul(s, &t, 10);
-				if (ul < 1 || ul > 31)
+				if (ul < 1 || ul > 31) {
+					if (verbose)
+						fprintf(stderr, "%s: nonsensical day-of-the-month (M) value: %lu!\n", argv0, ul);
 					return (-1);
-
-				if (ul > nd)
+				}
+				if (ul > nd) {
+					if (verbose)
+						fprintf(stderr, "%s: day-of-the-week (M) value out of range for month %d: %lu!\n", argv0, tms.tm_mon, ul);
 					return (-1);
-				tm.tm_mday = ul;
+				}
+				tms.tm_mday = ul;
 			}
 			break;
 
 		default:
+			if (verbose)
+				fprintf(stderr, "%s: invalid trimtime specification: '%c'!\n", argv0, *s);
 			return (-1);
 			break;
 		}
@@ -1513,8 +1598,11 @@ parse_dwm(s, trim_at)
 	 * XXX mktime() has a broken API that will not easily permit time_t to
 	 * be changed into an unsigned integer type....
 	 */
-	if ((*trim_at = mktime(&tm)) == (time_t) -1)
+	if ((*trim_at = mktime(&tms)) == (time_t) -1) {
+		if (verbose)
+			fprintf(stderr, "%s: mktime() failed!\n", argv0);
 		return (-1);
+	}
 
 	return 0;
 }
