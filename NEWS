@@ -1,9 +1,23 @@
 NEWSYSLOG NEWS -- history of user-visible changes.
 
-This file:  Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
+This file:  Copyright (C) Planix, Inc.
 	    - see COPYING for details
 
 Please send bug reports to bugs@robohack.planix.com
+
+
+* User-visible changes new in newsyslog-1.0.103.
+
+- a new debugging (-d) option allows various levels of verbose internals
+  debugging without performing any actions and is now separate from
+  normal verbose operation (-v) and separate from script generation (-n)
+
+- verbose explanitory and debug messages are prefixed with "[-=]*> " to
+  make them clearly visible and separate from script commands.
+
+- new log files are created with unique temporary names and then renamed
+  to their proper names only if their permissions and ownership are
+  successfully initialised.
 
 
 * User-visible changes new in newsyslog-1.0.102.
@@ -154,4 +168,4 @@ from being rolled over unnecessarily).
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.18 2002/02/09 21:50:06 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.19 2002/05/10 17:46:04 woods Exp $"
