@@ -3,7 +3,7 @@
 #
 # This file Copyright (C) 1998,1999,2000,2001 Planix, Inc. -- see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.9 2001/03/06 02:00:30 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.10 2002/01/04 00:45:57 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
@@ -11,37 +11,64 @@
 #	./configure --prefix=/usr --mandir=/usr/share/man --bindir=/usr/bin --sysconfdir=/etc --localstatedir=/var --with-newsyslog-conf=/etc/newsyslog.conf --with-syslogd_pid=/var/run/syslogd.pid --with-gzip
 #
 
-CPPFLAGS+= -DPATH_COMPRESS=\"@PATH_COMPRESS@\"
-CPPFLAGS+= -DCOMPRESS_SUFFIX=\"@COMPRESS_SUFFIX@\"
-CPPFLAGS+= -DPATH_CONFIG=\"@path_config@\"
-CPPFLAGS+= -DPATH_SYSLOGD_PIDFILE=\"@syslogd_pidfile@\"
+CPPFLAGS+= -DPATH_COMPRESS="\"@PATH_COMPRESS@\""
+CPPFLAGS+= -DCOMPRESS_SUFFIX="\"@COMPRESS_SUFFIX@\""
+CPPFLAGS+= -DPATH_CONFIG="\"@path_config@\""
+CPPFLAGS+= -DPATH_SYSLOGD_PIDFILE="\"@syslogd_pidfile@\""
 
 CPPFLAGS+= -DRETSIGTYPE=void
 CPPFLAGS+= -DSTDC_HEADERS
+CPPFLAGS+= -DSYS_SIGNAME_DECLARED
 CPPFLAGS+= -DTIME_WITH_SYS_TIME
+CPPFLAGS+= -DHAVE_DECL_STRCHR
+CPPFLAGS+= -DHAVE_DECL_STRDUP
+CPPFLAGS+= -DHAVE_DECL_STRPTIME
+CPPFLAGS+= -DHAVE_DECL_STRRCHR
+CPPFLAGS+= -DHAVE_DECL_STRTOK
 CPPFLAGS+= -DHAVE_ERRNO_H
 CPPFLAGS+= -DHAVE_FLOCK
+CPPFLAGS+= -DHAVE_MEMSET
 CPPFLAGS+= -DHAVE_STRCHR
 CPPFLAGS+= -DHAVE_STRDUP
 CPPFLAGS+= -DHAVE_STRERROR
 CPPFLAGS+= -DHAVE_STRTOK
 CPPFLAGS+= -DHAVE_STRING_H
+CPPFLAGS+= -DHAVE_SYS_PROC_H
 CPPFLAGS+= -DHAVE_SYS_TYPES_H
 CPPFLAGS+= -DHAVE_SYS_WAIT_H
 CPPFLAGS+= -DHAVE_UNISTD_H
 
-CPPFLAGS+= -DPACKAGE=\"@PACKAGE@\"
-CPPFLAGS+= -DVERSION=\"@VERSION@\"
+CPPFLAGS+= -DPACKAGE="\"@PACKAGE@\""
+CPPFLAGS+= -DVERSION="\"@VERSION@\""
 
 BINDIR?= @bindir@
 BINOWN= root
 
 PROG= newsyslog
+
+SRCS= newsyslog.c sig2str.c str2sig.c
+
 MAN= newsyslog.conf.5 newsyslog.8
 
 CLEANFILES+= newsyslog.conf.5
 
 WARNS?= 1
+
+CWARNFLAGS+= -Wall
+CWARNFLAGS+= -Wshadow
+CWARNFLAGS+= -Wswitch
+CWARNFLAGS+= -Wreturn-type
+CWARNFLAGS+= -Wpointer-arith
+CWARNFLAGS+= -Wconversion
+CWARNFLAGS+= -Wimplicit
+CWARNFLAGS+= -Wmissing-declarations
+CWARNFLAGS+= -Wmissing-prototypes
+CWARNFLAGS+= -Wstrict-prototypes
+CWARNFLAGS+= -Wcast-qual
+CWARNFLAGS+= -Wwrite-strings
+
+CWARNFLAGS+= -Wnetbsd-format-audit
+CWARNFLAGS+= -Wno-format-extra-args
 
 SOELIM = soelim
 
