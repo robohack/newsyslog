@@ -31,7 +31,7 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.9 1997/11/14 07:03:49 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.10 1997/11/15 07:05:14 woods Exp $";
 #endif /* not lint */
 
 #include <config.h>
@@ -540,13 +540,17 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 			printf("chown %d.%d %s\n",
 			       owner_uid, owner_gid, zfile2);
 		} else {
-			(void) rename(zfile1, zfile2);
-			(void) chmod(zfile2, perm);
-			(void) chown(zfile2, owner_uid, owner_gid);
+			(void) rename(zfile1, zfile2); /* XXX error check (non-fatal?) */
+			(void) chmod(zfile2, perm); /* XXX error check (non-fatal?) */
+			(void) chown(zfile2, owner_uid, owner_gid); /* XXX error check (non-fatal?) */
 		}
 	}
-	if (!noaction && !(flags & CE_BINARY))
-		(void) log_trim(log);	/* Report the trimming to the old log */
+	if (!noaction && !(flags & CE_BINARY)) {
+		if (log_trim(log)) {	/* Report the trimming to the old log */
+			fprintf(stderr, "%s: can't add final status message to log: %s: %s.\n", argv0, log, strerror(errno));
+			exit(1);	/* XXX fatal? */
+		}
+	}
 
 	if (!o_numdays) {
 		if (noaction)
@@ -575,10 +579,12 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 		}
 		(void) close(fd);
 		if (!(flags & CE_BINARY)) {
-			if (log_trim(log)) {	/* Add status message */
+#ifdef LOG_TURNOVER_IN_NEW_FILE_TOO
+			if (log_trim(log)) {	/* Add status message to new log file */
 				fprintf(stderr, "%s: can't add status message to log: %s: %s.\n", argv0, log, strerror(errno));
-				exit(1);
+				exit(1); /* XXX fatal? */
 			}
+#endif
 		}
 	}
 	if (noaction)
@@ -618,7 +624,7 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 		else if (noaction) {
 			if (notified)
 				puts("sleep 5");
-			printf("%s %s.0\n", _PATH_COMPRESS, log);
+			printf("%s %s.0\n", PATH_COMPRESS, log);
 		} else {
 			if (notified) {
 				if (verbose)
@@ -654,8 +660,8 @@ compress_log(log)
 	char           *log;
 {
 	pid_t           pid;
-	char            tmp[PATH_MAX + 1];
-	static char     c_path[] = _PATH_COMPRESS;
+	char            tmp[PATH_MAX + sizeof(".0")];
+	static char     c_path[] = PATH_COMPRESS;
 	char           *c_prog;
 
 	c_prog = (c_prog = strrchr(c_path, '/')) ? c_prog + 1 : c_path;
