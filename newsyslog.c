@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.27 2000/11/27 00:40:11 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.28 2000/11/27 00:57:11 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -739,19 +739,7 @@ do_trim(ent)
 	if (ent->pid_file && !(ent->flags & CE_NOSIGNAL)) {
 		need_notification = 1;
 		pid = get_pid(ent->pid_file);
-	} else if (!(ent->flags & CE_BINARY) && !(ent->flags & CE_NOSIGNAL)) {
-		/*
-		 * XXX is it wrong to assume that binaries without an
-		 * explicitly specified pid file are not written to by syslogd?
-		 *
-		 * The worst thing likely to happen is someone will set the
-		 * CE_BINARY flag on a syslogd log file and syslog might not
-		 * get notified right away about this file being trimmed.  Only
-		 * if all syslogd files are marked binary will they never be
-		 * properly re-opened by syslogd after being trimmed.  Anyone
-		 * who purposely marks all syslogd files as binary really needs
-		 * to get clue-x-4'ed anyway!
-		 */
+	} else if (!(ent->flags & CE_NOSIGNAL)) {
 		need_notification = 1;
 		pid = syslogd_pid;
 	}
