@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.38 2002/01/05 17:55:14 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.39 2002/01/05 19:29:26 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -535,6 +535,7 @@ parse_options(argc, argv)
 			/* NOTREACHED */
 		}
 	}
+
 	return;
 }
 
@@ -706,7 +707,7 @@ parse_file(files )
 				if (!(isdigit(*q))) {
 					if ((pass = getpwnam(q)) == NULL) {
 						fprintf(stderr,
-							"%s: error in config file; unknown user: '%s' in line:\n%6d:\t'%s'\n",
+							"%s: error in config file; unknown user: '%s', in line:\n%6d:\t'%s'\n",
 							argv0,
 							q,
 							lnum,
@@ -724,7 +725,7 @@ parse_file(files )
 				if (!(isdigit(*q))) {
 					if ((grp = getgrnam(q)) == NULL) {
 						fprintf(stderr,
-							"%s: error in config file; unknown group: '%s' in line:\n%6d:\t'%s'\n",
+							"%s: error in config file; unknown group: '%s', in line:\n%6d:\t'%s'\n",
 							argv0,
 							q,
 							lnum,
@@ -753,8 +754,9 @@ parse_file(files )
 
 		if (!sscanf(q, "%o", &working->permissions)) {
 			fprintf(stderr,
-				"%s: error in config file; bad permissions: '%s' in line:\n%6d:\t'%s'\n",
+				"%s: error in config file; %s: '%s', in line:\n%6d:\t'%s'\n",
 				argv0,
+				strchr(q, '.') ? "old-style 'owner:group' field format" : "bad permissions specification",
 				q,
 				lnum,
 				errline);
@@ -774,7 +776,7 @@ parse_file(files )
 		*parse = '\0';
 		if (!sscanf(q, "%d", &working->numlogs)) {
 			fprintf(stderr,
-				"%s: error in config file; bad number: '%s' in line\n%6d:\t'%s'\n",
+				"%s: error in config file; bad number: '%s', in line\n%6d:\t'%s'\n",
 				argv0,
 				q,
 				lnum,
@@ -817,7 +819,7 @@ parse_file(files )
 			if (isdigit(*q)) {
 				if ((ul = strtol(q, &q, 10)) > INT_MAX) {
 					fprintf(stderr,
-						"%s: error in config file; interval too large: '%s' in line\n%6d:\t'%s'\n",
+						"%s: error in config file; interval too large: '%s', in line\n%6d:\t'%s'\n",
 						argv0,
 						q,
 						lnum,
@@ -833,7 +835,7 @@ parse_file(files )
 			if ((*q == '-') || (working->hours == -1)) {
 				if (domidnight != -1) {
 					fprintf(stderr,
-						"%s: a trim time is nonsensical with %s: '%s' in line\n%6d:\t'%s'\n",
+						"%s: a trim time is nonsensical with %s: '%s', in line\n%6d:\t'%s'\n",
 						argv0,
 						(domidnight == 0) ? "-M" : "-m",
 						q,
@@ -843,7 +845,7 @@ parse_file(files )
 				}
 				if (parse_dwm(q, &working->trim_at) == -1) {
 					fprintf(stderr,
-						"%s: error in config file; malformed trim time: '%s' in line\n%6d:\t'%s'\n",
+						"%s: error in config file; malformed trim time: '%s', in line\n%6d:\t'%s'\n",
 						argv0,
 						q,
 						lnum,
@@ -852,7 +854,7 @@ parse_file(files )
 				}
 				if (run_interval == -1) {
 					fprintf(stderr,
-						"%s: a trim time needs '-i run_interval': '%s' in line\n%6d:\t'%s'\n",
+						"%s: a trim time needs '-i run_interval': '%s', in line\n%6d:\t'%s'\n",
 						argv0,
 						q,
 						lnum,
@@ -863,7 +865,7 @@ parse_file(files )
 			}
 			if ((working->hours == -1) && (working->trim_at == -1)) {
 				fprintf(stderr,
-					"%s: error in config file; malformed interval or trim time: '%s' in line\n%6d:\t'%s'\n",
+					"%s: error in config file; malformed interval or trim time: '%s', in line\n%6d:\t'%s'\n",
 					argv0,
 					q,
 					lnum,
@@ -985,6 +987,7 @@ missing_field(p, lnum, errline)
 			errline);
 		exit(1);
 	}
+
 	return (p);
 }
 
@@ -1249,6 +1252,7 @@ do_trim(ent)
 			}
 		}
 	}
+
 	return;
 }
 
@@ -1278,6 +1282,7 @@ note_trim(log)
 			return (-1);
 		}
 	}
+
 	return (0);
 }
 
@@ -1321,6 +1326,7 @@ check_file_size(file)
 
 	if (stat(file, &sb) < 0)
 		return (-1);
+
 	return ((long) kbytes(dbtob(sb.st_blocks)));
 }
 
@@ -1350,6 +1356,8 @@ check_old_log_age(ent)
 				return (-1);
 		}
 	}
+	free(tmp);
+
 	return ((int) (timenow - sb.st_mtime + 1800) / 3600); /* 1/2 hr older than reality */
 }
 
@@ -1474,6 +1482,7 @@ strsob(p)
 		return (0);
 	while (*p && isspace(*p))
 		p++;
+
 	return (p);
 }
 
@@ -1488,6 +1497,7 @@ strson(p)
 		return (0);
 	while (*p && !isspace(*p))
 		p++;
+
 	return (p);
 }
 
