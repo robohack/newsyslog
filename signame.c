@@ -5,7 +5,7 @@
 #include <sys/cdefs.h>
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.2 2002/01/05 17:58:59 woods Exp $";*/
+static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.3 2002/01/15 22:24:32 woods Exp $";*/
 #endif /* LIBC_SCCS and not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -17,7 +17,8 @@ static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.2 2002/01/05 
 #endif
 #include <signal.h>
 
-#if !defined(SYS_SIGNAME_DECLARED)
+#if !defined(SYS_SIGNAME_DECLARED) && ((HAVE_SIG2STR != 1) || (HAVE_STR2SIG != 1))
+
 /*
  * List of official signal names, indexed by signal number
  */
@@ -164,4 +165,4 @@ const char *const sys_signame[] = {
 #  include "ERROR: your system is not supported without a native sys_signame"
 # endif
 
-#endif /* ! SYS_SIGNAME_DECLARED */
+#endif /* ! SYS_SIGNAME_DECLARED && ! HAVE_STR2SIG && ! HAVE_SIG2STR */
