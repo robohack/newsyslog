@@ -1,4 +1,4 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.4 1999/08/25 00:59:20 woods Exp $";
+#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.5 2000/11/27 00:34:34 woods Exp $";
 
 /*
  * Copyright (C) 1997 Planix, Inc. - All rights reserved.
@@ -23,3 +23,9 @@
 
 /* Suffix string */
 #define COMPRESS_SUFFIX		".Z"
+
+@BOTTOM@
+
+/*
+ * End of this file
+ */
