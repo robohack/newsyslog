@@ -10,7 +10,7 @@ AC_INIT(newsyslog.c)
 dnl Required Autoconf version.
 AC_PREREQ(2.12)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.31 2001/02/23 01:30:01 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.32 2001/02/23 01:41:19 woods Exp $"])
 
 dnl for Automake
 PACKAGE="newsyslog"
@@ -18,6 +18,9 @@ PACKAGE="newsyslog"
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_SUBST(PACKAGE)
 
+dnl for Automake too
+dnl (note we have to actually set it here first to appease automake)
+VERSION="0.0.0-Broken # something is wrong in $srcdir/VERSION!"
 . $srcdir/VERSION
 
 changequote(,)
