@@ -1,4 +1,5 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: strptime.c,v 1.1 1999/01/17 06:23:09 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: strptime.c,v 1.2 2000/12/01 20:48:58 woods Exp $"
+/*	$NetBSD: strptime.c,v 1.19 2000/01/22 22:19:22 mycroft Exp $	*/
 
 /*-
  * Copyright (c) 1997, 1998 The NetBSD Foundation, Inc.
@@ -37,10 +38,11 @@
 
 #include <sys/cdefs.h>
 #if defined(LIBC_SCCS) && !defined(lint)
-static char netbsd_rcsid[] = "NetBSD:strptime.c,v 1.17 1998/11/15 17:11:06 christos Exp");
+__RCSID("$NetBSD: strptime.c,v 1.19 2000/01/22 22:19:22 mycroft Exp $");
 #endif
 
-#ifdef __NetBSD__			/* ????? */
+#include "namespace.h"
+#ifdef HAVE_SYS_LOCALEDEF_H
 # include <sys/localedef.h>
 #endif
 #include <ctype.h>
@@ -48,6 +50,10 @@ static char netbsd_rcsid[] = "NetBSD:strptime.c,v 1.17 1998/11/15 17:11:06 chris
 #include <string.h>
 #include <time.h>
 #include <tzfile.h>
+
+#ifdef __weak_alias
+__weak_alias(strptime,_strptime)
+#endif
 
 #define	_ctloc(x)		__CONCAT(_CurrentTimeLocale->,x)
 
@@ -60,7 +66,7 @@ static char netbsd_rcsid[] = "NetBSD:strptime.c,v 1.17 1998/11/15 17:11:06 chris
 #define	LEGAL_ALT(x)		{ if (alt_format & ~(x)) return (0); }
 
 
-static	int conv_num __P((const char **, int *, int, int));
+static	int conv_num __P((const unsigned char **, int *, int, int));
 
 
 char *
@@ -68,8 +74,8 @@ strptime(buf, fmt, tm)
 	const char *buf, *fmt;
 	struct tm *tm;
 {
-	char c;
-	const char *bp;
+	unsigned char c;
+	const unsigned char *bp;
 	size_t len = 0;
 	int alt_format, i, split_year = 0;
 
@@ -127,7 +133,7 @@ literal:
 			if (!(bp = strptime(bp, "%m/%d/%y", tm)))
 				return (0);
 			break;
-	
+
 		case 'R':	/* The time as "%H:%M". */
 			LEGAL_ALT(0);
 			if (!(bp = strptime(bp, "%H:%M", tm)))
@@ -316,35 +322,28 @@ literal:
 				return (0);
 			break;
 
-		case 'Y':	/* The year including century. */
+		case 'Y':	/* The year. */
 			LEGAL_ALT(ALT_E);
-			if (!(conv_num(&bp, &i, 0, INT_MAX)))
+			if (!(conv_num(&bp, &i, 0, 9999)))
 				return (0);
 
 			tm->tm_year = i - TM_YEAR_BASE;
 			break;
 
-		case 'y':	/* The year within century. */
-	 		/*
-			 * When a century is not otherwise specified, values in
-			 * the range 69-99 refer to years in the twentieth
-			 * century (1969 to 1999 inclusive); values in the
-			 * range 00-68 refer to years in the twenty-first
-			 * century (2000 to 2068 inclusive).
-			 */
+		case 'y':	/* The year within 100 years of the epoch. */
 			LEGAL_ALT(ALT_E | ALT_O);
 			if (!(conv_num(&bp, &i, 0, 99)))
 				return (0);
 
 			if (split_year) {
 				tm->tm_year = ((tm->tm_year / 100) * 100) + i;
-			} else {
-				split_year = 1;
-				if (i <= 68)
-					tm->tm_year = i + 2000 - TM_YEAR_BASE;
-				else
-					tm->tm_year = i + 1900 - TM_YEAR_BASE;
+				break;
 			}
+			split_year = 1;
+			if (i <= 68)
+				tm->tm_year = i + 2000 - TM_YEAR_BASE;
+			else
+				tm->tm_year = i + 1900 - TM_YEAR_BASE;
 			break;
 
 		/*
@@ -372,22 +371,27 @@ literal:
 
 static int
 conv_num(buf, dest, llim, ulim)
-	const char **buf;
+	const unsigned char **buf;
 	int *dest;
 	int llim, ulim;
 {
-	*dest = 0;
+	int result = 0;
+
+	/* The limit also determines the number of valid digits. */
+	int rulim = ulim;
 
 	if (**buf < '0' || **buf > '9')
 		return (0);
 
 	do {
-		*dest *= 10;
-		*dest += *(*buf)++ - '0';
-	} while ((*dest * 10 <= ulim) && **buf >= '0' && **buf <= '9');
+		result *= 10;
+		result += *(*buf)++ - '0';
+		rulim /= 10;
+	} while ((result * 10 <= ulim) && rulim && **buf >= '0' && **buf <= '9');
 
-	if (*dest < llim || *dest > ulim)
+	if (result < llim || result > ulim)
 		return (0);
 
+	*dest = result;
 	return (1);
 }
