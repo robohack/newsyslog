@@ -3,9 +3,26 @@
 #
 #	newsyslog2netbsd - upgrade from latest newsyslog release
 #
-# NOTE: needs a POSIX /bin/sh to run....
+# This file Copyright (C) 1999 Planix, Inc. -- see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.1 1999/01/17 06:44:53 woods Exp $"
+# NOTE: needs a fully POSIX /bin/sh to run properly....
+#
+#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.2 1999/08/25 01:22:45 woods Exp $"
+
+# The following variables can be adjusted as necessary
+#
+PREFIX="/usr"
+BINDIR=${PREFIX}/bin
+SYSCONFDIR="/etc"
+LOCALSTATEDIR="/var"
+NEWSYSLOG_CONF=${SYSCONFDIR}/newsyslog.conf
+SYSLOGD_PID=${LOCALSTATEDIR}/run/syslog.pid
+
+IMPORTDIR="import.d"
+
+#
+# NOTHING user adjustable below this line!
+#
 
 PWD=$(/bin/pwd)
 version=$(basename $PWD | sed -e 's/newsyslog-//')
@@ -26,29 +43,28 @@ cpsed ()
 ' \
 	    -e '/^\.\\"#ident/i\
 .\\"#ident	"@(#)$\Name$:$\NetBSD$"\
-' \
-	    -e 's;@\path_config@;/etc/newsyslog.conf;' \
-	    -e 's;@\syslogd_pidfile@;/var/run/syslog.pid;' $1 > $2
+' $1 > $2
 }
-
-IMPORTDIR="import.d"
 
 rm -rf ${IMPORTDIR}
 mkdir ${IMPORTDIR}
 
-if [ ! -r Makefile.BSD ] ; then
-	./configure
+if [ ! -f Makefile.BSD ] ; then
+	./configure --prefix=${PREFIX} --bindir=${BINDIR} --sysconfdir=${SYSCONFDIR} --localstatedir=${LOCALSTATEDIR} --with-newsyslog-conf=${NEWSYSLOG_CONF} --with-syslogd_pid=${SYSLOGD_PID} --with-gzip
 fi
 
 # note the renames....
+cpsed AUTHORS ${IMPORTDIR}/AUTHORS
+cpsed COPYING ${IMPORTDIR}/COPYING
 cpsed Makefile.BSD ${IMPORTDIR}/Makefile
-cpsed newsyslog.8so.in ${IMPORTDIR}/newsyslog.8
-cpsed newsyslog.conf.5so.in ${IMPORTDIR}/newsyslog.conf.5so
+cpsed newsyslog.8so ${IMPORTDIR}/newsyslog.8
+cpsed newsyslog.conf.5so ${IMPORTDIR}/newsyslog.conf.5so
 cpsed newsyslog.c ${IMPORTDIR}/newsyslog.c
 cpsed newsyslog.conf ${IMPORTDIR}/newsyslog.conf
 cpsed newsyslog2netbsd.sh ${IMPORTDIR}/newsyslog2netbsd.sh
 
 # tell them what to do....
+echo "# Now do this:"
 echo "cd ${IMPORTDIR} ; cvs import -m 'Import of Planix newsyslog version $version' src/usr.bin/newsyslog PLANIX $releasetag"
 
 exit 0
