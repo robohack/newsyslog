@@ -1,4 +1,4 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.6 2001/02/23 01:30:01 woods Exp $";
+#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.7 2001/02/23 01:36:58 woods Exp $";
 
 /*
  * Copyright (C) 1997 Planix, Inc. - All rights reserved.
@@ -12,11 +12,20 @@
 /* The package release identifier. */
 #define VERSION			"Pre-Release"
 
+/* The package release major number. */
 #define VERSION_MAJOR		0
+
+/* The package release minor number. */
 #define VERSION_MINOR		0
+
+/* The package release patch number. */
 #define VERSION_PATCH		0
+
+/* The package release suffix (usually -Prelease in unreleased code). */
 #define VERSION_SUFFIX		"unconfigured"
-#define VERSION_COMMENT		"Please run ./configure!"
+
+/* Optional package release comment (WARNING: keep as one word in acconfig.h!). */
+#define VERSION_COMMENT		"Please_run_./configure!"
 
 /* Configuration file */
 #define PATH_CONFIG		"/etc/newsyslog.conf"
