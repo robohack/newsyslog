@@ -1,9 +1,9 @@
 #
 #	Makefile.am - input for automake
 #
-# Copyright (C) 1997 Planix, Inc. - All rights reserved.
+# Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.16 2001/02/23 01:41:11 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.17 2001/03/06 02:05:34 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
 MAINT_CHARSET = latin1
@@ -30,7 +30,7 @@ PATH_CONFIG = @path_config@
 PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 
 # Mention here files which are created using '--add-missing'
-MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL README.developers
+MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL README.developers $(catman_MANS) $(man_MANS) 
 
 ##
 ##	local extensions to automake
@@ -64,8 +64,6 @@ SUFFIXES = .5 .8 .5so .8so .cat8 .cat5 .ps .txt
 
 .5.ps:
 	$(SOELIM) $(srcdir)/$? | $(TBL) | $(TROFF) -mdoc $(ROFFDEV) > $@
-
-CLEANFILES = $(catman_MANS) $(man_MANS) 
 
 #
 # hard-coded dependencies and extensions
