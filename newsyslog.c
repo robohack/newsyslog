@@ -31,30 +31,24 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.7 1997/11/12 22:03:32 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.9 1997/11/14 07:03:49 woods Exp $";
 #endif /* not lint */
 
-#ifndef CONF
-# define CONF	"/etc/newsyslog.conf"		/* Configuration file */
-#endif
-#ifndef PIDFILE
-# define PIDFILE "/etc/syslog.pid"		/* default pid file */
-#endif
-#ifndef COMPRESS_PATH
-# define COMPRESS_PATH	"/usr/ucb/compress"	/* File compression program */
-#endif
-#ifndef COMPRESS_PROG
-# define COMPRESS_PROG	"compress"
-#endif
-#ifndef COMPRESS_POSTFIX
-# define COMPRESS_POSTFIX ".Z"
+#include <config.h>
+
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+#else
+extern void exit();
 #endif
 
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#include <sys/wait.h>
+#if HAVE_SYS_WAIT_H
+# include <sys/wait.h>
+#endif
 #include <ctype.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -62,14 +56,38 @@ static const char rcsid[] =
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
+#if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
+# include <string.h>
+#else
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif
+# include <strings.h>
+extern char *strchr(), *strrchr(), *strtok();
+#endif
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+#ifdef HAVE_ERRNO_H
+# include <errno.h>
+#else
+# ifndef errno
+extern int errno;
+# endif /* !errno */
+#endif /* HAVE_ERRNO_H */
 #include <assert.h>
+
+#ifndef PATH_MAX
+# ifdef MAXPATHLEN
+#  define PATH_MAX	MAXPATHLEN
+# else
+#  define PATH_MAX	1024
+# endif
+#endif /* PATH_MAX */
 
 #define kbytes(size)	(((size) + 1023) >> 10)
 #ifdef _IBMR2
-
 # define dbtob(db)	((unsigned)(db) << UBSHIFT) /* Calculates (db * DEV_BSIZE) */
 #endif
 
@@ -90,16 +108,20 @@ struct conf_entry {
 	struct conf_entry *next;	/* Linked list pointer */
 };
 
-char           *argv0 = "NEWSYSLOG";
+char           *argv0 = PACKAGE;
+char            version[] = VERSION;
 
 int             verbose = 0;	/* Print out what's going on */
 int             needroot = 1;	/* Root privs are necessary */
 int             noaction = 0;	/* Don't do anything, just show it */
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
-char           *conf = CONF;	/* Configuration file to use */
+char           *conf = PATH_CONFIG;/* Configuration file to use */
 time_t          timenow;
 pid_t           syslog_pid;	/* read in from /etc/syslog.pid */
 
+/*
+ * MIN_PID & MAX_PID are used to sanity-check the pid_file contents.
+ */
 #ifndef MIN_PID
 # define MIN_PID	5
 #endif
@@ -151,7 +173,7 @@ main(argc, argv)
 	}
 	p = q = parse_file();
 
-	syslog_pid = get_pid(PIDFILE);
+	syslog_pid = get_pid(PATH_SYSLOG_PIDFILE);
 
 	while (p) {
 		do_entry(p);
@@ -180,21 +202,25 @@ do_entry(ent)
 	modtime = age_old_log(ent->log);
 	if (size < 0) {
 		if (verbose)
-			printf("does not exist.\n");
+			printf("does not exist ");
 	} else if (size == 0) {
 		if (verbose)
-			printf("is empty.\n");
+			printf("is empty ");
 	} else if (size > 0) {
 		if (verbose && (ent->size > 0))
-			printf("size (Kb): %d [%d] ", size, ent->size);
+			printf("size (Kb): %d [allow %d] ", size, ent->size);
 		if (verbose && (ent->hours > 0))
-			printf(" age (hr): %d [%d] ", modtime, ent->hours);
+			printf(" age (hr): %d [allow %d] ", modtime, ent->hours);
 		if ((ent->size > 0) && (size >= ent->size))
 			we_trim_it = 1;
 		assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 		if ((ent->hours > 0) && ((modtime >= ent->hours) || (modtime < 0))) {
 			if (domidnight == -1 || (domidnight == 1 && (ent->hours % 24) == 0))
 				we_trim_it = 1;
+			else {
+				if (verbose)
+					printf("but not doing daily trim ");
+			}
 		}
 	}
 	if (we_trim_it) {
@@ -206,6 +232,10 @@ do_entry(ent)
 		if (verbose)
 			printf("--> skipping.\n");
 	}
+	if (ent->log)
+		free(ent->log);
+	if (ent->pid_file)
+		free(ent->pid_file);
 }
 
 static void 
@@ -228,17 +258,21 @@ PRS(argc, argv)
 		*p = '\0';
 	}
 	optind = 1;		/* Start options parsing */
-	while ((c = getopt(argc, argv, "Mmnrvf:t:")) != -1)
+	while ((c = getopt(argc, argv, "MVmnrvf:t:")) != -1)
 		switch (c) {
 		case 'M':
 			domidnight = 0;
 			break;
+		case 'V':
+			printf("%s: version %s.\n", argv0, version);
+			exit(0);
+			/* NOTREACHED */
 		case 'm':
 			domidnight = 1;
 			break;
 		case 'n':
 			noaction++;	/* This implies needroot as off */
-			/* fall through */
+			/* FALLTHROUGH */
 		case 'r':
 			needroot = 0;
 			break;
@@ -256,7 +290,7 @@ PRS(argc, argv)
 static void 
 usage()
 {
-	fprintf(stderr, "Usage: %s [-M|-m] [-nrv] [-f config-file]\n", argv0);
+	fprintf(stderr, "Usage: %s [-M|-m] [-Vnrv] [-f config-file]\n", argv0);
 	exit(1);
 }
 
@@ -275,10 +309,11 @@ parse_file()
 	struct group   *grp;
 	int             eol;
 
-	if (strcmp(conf, "-"))
-		f = fopen(conf, "r");
-	else
+	if (strcmp(conf, "-") == 0) {
 		f = stdin;
+		conf = "STDIN";
+	} else
+		f = fopen(conf, "r");
 	if (!f) {
 		fprintf(stderr, "%s: could not open config file %s: %s.\n", argv0, conf, strerror(errno));
 		exit(1);
@@ -298,7 +333,7 @@ parse_file()
 		q = parse = missing_field(sob(line), errline);
 		parse = son(line);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n%s\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
 			exit(1);
 		}
 		*parse = '\0';
@@ -307,7 +342,7 @@ parse_file()
 		q = parse = missing_field(sob(++parse), errline);
 		parse = son(parse);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n%s\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
 			exit(1);
 		}
 		*parse = '\0';
@@ -316,7 +351,7 @@ parse_file()
 			if (*q) {
 				if (!(isdigit(*q))) {
 					if ((pass = getpwnam(q)) == NULL) {
-						fprintf(stderr, "%s: error in config file; unknown user:\n%s\n",
+						fprintf(stderr, "%s: error in config file; unknown user:\n'%s'\n",
 							argv0, errline);
 						exit(1);
 					}
@@ -330,7 +365,7 @@ parse_file()
 			if (*q) {
 				if (!(isdigit(*q))) {
 					if ((grp = getgrnam(q)) == NULL) {
-						fprintf(stderr, "%s: error in config file; unknown group:\n%s\n",
+						fprintf(stderr, "%s: error in config file; unknown group:\n'%s'\n",
 							argv0, errline);
 						exit(1);
 					}
@@ -343,7 +378,7 @@ parse_file()
 			q = parse = missing_field(sob(++parse), errline);
 			parse = son(parse);
 			if (!*parse) {
-				fprintf(stderr, "%s: malformed line (missing fields):\n%s\n", argv0, errline);
+				fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
 				exit(1);
 			}
 			*parse = '\0';
@@ -351,7 +386,7 @@ parse_file()
 			working->uid = working->gid = NONE;
 
 		if (!sscanf(q, "%o", &working->permissions)) {
-			fprintf(stderr, "%s: error in config file; bad permissions:\n%s\n",
+			fprintf(stderr, "%s: error in config file; bad permissions:\n'%s'\n",
 				argv0, errline);
 			exit(1);
 		}
@@ -359,19 +394,19 @@ parse_file()
 		q = parse = missing_field(sob(++parse), errline);
 		parse = son(parse);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n%s\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
 			exit(1);
 		}
 		*parse = '\0';
 		if (!sscanf(q, "%d", &working->numlogs)) {
-			fprintf(stderr, "%s: error in config file; bad number:\n%s\n",
-				argv0, errline);
+			fprintf(stderr, "%s: error in config file; bad number:\n'%s'\n", argv0, errline);
+			exit(1);
 		}
 
 		q = parse = missing_field(sob(++parse), errline);
 		parse = son(parse);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n%s\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
 			exit(1);
 		}
 		*parse = '\0';
@@ -424,7 +459,7 @@ parse_file()
 			if (*q == '/')
 				working->pid_file = strdup(q);
 			else {
-				fprintf(stderr, "%s: illegal pid file in config file:\n%s\n", argv0, q);
+				fprintf(stderr, "%s: illegal pid file in config file: %s.\n", argv0, q);
 				exit(1);
 			}
 		}
@@ -442,7 +477,7 @@ missing_field(p, errline)
 	char           *errline;
 {
 	if (!p || !*p) {
-		fprintf(stderr, "%s: missing field in config file:\n%s\n", argv0, errline);
+		fprintf(stderr, "%s: missing field in config file:\n'%s'\n", argv0, errline);
 		exit(1);
 	}
 	return (p);
@@ -458,16 +493,17 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 	int             owner_uid;
 	int             owner_gid;
 {
-	char            file1[MAXPATHLEN + 1], file2[MAXPATHLEN + 1];
-	char            zfile1[MAXPATHLEN + 1], zfile2[MAXPATHLEN + 1];
-	int             notified, need_notification, fd, _numdays;
+	char            file1[PATH_MAX + 1], file2[PATH_MAX + 1];
+	char            zfile1[PATH_MAX + 1], zfile2[PATH_MAX + 1];
+	int             notified, need_notification, fd, o_numdays;
 	struct stat     st;
 	pid_t           pid;
 
 #ifdef _IBMR2
-/* AIX 3.1 has a broken fchown- if the owner_uid is -1, it will actually */
-/* change it to be owned by uid -1, instead of leaving it as is, as it is */
-/* supposed to. */
+	/* AIX 3.1 has a broken fchown():  if the owner_uid is -1, it will
+	 * actually change it to be owned by uid -1, instead of leaving it as
+	 * is, as it is supposed to.
+	 */
 	if (owner_uid == -1)
 		owner_uid = geteuid();
 #endif
@@ -486,7 +522,7 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 	}
 
 	/* Move down log files */
-	_numdays = numdays;	/* preserve */
+	o_numdays = numdays;	/* preserve */
 	while (numdays--) {
 		(void) strcpy(file2, file1);
 		(void) sprintf(file1, "%s.%d", log, numdays);
@@ -512,7 +548,7 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 	if (!noaction && !(flags & CE_BINARY))
 		(void) log_trim(log);	/* Report the trimming to the old log */
 
-	if (!_numdays) {
+	if (!o_numdays) {
 		if (noaction)
 			printf("rm %s\n", log);
 		else
@@ -530,25 +566,29 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 	} else {
 		fd = creat(log, perm);
 		if (fd < 0) {
-			fprintf(stderr, "%s: can't start new log: %s.\n", argv0, strerror(errno));
+			fprintf(stderr, "%s: can't create new log: %s: %s.\n", argv0, log, strerror(errno));
 			exit(1);
 		}
 		if (fchown(fd, owner_uid, owner_gid)) {
-			fprintf(stderr, "%s: can't chmod new log file: %s.\n", argv0, strerror(errno));
+			fprintf(stderr, "%s: can't chown new log file: %s: %s.\n", argv0, log, strerror(errno));
 			exit(1);
 		}
 		(void) close(fd);
 		if (!(flags & CE_BINARY)) {
 			if (log_trim(log)) {	/* Add status message */
-				fprintf(stderr, "%s: can't add status message to log: %s.\n", argv0, strerror(errno));
+				fprintf(stderr, "%s: can't add status message to log: %s: %s.\n", argv0, log, strerror(errno));
 				exit(1);
 			}
 		}
 	}
 	if (noaction)
 		printf("chmod %o %s\n", perm, log);
-	else
-		(void) chmod(log, perm);
+	else {
+		if (chmod(log, perm) < 0) {
+			fprintf(stderr, "%s: can't chmod log file %s: %s.\n", argv0, log, strerror(errno));
+			exit(1);
+		}
+	}
 
 	pid = 0;
 	need_notification = 0;
@@ -574,11 +614,11 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 	}
 	if ((flags & CE_COMPACT)) {
 		if (need_notification && !notified)
-			fprintf(stderr, "%s: log not compressed because daemon not notified.\n", argv0);
+			fprintf(stderr, "%s: %s not compressed because daemon not notified.\n", argv0, log);
 		else if (noaction) {
 			if (notified)
 				puts("sleep 5");
-			printf("%s %s.0\n", COMPRESS_PROG, log);
+			printf("%s %s.0\n", _PATH_COMPRESS, log);
 		} else {
 			if (notified) {
 				if (verbose)
@@ -608,22 +648,27 @@ log_trim(log)
 	return (0);
 }
 
-/* Fork of /usr/ucb/compress to compress the old log file */
+/* Fork off compress to compress the old log file */
 static void 
 compress_log(log)
 	char           *log;
 {
 	pid_t           pid;
-	char            tmp[MAXPATHLEN + 1];
+	char            tmp[PATH_MAX + 1];
+	static char     c_path[] = _PATH_COMPRESS;
+	char           *c_prog;
+
+	c_prog = (c_prog = strrchr(c_path, '/')) ? c_prog + 1 : c_path;
+
 
 	(void) sprintf(tmp, "%s.0", log);
 	pid = fork();
 	if (pid < 0) {
 		perror("fork()");
-		exit(1);
+		exit(1);		/* XXX do we really care???? */
 	} else if (!pid) {
-		(void) execl(COMPRESS_PATH, COMPRESS_PROG, "-f", tmp, 0);
-		perror(COMPRESS_PATH);
+		(void) execl(c_path, c_prog, "-f", tmp, 0);
+		perror(c_path);
 		exit(1);
 	}
 }
@@ -646,12 +691,13 @@ age_old_log(file)
 	char           *file;
 {
 	struct stat     sb;
-	char            tmp[MAXPATHLEN + sizeof(".0") + sizeof(COMPRESS_POSTFIX) + 1];
+	char            tmp[PATH_MAX + sizeof(".0") + sizeof(COMPRESS_POSTFIX) + 1];
 
 	(void) strcpy(tmp, file);
-	if (stat(strcat(tmp, ".0"), &sb) < 0)
+	if (stat(strcat(tmp, ".0"), &sb) < 0) {
 		if (stat(strcat(tmp, COMPRESS_POSTFIX), &sb) < 0)
 			return (-1);
+	}
 	return ((int) (timenow - sb.st_mtime + 1800) / 3600);
 }
 
@@ -671,31 +717,17 @@ get_pid(pid_file)
 	if (fgets(line, BUFSIZ, f)) {
 		pid = atol(line);
 		if (pid < MIN_PID || pid > MAX_PID) {
-			fprintf(stderr, "%s: preposterous process number: %d.\n", (int) pid);
+			fprintf(stderr, "%s: preposterous process number: %s.\n", line);
 			pid = 0;
 		}
-	} else
+	} else {
 		fprintf(stderr, "%s: can't read %s pid file to restart a daemon: %s.\n",
 			argv0, pid_file, strerror(errno));
+	}
 	(void) fclose(f);
 
 	return pid;
 }
-
-#if (!defined(OSF) && !defined(BSD)) || ((BSD + 0) < 199103)	/* XXX HACK!!! */
-/* Duplicate a string using malloc */
-
-char           *
-strdup(strp)
-	register const char  *strp;
-{
-	register char  *cp;
-
-	if ((cp = malloc((unsigned) strlen(strp) + 1)) == NULL)
-		abort();
-	return (strcpy(cp, strp));
-}
-#endif
 
 /* Skip Over Blanks */
 static char    *
