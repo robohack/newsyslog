@@ -3,7 +3,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	$FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp $
 .\"
-.\"ident	"@()newsyslog:$Name:  $:$Id: newsyslog.8.in,v 1.2 1997/11/14 06:52:04 woods Exp $"
+.\"ident	"@()newsyslog:$Name:  $:$Id: newsyslog.8.in,v 1.3 1998/03/05 03:56:36 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -37,11 +37,15 @@ is a program that should be scheduled to run periodically by
 When it is executed it archives log files if necessary.  If a log file
 is determined to require archiving, 
 .Nm
-rearranges the files so that ``logfile'' is empty, ``logfile.0'' has the
-last period's logs in it, ``logfile.1'' has the next to last period's
-logs in it, and so on, up to a user-specified number of archived logs.
-The archived logs may also be compressed to save space.  After all file
-operations are done
+rearranges the files so that
+.Dq Pa logfile
+is empty,
+.Dq Pa logfile.0
+has the last period's logs in it,
+.Dq Pa logfile.1
+has the next to last period's logs in it, and so on, up to a
+user-specified number of archived logs.  The archived logs may also be
+compressed to save space.  After all file operations are done
 .Nm
 notifies the
 .Nm syslogd
@@ -84,8 +88,10 @@ Cause
 to trim log files which have an
 .Ar interval
 specified as an even multiple of 24 hours as well as any which may have
-grown beyond their allowed size.  I.e. do the ``midnight'' archiving of
-logs that must be archived at the same time every day or every
+grown beyond their allowed size.  I.e. do the
+.Dq midnight
+archiving of logs that must be archived at the same time every day or
+every
 .Ar N
 days.  You probably only want to specify this option for one invocation
 per 24 hours and you probably want to use the corresponding
