@@ -1,9 +1,10 @@
 #
 #	Makefile.am - input for automake
 #
-# Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc. - All rights reserved.
+# Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
+# - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.21 2002/01/13 19:57:07 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.22 2002/01/13 20:16:23 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.4.5
 MAINT_CHARSET = latin1
@@ -20,10 +21,18 @@ catman_MANS_dist = newsyslog.conf.cat5-dist newsyslog.cat8-dist
 
 catmandir = @mandir@
 
-# things that exist in the repository
-DIST_OTHER = README.developers ToDo VERSION newsyslog.conf
+COMPAT_HDRS = compat/sys/cdefs.h compat/machine/ansi.h
+
+COMPAT_MANS = str2sig.3
+
+# things that exist in the repository and need to be in the distribution
+#
+DIST_OTHER = README.developers ToDo VERSION newsyslog.conf \
+		newsyslog2netbsd.sh .cvsignore \
+		$(COMPAT_HDRS) $(COMPAT_MANS)
 
 # things that must be made during 'make dist'
+#
 DIST_MAKE = $(catman_MANS_dist) Makefile.BSD-dist
 
 EXTRA_DIST = $(DIST_OTHER) $(DIST_MAKE)
@@ -32,7 +41,11 @@ PATH_CONFIG = @path_config@
 
 PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 
-# Mention here files which are created using '--add-missing'
+# Mention here files which are created using '--add-missing', as well
+# as files created during 'make dist' and which can be re-created.
+# (We don't mention Makefile.BSD-dist because it should be a virgin
+# copy, never locally edited)
+#
 MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL $(catman_MANS_dist)
 
 CLEANFILES = $(catman_MANS) $(man_MANS)
