@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.25 2000/11/26 21:42:36 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.26 2000/11/26 21:47:47 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -102,6 +102,12 @@ extern int errno;
 #  define PATH_MAX	1024
 # endif
 #endif /* PATH_MAX */
+
+#define MAX_PERCENTD	10	 /* XXX should this be based on sizeof(int)?
+				  * the maximum number of ASCII digits in an
+				  * integer, used in calculating pathname
+				  * buffer sizes
+				  */
 
 #ifndef _PATH_DEVNULL
 # define _PATH_DEVNULL	"/dev/null"
@@ -582,7 +588,6 @@ static void
 do_trim(ent)
 	struct conf_entry *ent;
 {
-#define MAX_PERCENTD 10	/* XXX maximum number of ascii digits in an integer */
 	char            file1[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAX_PERCENTD - 1];
 	char            file2[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAX_PERCENTD - 1];
 	char            zfile1[PATH_MAX];
