@@ -1,4 +1,4 @@
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.1 1998/03/16 01:25:40 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.2 1999/01/17 06:35:38 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -14,7 +14,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd November 12, 1997
+.Dd January 17, 1999
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh NAME
@@ -44,6 +44,9 @@ The subfields may be numeric, or a name which is present in
 .Pa /etc/passwd
 or
 .Pa /etc/group .
+Either of the file's user-id or group-id may be left unchanged by
+specifying it as
+.Dq Li -1.
 .It Ar mode 
 Specifies the file permissions of the log file and its archival copies
 in the standard three-digit octal format.
@@ -154,12 +157,12 @@ A configuration file might appear as follows:
 .so newsyslog.conf
 .Ed
 .Sh FILES
-.Bl -tag -width @path_config@ -compact
+.Bl -tag -width /usr/local/etc/newsyslog.conf -compact
 .It Pa @path_config@
 The
 .Nm newsyslog
 configuration file.
-.It Pa @syslog_pidfile@
+.It Pa @syslogd_pidfile@
 The default location of the PID for
 .Nm syslogd .
 .El
@@ -206,6 +209,21 @@ perhaps the
 .Ar path_to_pid_file
 field could be followed by yet another optional field to specify the
 appropriate signal number.
+.Pp
+Listing the same
+.Ar path_to_pid_file
+multiple times will cause SIGHUP to be sent to the associated daemon
+process for every log file with the same PID file.  This is done to
+ensure that it's safe to compress the file after it has hopefully been
+closed but in theory should be optimized to only notify daemon(s) once
+(and of course to batch all the compression commands to the end of the
+process).  This behaviour is normally harmless for
+.Nm syslogd
+and multiple signals can be avoided for other daemons by ensuring their
+PID files are only listed once and that the
+.Ar 0
+flag is used to ensure the most recent log file is not immediately
+compressed.
 .Pp
 The age of the log file may be impossible to determine, especially for
 binary format files, if the most recent archive copy
