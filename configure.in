@@ -2,7 +2,7 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
 
-dnl This file:  Copyright (C) 1997,1998,1999 Planix, Inc.
+dnl This file:  Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc.
 dnl             see COPYING for details
 
 AC_INIT(newsyslog.c)
@@ -10,7 +10,7 @@ AC_INIT(newsyslog.c)
 dnl Required Autoconf version.
 AC_PREREQ(2.12)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.32 2001/02/23 01:41:19 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.33 2001/03/06 02:03:52 woods Exp $"])
 
 dnl for Automake
 PACKAGE="newsyslog"
@@ -74,10 +74,13 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
-AC_CHECK_HEADERS(errno.h string.h sys/types.h unistd.h)
+AC_CHECK_HEADERS(errno.h string.h netdb.h sys/types.h unistd.h)
 
 AC_MSG_CHECKING(for sys/cdefs.h)
-AC_TRY_CPP([<sys/cdefs.h>], fd_cv_have_sys_cdefs_h=yes, fd_cv_have_sys_cdefs_h=no)
+AC_TRY_CPP([
+#include <sys/cdefs.h>
+int main __P((int, char **));
+], fd_cv_have_sys_cdefs_h=yes, fd_cv_have_sys_cdefs_h=no)
 AC_MSG_RESULT($fd_cv_have_sys_cdefs_h)
 if test $fd_cv_have_sys_cdefs_h = no ; then
 	# ideally this would be '-I$(srcdir)/compat'
@@ -88,6 +91,8 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 
 AC_TYPE_SIGNAL
+
+AC_DECL_SYS_SIGNAME
 
 dnl Checks for library functions.
 AC_REPLACE_FUNCS(snprintf strdup strerror strtok strptime)
