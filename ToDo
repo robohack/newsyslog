@@ -3,18 +3,6 @@ NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
 Patches to close any of these items will be gratefully accepted!  Other
 suggestions and comments are also encouraged.
 
-- Message-ID: <0c8f01bf2af4$429bd940$eff83b9d@redmond.corp.microsoft.com>
-  Date: Tue, 9 Nov 1999 12:51:54 -0800
-  From: "James Webster" <James3838@tsi-net.com>
-  Subject: Archives not working on Newsyslog
-  To: <woods@planix.com>
-  
-  I've been using your version of newsyslog and have been quite happy with it,
-  though I should have watched it more closely.  It appears that the ngen
-  option isn't working and that it only archives one days worth of logs.  I
-  figured I'd check with you if you knew about it, before digging into to find
-  out the problem. [[reported for 1.0.95]]
-
 - fix handling of log file timestamps to take into account timezones.
   Note that the common log format actually includes " {+-}TZOFF" after
   the time, but strptime() doesn't seem to have a way to parse and use
@@ -70,50 +58,16 @@ suggestions and comments are also encouraged.
 
 - add support for specifying size and interval units other than KB & hrs.
 
-- think about need to add an optional signal number/name to use other
-  than SIGHUP for notifying the log-writing daemon.  FreeBSD added this
-  feature in their 1.20 because "F.e. apache restarts less agressively
-  on USR1 then on HUP."
-
 - think about adding an optional way to specify a process to be run
   after a given logfile has been rotated.  This could be used to run
   logfile analysis tools, etc.
 
-- think about adding FreeBSD's "when" field:
+- historical log file suffixes (suggested by Andy Doran <ad@netbsd.org>)
+  (i.e. ".YYYYMMDDHHMMSS" or ".YYYY-MM-DD.HH:MM:SS" or whatever)
 
-     when    The when field can consist of an interval, a specific time, or
-             both.  If the when field is an asterisk (`*') log rotation will
-             depend only on the contents of the size field.  Otherwise, the
-             when field consists of an optional interval in hours, optionally
-             followed by an `@'-sign and a time in a restricted ISO 8601 for-
-             mat.  If a time is specified, the log file will only be trimmed
-             if newsyslog is run within one hour of the specified time.  If an
-             interval is specified, the log file will be trimmed if that many
-             hours have passed since the last rotation.  When both a time and
-             an interval are specified, both conditions must be satisfied for
-             the rotation to take place.
+  FreeBSD will likely use Toshihisa Eto <eto@clave.gr.jp> patch with the
+  format ".YYYMMDD-NN":
 
-             The particular format of the time is
-             [[[[[cc]yy]mm]dd][T[hh[mm[ss]]]]]. Optional date fields default
-             to the appropriate component of the current date; optional time
-             fields default to midnight; hence if today is January 22, 1999,
-             the following date specifications are all equivalent:
+    http://www.clave.gr.jp/~eto/software/newsyslog/newsyslog.diff.gz
 
-                   `19990122T000000'
-                   `990122T000000'
-                   `0122T000000'
-                   `22T000000'
-                   `T000000'
-                   `T0000'
-                   `T00'
-                   `22T'
-                   `T'
-                   `'
-
-             There is no provision for specification of a timezone.  There is
-             little point in specifying an explicit minutes or seconds compo-
-             nent in the current implementation, since the only comparison is
-             `within the hour'.
-
-
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.6 2000/07/07 17:29:41 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.7 2000/12/01 19:58:16 woods Exp $"
