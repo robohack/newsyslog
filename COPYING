@@ -21,46 +21,63 @@ inspect each for any additional copyright terms.
 
 Complete Package and noted individual files:
 
-Copyright (C) 1997,1998,1999 Planix, Inc.
-
-Redistribution of this software in both source and binary forms, with
-or without modification, is permitted provided that all of the
-following conditions are met:
-
-1. Redistributions of source code, either alone or as part of a
-collective work, must retain this entire copyright notice, and the
-following disclaimer, without alteration.  Each containing part of this
-software must either refer to the file containing this notice, or
-include this notice, without alteration, within it.
-
-2. The following acknowledgement must appear in printed documentation
-accompanying a physical distribution of a collective work including
-this software, and must appear in an ASCII file accompanying an
-electronic distribution of a collective work including this software:
-
-    This product includes software developed in part by Planix, Inc.
-
-3. The name of the author may NOT be used to endorse or promote
-products derived from this software without specific prior written
-permission.
-
-4. Altered versions (derivative works) must be plainly marked as
-such, and must not be misrepresented as being the original software.
-This copyright notice, and the following disclaimer, must not be
-removed from any derivative work and must not be changed in any way.
-
-All other rights reserved.
-
-DISCLAIMER:
-
-THIS SOFTWARE IS PROVIDED BY PLANIX, INC. ``AS IS'' AND ANY EXPRESS
-OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
-IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/*
+ * Copyright (c) 2000 Planix, Inc.
+ *
+ * Contact:  Greg A. Woods <woods@planix.com>
+ * 
+ * Redistribution of this software in both source and binary forms, with
+ * or without modification, is permitted provided that all of the
+ * following conditions are met:
+ * 
+ * 1. Redistributions of source code, either alone or as part of a
+ *    collective work, must retain this entire copyright notice, and the
+ *    following disclaimer, without alteration, in each file that
+ *    contains part of this software.
+ * 
+ * 2. Redistributions of this software in binary form, either alone or
+ *    as part of a collective work, must reproduce this entire copyright
+ *    notice, and the following disclaimer, without alteration, in
+ *    either the documentation (as text files in electronic media, or in
+ *    printed matter), and/or any original header files from this
+ *    software as per the previous term, and/or other materials provided
+ *    as part of the distribution.
+ * 
+ * 3. Collective works including this software must also include the
+ *    following acknowledgement, either alone or as part of this entire
+ *    copyright license, in any printed documentation accompanying a
+ *    physical distribution (if there is printed documentation), and in
+ *    a plain text file separate from the archive files (but perhaps
+ *    along with other similar acknowledgments) on any electronic
+ *    medium:
+ * 
+ * 	This product includes software developed in part by Planix, Inc.
+ * 
+ * 4. The name of the author may NOT be used to endorse or promote
+ *    products derived from this software without specific prior written
+ *    permission.  The use of the author's name strictly to meet the
+ *    requirements of the previous terms is not to be considered
+ *    promotion or endorsement under this term.
+ * 
+ * 5. Altered versions (derivative works) must be plainly marked as
+ *    such, and must not be misrepresented as being the original
+ *    software.  This copyright notice, and the following disclaimer,
+ *    must not be removed from any derivative work and must not be
+ *    changed in any way.
+ * 
+ * All other rights are reserved.
+ * 
+ * DISCLAIMER:
+ * 
+ * THIS SOFTWARE IS PROVIDED BY PLANIX, INC. ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+ * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
