@@ -17,7 +17,7 @@ AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 dnl Required Autoconf version.
 AC_PREREQ(2.53)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.38 2002/05/04 19:36:19 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.39 2002/05/10 17:44:31 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -89,7 +89,7 @@ dnl code and account for its absense with a macro.
 dnl Also note that checking for flock() here doesn't guarantee a
 dnl working flock()!
 
-AC_CHECK_FUNCS(bzero flock isnan isinf memset strchr strrchr)
+AC_CHECK_FUNCS(bzero flock isnan isinf memset mkstemp rename strchr strrchr)
 
 AM_WITH_DMALLOC
 
