@@ -9,7 +9,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.8 2002/02/09 21:43:22 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.9 2002/03/01 23:00:54 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -25,12 +25,14 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd February 9, 2002
+.Dd February 10, 2002
 .Dt NEWSYSLOG 8
 .Os BSD
+.\"
 .Sh NAME
 .Nm newsyslog
 .Nd maintain system log files to manageable sizes
+.\"
 .Sh SYNOPSIS
 .Nm newsyslog
 .Oo
@@ -45,6 +47,7 @@
 .Op Fl f Ar config_file
 .Op Fl p Ar syslogd_pidfile
 .Op Ar log_file ...
+.\"
 .Sh DESCRIPTION
 .Nm Newsyslog
 is a program that should be scheduled to run periodically by
@@ -75,9 +78,12 @@ hours may have elapsed since the last log archive.  The granularity of
 is dependent on how often it is scheduled to run by
 .Nm cron .
 Since the program is quite fast, it may be scheduled to run at least
-every hour without any ill effects, which will achieve near the maximum
-granularity for elapsed time specification.  More frequent runs may be
-necessary to catch extremely fast growing log files.
+every hour without any ill effects, which will match the granularity of
+elapsed time specifications.  However more frequent runs may be
+necessary to catch extremely fast growing log files when files are
+trimmed by size, and
+.Nm
+may be run as often as every minute without harm to facilitate this need.
 .Pp
 When starting up, 
 .Nm
@@ -101,6 +107,7 @@ parameters are given then processing is restricted to just the specified
 files.  The control specifications for the specified files are taken
 from the configuration file.  Any files specified which do not
 correspond to entries in the configuration file will be ignored.
+.\"
 .Sh OPTIONS
 The following options can be used with newsyslog:
 .Bl -tag -width 12345678
@@ -201,6 +208,7 @@ Place
 in verbose mode.  In this mode it will print out each log and its
 reasons for either trimming that log or skipping it.
 .El
+.\"
 .Sh FILES
 .Bl -tag -width @syslogd_pidfile@ -compact
 .It Pa @path_config@
@@ -210,6 +218,7 @@ configuration file.
 The default location of the PID for
 .Nm syslogd .
 .El
+.\"
 .Sh "SEE ALSO"
 .Xr compress 1 ,
 .Xr cron 8 ,
@@ -217,6 +226,7 @@ The default location of the PID for
 .Xr newsyslog.conf 5 ,
 .Xr syslog 3 ,
 .Xr syslogd 8
+.\"
 .Sh HISTORY
 Originated at MIT Project Athena.
 .Pp
@@ -235,6 +245,7 @@ This particular version's feature set, and this separate manual page for
 the configuration file, was put together by
 .An Greg A. Woods ,
 Planix, Inc.
+.\"
 .Sh AUTHOR
 .An Theodore Ts'o ,
 MIT Project Athena
@@ -244,14 +255,8 @@ Copyright 1987, Massachusetts Institute of Technology
 This version by
 .An Greg A. Woods ,
 Planix, Inc.
+.\"
 .Sh BUGS
-The 
-.Fl m
-and
-.Fl M
-options do not allow for archiving on intervals other than multiples of
-days (which is only slightly better than the default hourly interval).
-.Pp
 When the
 .Fl m
 and
@@ -259,17 +264,19 @@ and
 options are not in use, and when the time period is not evenly divisible
 by 24, log files that are archived based on a time period will not be
 rolled over at the same time of day.  In fact the roll-over time will
-creep around the clock.
+likely creep around the clock.
 .Pp
-Sends SIGHUP to the associated daemon process for every log file
+.Nm
+sends SIGHUP to the associated daemon process for every log file
 trimmed.  This is done to ensure that it's safe to compress the file
-after it has hopefully been closed but in theory should be optimized to
-only notify daemon(s) once (and of course to batch all the compression
-commands to the end of the process).  This behaviour is normally
-harmless for
+after it has hopefully been closed.  In theory we could try to optimize
+this procedure to only notify the daemon(s) once (and of course to batch
+all the compression commands at the end of the run).  The current
+behaviour is normally harmless for
 .Nm syslogd
 and multiple signals can be avoided for other daemons by ensuring their
-PID files are only listed once and that the
+PID files are only listed once with the last associated log file and
+that the
 .Ar 0
 flag is used to ensure the most recent log file is not immediately
 compressed.
