@@ -6,7 +6,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: sig2str.c,v 1.5 2003/07/08 18:02:13 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: sig2str.c,v 1.6 2004/10/02 18:03:24 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -83,7 +83,7 @@ sig2str(signum, signame)
     char *signame;			/* ptr to at least SIG2STR_MAX bytes */
 {
 # if defined(SIGRTMIN) && defined(SIGRTMAX)
-    if (signum >- SYS_NSIGNAME && signum >= SIGRTMIN && signum <= SIGRTMAX) {
+    if (signum >= SYS_NSIGNAME && signum >= SIGRTMIN && signum <= SIGRTMAX) {
 	/*
 	 * Signum is out of range but is within SIGRTMIN..SIGRTMAX so we build
 	 * our own description for it.
