@@ -7,7 +7,7 @@
 #
 # NOTE: needs a fully POSIX /bin/sh to run properly....
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.5 2001/03/06 02:00:30 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.6 2002/01/04 03:09:34 woods Exp $"
 
 # The following variables can be adjusted as necessary
 #
@@ -60,9 +60,12 @@ cpsed Makefile.BSD ${IMPORTDIR}/Makefile
 cpsed NEWS ${IMPORTDIR}/NEWS
 cpsed README ${IMPORTDIR}/README
 cpsed ToDo ${IMPORTDIR}/ToDo
+cpsed VERSION ${IMPORTDIR}/VERSION
 cpsed newsyslog.8so ${IMPORTDIR}/newsyslog.8
 cpsed newsyslog.conf.5so ${IMPORTDIR}/newsyslog.conf.5so
 cpsed newsyslog.c ${IMPORTDIR}/newsyslog.c
+cpsed sig2str.c ${IMPORTDIR}/sig2str.c
+cpsed str2sig.c ${IMPORTDIR}/str2sig.c
 cpsed newsyslog.conf ${IMPORTDIR}/newsyslog.conf
 cpsed newsyslog2netbsd.sh ${IMPORTDIR}/newsyslog2netbsd.sh
 
