@@ -3,33 +3,38 @@
 #
 # Copyright (C) 1997 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.1 1998/03/15 20:46:03 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.2 1998/03/16 01:31:03 woods Exp $"
 
-PROG= newsyslog
-
-CPPFLAGS+= -DPACKAGE=\"@PACKAGE@\"
-CPPFLAGS+= -DVERSION=\"@VERSION@\"
-CPPFLAGS+= -DHAVE_SYS_WAIT_H
-CPPFLAGS+= -DRETSIGTYPE=void
-CPPFLAGS+= -DSTDC_HEADERS
-CPPFLAGS+= -DTIME_WITH_SYS_TIME
-CPPFLAGS+= -DHAVE_STRCHR
-CPPFLAGS+= -DHAVE_STRDUP
-CPPFLAGS+= -DHAVE_STRERROR
-CPPFLAGS+= -DHAVE_STRTOK
-CPPFLAGS+= -DHAVE_ERRNO_H
-CPPFLAGS+= -DHAVE_STRING_H
-CPPFLAGS+= -DHAVE_SYS_TYPES_H
-CPPFLAGS+= -DHAVE_UNISTD_H
-
+# adjust these as desired:
 CPPFLAGS+= -DPATH_CONFIG=\"/etc/newsyslog.conf\"
 CPPFLAGS+= -DPATH_SYSLOG_PIDFILE=\"/var/run/syslog.pid\"
 CPPFLAGS+= -DPATH_COMPRESS=\"/usr/bin/gzip\"
 CPPFLAGS+= -DCOMPRESS_POSTFIX=\".gz\"
 
-BINOWN= root
 BINDIR?= /usr/bin
+BINOWN= root
 
+# You shouldn't have to change anything below here.
+
+CPPFLAGS+= -DRETSIGTYPE=void
+CPPFLAGS+= -DSTDC_HEADERS
+CPPFLAGS+= -DTIME_WITH_SYS_TIME
+CPPFLAGS+= -DHAVE_ERRNO_H
+CPPFLAGS+= -DHAVE_STRCHR
+CPPFLAGS+= -DHAVE_STRDUP
+CPPFLAGS+= -DHAVE_STRERROR
+CPPFLAGS+= -DHAVE_STRTOK
+CPPFLAGS+= -DHAVE_STRING_H
+CPPFLAGS+= -DHAVE_SYS_TYPES_H
+CPPFLAGS+= -DHAVE_SYS_WAIT_H
+CPPFLAGS+= -DHAVE_UNISTD_H
+
+CPPFLAGS+= -DPACKAGE=\"@PACKAGE@\"
+CPPFLAGS+= -DVERSION=\"@VERSION@\"
+
+PROG= newsyslog
 MAN= newsyslog.conf.5 newsyslog.8
+
+WARNS?= 1
 
 .include <bsd.prog.mk>
