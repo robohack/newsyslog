@@ -4,7 +4,7 @@
 # This file Copyright (C) by Planix, Inc.
 # - see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.13 2002/11/08 23:13:08 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.14 2003/07/08 18:27:13 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
@@ -13,6 +13,28 @@
 
 # (Remember pre-1.4 systems used /var/run/syslog.pid!)
 #
+
+.include <bsd.own.mk>
+
+# are we running in the full NetBSD build environment?
+.if defined(MAKE) && defined(MACHINE) && defined(MACHINE_ARCH) && defined(TOOLDIR) && defined(USETOOLS)
+
+__NetBSD__ = 1
+__GNUC__ = 2
+__GNULD__ = 2
+
+.elif defined(HOSTNAME) && ${HOSTNAME} == "proven"
+
+prefix ?= /usr/pkg
+CC = PATH=/usr/pkg/gcc-ssp/bin:$$PATH /usr/pkg/gcc-ssp/bin/cc
+CFLAGS += -pipe -fstack-protector
+__NetBSD__ = 1
+__GNUC__ = 2
+__GNULD__ = 2
+
+.endif
+
+CPPFLAGS += -DDEBUG
 
 CPPFLAGS+= -DPATH_COMPRESS="\"@PATH_COMPRESS@\""
 CPPFLAGS+= -DCOMPRESS_SUFFIX="\"@COMPRESS_SUFFIX@\""
@@ -27,18 +49,22 @@ CPPFLAGS+= -DHAVE_DECL_STRCHR
 CPPFLAGS+= -DHAVE_DECL_STRDUP
 CPPFLAGS+= -DHAVE_DECL_STRPTIME
 CPPFLAGS+= -DHAVE_DECL_STRRCHR
+CPPFLAGS+= -DHAVE_DECL_STRSIGNAL
 CPPFLAGS+= -DHAVE_DECL_STRTOK
 CPPFLAGS+= -DHAVE_ERRNO_H
 CPPFLAGS+= -DHAVE_FLOCK
+CPPFLAGS+= -DHAVE_MEMORY_H
 CPPFLAGS+= -DHAVE_MEMSET
 CPPFLAGS+= -DHAVE_MKSTEMP
 CPPFLAGS+= -DHAVE_RENAME
 CPPFLAGS+= -DHAVE_STRCHR
 CPPFLAGS+= -DHAVE_STRDUP
 CPPFLAGS+= -DHAVE_STRERROR
+CPPFLAGS+= -DHAVE_STRSIGNAL
 CPPFLAGS+= -DHAVE_STRTOK
 CPPFLAGS+= -DHAVE_STRING_H
 CPPFLAGS+= -DHAVE_SYS_PROC_H
+CPPFLAGS+= -DHAVE_SYS_SIGNAME
 CPPFLAGS+= -DHAVE_SYS_TYPES_H
 CPPFLAGS+= -DHAVE_SYS_WAIT_H
 CPPFLAGS+= -DHAVE_UNISTD_H
@@ -52,8 +78,24 @@ CPPFLAGS+= -DPACKAGE_VERSION="\"@PACKAGE_VERSION@\""
 CPPFLAGS+= -DPACKAGE_STRING="\"@PACKAGE_STRING@\""
 CPPFLAGS+= -DPACKAGE_BUGREPORT="\"@PACKAGE_BUGREPORT@\""
 
-BINDIR?= @bindir@
-BINOWN= root
+prefix ?= @prefix@
+exec_prefix ?= @exec_prefix@
+
+# Note: @\bindir\@ expands to use ${exec_prefix}
+BINDIR ?= @bindir@
+BINOWN ?= root
+
+LDSTATIC = -static
+NOSHARED = YES
+
+.if defined(__NetBSD__)
+MANDIR ?= ${prefix}/share/man
+.elif defined(__FreeBSD__)
+MANDIR ?= ${prefix}/share/man/man
+.else
+# 4.4BSD, including BSD/OS
+MANDIR ?= ${prefix}/share/man/cat
+.endif
 
 PROG= newsyslog
 
@@ -63,23 +105,89 @@ MAN= newsyslog.conf.5 newsyslog.8
 
 CLEANFILES+= newsyslog.conf.5
 
-WARNS?= 1
+# GCC apparently has buggy parameter width detection
+NOGCCERROR = 1
+NO_WERROR = 1
 
-CWARNFLAGS+= -Wall
-CWARNFLAGS+= -Wshadow
-CWARNFLAGS+= -Wswitch
-CWARNFLAGS+= -Wreturn-type
-CWARNFLAGS+= -Wpointer-arith
-CWARNFLAGS+= -Wconversion
-CWARNFLAGS+= -Wimplicit
-CWARNFLAGS+= -Wmissing-declarations
-CWARNFLAGS+= -Wmissing-prototypes
-CWARNFLAGS+= -Wstrict-prototypes
-CWARNFLAGS+= -Wcast-qual
-CWARNFLAGS+= -Wwrite-strings
+# Take control of our own warning flags (WARNS=2 is not yet appropriate)
+WARNS = 0
 
-CWARNFLAGS+= -Wnetbsd-format-audit
-CWARNFLAGS+= -Wno-format-extra-args
+__GNUC__ ?= 1
+.if $(__GNUC__) >= 1
+# no, we're not that pedantic!
+#CWARNFLAGS += -pedantic
+#
+CWARNFLAGS += -W
+CWARNFLAGS += -Wall
+#
+# these aren't always in "-Wall"
+CWARNFLAGS += -Wimplicit
+CWARNFLAGS += -Wreturn-type
+CWARNFLAGS += -Wswitch
+CWARNFLAGS += -Wcomment
+#
+# in addition to -Wall
+CWARNFLAGS += -Wtraditional
+CWARNFLAGS += -Wcast-qual
+# -Wid-clash-LEN is sadly no longer supported in 3.2.2
+CWARNFLAGS += -Wid-clash-30
+CWARNFLAGS += -Wpointer-arith
+CWARNFLAGS += -Wshadow
+#
+# we're not quite ready for full const-ification yet...
+#CWARNFLAGS += -Wwrite-strings
+#
+# this isn't mentioned in 1.42's manual but causes no error
+CWARNFLAGS += -Wstrict-prototypes
+.endif
+
+.if $(__GNUC__) >= 2
+CWARNFLAGS += -Waggregate-return
+CWARNFLAGS += -Wcast-align
+CWARNFLAGS += -Wchar-subscripts
+CWARNFLAGS += -Wconversion
+CWARNFLAGS += -Wmissing-declarations
+CWARNFLAGS += -Wmissing-prototypes
+CWARNFLAGS += -Wno-long-long
+# the rest aren't in the manual, but work on at least 2.9x.x
+CWARNFLAGS += -Wformat-extra-args
+# -Wundef isn't in 2.7.2, but then again if you're still using 2.7.2
+# you may be suffering from far more code generation bugs and other
+# compiler problems than you might know!
+CWARNFLAGS += -Wundef
+CWARNFLAGS += -Wlarger-than-65536
+CWARNFLAGS += -Wbad-function-cast
+.endif
+
+.if $(__GNUC__) >= 3
+# Yuck:  this is broken in at least 3.2.2...
+#CWARNFLAGS += -Wunreachable-code
+.endif
+
+#WFORMAT = 0
+.if defined(__NetBSD__) && defined(__GNUC__) && $(CC) == "cc"
+# Some magic is missing -- I can't get this to shut up....
+#CWARNFLAGS += -Wnetbsd-format-audit
+.elif defined(__FreeBSD__) && defined(__GNUC__)
+# Some magic is missing -- I can't get this to shut up....
+#CWARNFLAGS += -Wnon-const-format
+.endif
+
+.if !defined(__NetBSD__) && !defined(__FreeBSD__)
+CFLAGS += $(CWARNFLAGS)
+.endif
+
+.if defined(__FreeBSD__)
+CFLAGS += $(CPPFLAGS)
+.endif
+
+__GNULD__ ?= 1
+.if $(__GNULD__) >= 1
+LDFLAGS += -W
+LDFLAGS += -Wall
+LDFLAGS += -Wid-clash-30
+LDFLAGS += -Wl,--warn-common
+.endif
 
 SOELIM = soelim
 
@@ -95,3 +203,7 @@ SOELIM = soelim
 	${SOELIM} -I ${.CURDIR} ${.IMPSRC} > ${.TARGET} || (rm -f ${.TARGET}; exit 1)
 
 .include <bsd.prog.mk>
+
+.if !target(clobber)
+clobber: .NOTMAIN cleandir
+.endif
