@@ -1,4 +1,8 @@
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.2 1999/01/17 06:35:38 woods Exp $"
+.\" This file contains changes from the Open Software Foundation.
+.\"
+.\" This file contains changes from Greg A. Woods; Planix, Inc.
+.\"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.3 1999/08/24 23:07:00 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
