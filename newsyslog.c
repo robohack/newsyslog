@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.16 1999/01/17 06:36:46 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.17 1999/01/17 18:01:48 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -613,7 +613,7 @@ do_trim(ent)
 			(void) chown(zfile2, ent->uid, ent->gid); /* XXX error check (non-fatal?) */
 		}
 	}
-	if (!noaction && !(ent->flags & CE_BINARY)) {
+	if (!(ent->flags & CE_BINARY)) {
 		if (note_trim(ent->log))
 			fprintf(stderr, "%s: can't add final status message to log: %s: %s.\n", argv0, ent->log, strerror(errno));
 	}
@@ -637,27 +637,33 @@ do_trim(ent)
 					fprintf(stderr, "%s: can't rename file: %s to %s: %s.\n", argv0, ent->log, file1, strerror(errno));
 			}
 		}
-		if (noaction) {
-			printf("touch %s\n", ent->log);
-			printf("chown %d.%d %s\n", ent->uid, ent->gid, ent->log);
-		} else {
-			fd = creat(ent->log, ent->permissions);
-			if (fd < 0)
-				fprintf(stderr, "%s: can't create new log: %s: %s.\n", argv0, ent->log, strerror(errno));
-			else {
-				if (fchown(fd, ent->uid, ent->gid))
-					fprintf(stderr, "%s: can't chown new log file: %s: %s.\n", argv0, ent->log, strerror(errno));
-				if (close(fd) < 0)
-					fprintf(stderr, "%s: failed to close new log file: %s: %s.\n", argv0, ent->log, strerror(errno));
-			}
-			if (!(ent->flags & CE_BINARY)) {
-#ifdef LOG_TURNOVER_IN_NEW_FILE_TOO
-				if (note_trim(ent->log))
-					fprintf(stderr, "%s: can't add status message to log: %s: %s.\n", argv0, ent->log, strerror(errno));
-#endif
-			}
+	}
+	if (noaction) {
+		printf("touch %s\n", ent->log);
+		printf("chown %d.%d %s\n", ent->uid, ent->gid, ent->log);
+	} else {
+		fd = creat(ent->log, ent->permissions);
+		if (fd < 0)
+			fprintf(stderr, "%s: can't create new log: %s: %s.\n", argv0, ent->log, strerror(errno));
+		else {
+			if (fchown(fd, ent->uid, ent->gid))
+				fprintf(stderr, "%s: can't chown new log file: %s: %s.\n", argv0, ent->log, strerror(errno));
+			if (close(fd) < 0)
+				fprintf(stderr, "%s: failed to close new log file: %s: %s.\n", argv0, ent->log, strerror(errno));
 		}
 	}
+#ifdef LOG_TURNOVER_IN_NEW_FILE_TOO
+	/*
+	 * this is probably a bad idea -- it'll screw up the size test above,
+	 * may use the wrong format entry, etc.; though of course if you want
+	 * to cycle logs regardless of whether they're used, this is one way to
+	 * do it....
+	 */
+	if (!(ent->flags & CE_BINARY)) {
+		if (note_trim(ent->log))
+			fprintf(stderr, "%s: can't add status message to log: %s: %s.\n", argv0, ent->log, strerror(errno));
+	}
+#endif
 	if (noaction)
 		printf("chmod %o %s\n", ent->permissions, ent->log);
 	else {
@@ -727,17 +733,22 @@ note_trim(log)
 {
 	FILE           *fp;
 
-	if ((fp = fopen(log, "a")) == NULL) {
-		fprintf(stderr, "%s: failed to open log to append trim notice: %s: %s.\n",
-			argv0, log, strerror(errno));
-		return (-1);
-	}
-	(void) fprintf(fp, "%s %s newsyslog[%d]: logfile turned over\n",
-		       daytime, hostname, (int) getpid());
-	if (fclose(fp) == EOF) {
-		fprintf(stderr, "%s: failed to close log after appending trim notice: %s: %s.\n",
-			argv0, log, strerror(errno));
-		return (-1);
+	if (noaction) {
+		(void) printf("echo '%s %s newsyslog[%d]: logfile turned over' >> %s\n",
+			      daytime, hostname, (int) getpid(), log);
+	} else {
+		if ((fp = fopen(log, "a")) == NULL) {
+			fprintf(stderr, "%s: failed to open log to append trim notice: %s: %s.\n",
+				argv0, log, strerror(errno));
+			return (-1);
+		}
+		(void) fprintf(fp, "%s %s newsyslog[%d]: logfile turned over\n",
+			       daytime, hostname, (int) getpid());
+		if (fclose(fp) == EOF) {
+			fprintf(stderr, "%s: failed to close log after appending trim notice: %s: %s.\n",
+				argv0, log, strerror(errno));
+			return (-1);
+		}
 	}
 	return (0);
 }
