@@ -70,4 +70,12 @@ suggestions and comments are also encouraged.
 
     http://www.clave.gr.jp/~eto/software/newsyslog/newsyslog.diff.gz
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.7 2000/12/01 19:58:16 woods Exp $"
+- add a '--with-bzip2' option
+
+- add a '--with-compress_options=options' option too
+
+  --with-compress_options=options pass these additional options to
+                                  compress (or gzip or bzip2)
+
+
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.8 2002/01/03 06:45:48 woods Exp $"
