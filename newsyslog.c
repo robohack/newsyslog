@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.47 2003/07/08 17:35:13 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.48 2003/07/08 18:02:13 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -121,84 +121,7 @@ extern int errno;
 # include <linux/tasks.h>		/* PID_MAX? */
 #endif
 
-#ifndef MAXHOSTNAMELEN
-# define MAXHOSTNAMELEN	255
-#endif
-
-#ifndef SIG2STR_MAX
-# define SIG2STR_MAX	32		/* also defined in str2sig.c */
-#endif
-
-#ifndef PATH_MAX
-# ifdef MAXPATHLEN
-#  define PATH_MAX	MAXPATHLEN
-# else
-#  define PATH_MAX	1024
-# endif
-#endif /* PATH_MAX */
-
-#ifndef TRUE				/* XXX should be #undef ??? */
-# define TRUE		1
-#endif
-#ifndef FALSE				/* XXX should be #undef ??? */
-# define FALSE		0
-#endif
-
-/*
- * MIN_PID & MAX_PID are used to sanity-check the pid_file contents.
- */
-#ifndef MIN_PID
-# define MIN_PID	5		/* probably a sane number... */
-#endif
-#ifndef MAX_PID
-# ifdef MAXPID
-#  define MAX_PID	MAXPID
-# else
-#  ifdef PID_MAX
-#   define MAX_PID	PID_MAX
-#  else
-#   ifdef __linux__
-#    define MAX_PID	0x8000		/* probably true for those without linux/tasks.h? */
-#   else
-#    define MAX_PID	30000		/* good enough for real Unix... */
-#   endif
-#  endif
-# endif
-#endif
-
-#define MAX_PERCENTD	10		/* Maximum size of printf("%d", (int));
-					 * XXX should this be based on
-					 * sizeof(int)?  the maximum number of
-					 * ASCII digits in an integer, used in
-					 * calculating pathname buffer sizes
-					 */
-
-#ifndef _PATH_DEVNULL
-# define _PATH_DEVNULL	"/dev/null"
-#endif
-
-/*
- * you can define bzero() in terms of memset(), but not the other way around...
- */
-#ifndef HAVE_BZERO
-# ifndef HAVE_MEMSET
-#  include "ERROR: memset() not avaliable: this is nearly impossible!"
-# endif
-# define bzero(p, l)	memset((p), '0', (l));
-#endif
-
-#ifndef HAVE_STRCHR
-# define strchr		index
-# define strrchr	rindex	/* assume we don't have it either... */
-#endif
-
-#ifndef HAVE_RENAME
-# include "ERROR: rename() not available!"
-#endif
-
-#ifndef HAVE_MKSTEMP
-# include "ERROR: mkstemp() not available!"
-#endif
+#include "newsyslog.h"			/* portability defines */
 
 #define kbytes(size)	(((size) + 1023) >> 10)
 
@@ -364,18 +287,33 @@ main(argc, argv)
 	/* Wait for any children (log compressors) to finish.... */
 	errno = 0;
 	while (((cpid = wait(&cstatus)) != -1) || errno == EINTR) {
-		if (WIFEXITED(cstatus)) {
+		if (cstatus == -1) {
+			fprintf(stderr, "%s: failed to reap child process %d: %s.",
+				argv0, cpid, strerror(errno));
+		} else if (WIFEXITED(cstatus)) {
 			if (verbose || (WEXITSTATUS(cstatus) != 0)) {
 				fprintf(verbose ? stdout : stderr,
 					"%s: child process[%d] exited status %d\n",
 					argv0, cpid, WEXITSTATUS(cstatus));
 			}
 		} else if (WIFSIGNALED(cstatus)) {
-			fprintf(stderr, "%s: child process[%d] died with signal %d\n",
-				argv0, cpid, WTERMSIG(cstatus));
+			char signm[SIG2STR_MAX];
+
+			if (sig2str(WTERMSIG(cstatus), signm) == -1) {
+				sprintf(signm, "#%d", WTERMSIG(cstatus));
+			}
+			fprintf(stderr, "%s: child process[%d] killed by signal SIG%s %s: %s\n",
+				argv0, cpid, signm,
+				WCOREDUMP(cstatus) ? "and dumped core" : "(no core)",
+				strsignal(WTERMSIG(cstatus)));
 		} else if (WIFSTOPPED(cstatus)) {
-			fprintf(stderr, "%s: child process[%d] stopped with signal %d, continuing...\n",
-				argv0, cpid, WSTOPSIG(cstatus));
+			char signm[SIG2STR_MAX];
+
+			if (sig2str(WSTOPSIG(cstatus), signm) == -1) {
+				sprintf(signm, "#%d", WSTOPSIG(cstatus));
+			}
+			fprintf(stderr, "%s: child process[%d] stopped with signal SIG%s (%s), continuing...\n",
+				argv0, cpid, signm, strsignal(WSTOPSIG(cstatus)));
 			kill(cpid, SIGCONT);
 		} else {
 			fprintf(stderr, "%s: child process[%d] died with bad status \\0%o\n",
@@ -1082,8 +1020,8 @@ static void
 do_trim(ent)
 	struct conf_entry *ent;
 {
-	char            file1[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAX_PERCENTD - 1];
-	char            file2[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAX_PERCENTD - 1];
+	char            file1[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAXINT_B10_DIGITS - 1];
+	char            file2[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAXINT_B10_DIGITS - 1];
 	char            zfile1[PATH_MAX];
 	char            zfile2[PATH_MAX];
 	char            newlog[PATH_MAX];
