@@ -1,7 +1,8 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.9 2002/01/04 00:42:15 woods Exp $";
+#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.10 2002/02/09 21:44:07 woods Exp $";
 
 /*
- * Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc. - All rights reserved.
+ * Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
+ * - See COPYING for details.
  */
 
 @TOP@
@@ -43,27 +44,6 @@
 #undef SYS_SIGNAME_DECLARED
 
 @BOTTOM@
-
-/* Define if you have a sig2str() function declaration in <signal.h>.  */
-#define HAVE_DECL_SIG2STR	0
-
-/* Define if you have a str2sig() function declaration in <signal.h>.  */
-#define HAVE_DECL_STR2SIG	0
-
-/* Define if you have a strchr() function declaration in <string[s].h>.  */
-#define HAVE_DECL_STRCHR	0
-
-/* Define if you have a strdup() function declaration in <string[s].h>.  */
-#define HAVE_DECL_STRDUP	0
-
-/* Define if you have a strptime() function declaration in <time.h>.  */
-#define HAVE_DECL_STRPTIME	0
-
-/* Define if you have a strrchr() function declaration in <string[s].h>.  */
-#define HAVE_DECL_STRRCHR	0
-
-/* Define if you have a strtok() function declaration in <string[s].h>.  */
-#define HAVE_DECL_STRTOK	0
 
 /*
  * End of this file
