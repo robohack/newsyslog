@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.10 2002/03/01 23:00:07 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.11 2002/05/10 18:43:53 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -22,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd February 9, 2002
+.Dd May 10, 2002
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -210,11 +210,14 @@ The
 .Ar D
 flag prevents the creation of the new empty log file.  This can be
 useful to avoid cluttering log directories with files that'll never be
-used (though this flag should probably be avoided with daemons like
+used, or when a daemon creates its own log file(s) on demand (failure to
+use this flag in the latter case may result in spurious warnings should
+.Nm newsyslog
+and the daemon both try to create the log file).  Note though this flag
+should not be used with daemons like
 .Nm syslogd
-which require the log file to exist prior to when they start); or when
-the owner of the file writes any special start records to a new log file
-that it creates.
+which require the log file to exist prior to when they start and prior
+to when they're signalled to re-open their log file(s).
 .It Sy Z
 The
 .Ar Z
