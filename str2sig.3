@@ -1,4 +1,4 @@
-.Dd January 3, 2002
+.Dd June 6, 2003
 .Dt str2sig 3
 .Os
 .Sh NAME
@@ -78,3 +78,25 @@ corresponds to a valid signal number; otherwise, it returns \-1.
 and
 .Fn str2sig
 first appeared in SunOS 5.4.
+.Pp
+This implementation was written by
+.An Greg A. Woods ,
+Planix, Inc.
+.Sh BUGS
+On many systems there are several signal symbols defined with the same
+name, with the most common examples being:
+.Dv SIGABRT
+and
+.Dv SIGIOT ,
+.Dv SIGCLD
+and
+.Dv SIGCHLD ,
+as well as
+.Dv SIGPOLL
+and
+.Dv SIGIO .
+This implementation of
+.Fn str2sig
+can only find those names that are given in in the
+.Va sys_signame
+array.
