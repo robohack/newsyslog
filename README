@@ -90,7 +90,20 @@ Please see the file "INSTALL" for overall instructions on how to
 configure and build this package using the GNU Autoconf generated
 "configure" script.
 
-In general you need only run "./configure && make && make install"
+In general you need only run the following command sequence
+
+	./configure && make && make install
+
+On systems without the "mandoc" macros (or without "nroff"), you can
+still install and read the distributed 'cat'-table manual pages.
+For example if you get an error during the first "make" that says
+something like "nroff: Cannot find library -mandoc", or "nroff: not
+found", run the following command before you run "make install":
+
+	make copy-dist-catman
+
+
+CUSTOM CONFIGURATION OPTIONS
 
 You may choose to use GNU Zip in preference to the default compress
 program as the archive compression too with:
@@ -102,7 +115,7 @@ option and now wish to add it you will have to remove ./config.cache
 first to prevent the wrong program pathname from being used.
 
 Beware that you may need to specify exactly where your syslogd keeps
-it's pid-file.  This can be done either by specifying an alternate
+it's PID file.  This can be done either by specifying an alternate
 directory prefix to ./configure in this way ("/run/syslog.pid" will be
 appended to the directory name given):
 
@@ -143,4 +156,4 @@ or:
 						<woods@weird.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.7 2001/03/06 02:00:56 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.8 2001/03/06 02:45:34 woods Exp $"
