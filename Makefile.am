@@ -3,7 +3,7 @@
 #
 # Copyright (C) 1997 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.5 1998/03/16 01:28:22 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.6 1998/03/16 01:47:15 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
 MAINT_CHARSET = latin1
@@ -13,7 +13,7 @@ bin_PROGRAMS = newsyslog
 man_MANS = newsyslog.conf.5 newsyslog.8
 
 catman_MANS = newsyslog.conf.cat5 newsyslog.cat8
-soelim_MANS = newsyslog.conf.cat5so
+soelim_MANS = newsyslog.conf.5so
 
 # things that exist in the repository
 DIST_OTHER = README.developers ToDo
