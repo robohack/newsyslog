@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.43 2002/05/10 18:36:06 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.44 2002/08/23 04:56:46 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -114,6 +114,13 @@ extern int errno;
 # endif /* !errno */
 #endif /* HAVE_ERRNO_H */
 
+#ifdef HAVE_LINUX_THREADS_H
+# include <linux/threads.h>		/* PID_MAX? */
+#endif
+#ifdef HAVE_LINUX_TASKS_H
+# include <linux/tasks.h>		/* PID_MAX? */
+#endif
+
 #ifndef MAXHOSTNAMELEN
 # define MAXHOSTNAMELEN	255
 #endif
@@ -150,7 +157,11 @@ extern int errno;
 #  ifdef PID_MAX
 #   define MAX_PID	PID_MAX
 #  else
-#   define MAX_PID	30000		/* good enough for real Unix... */
+#   ifdef __linux__
+#    define MAX_PID	0x8000		/* probably true for those without linux/tasks.h? */
+#   else
+#    define MAX_PID	30000		/* good enough for real Unix... */
+#   endif
 #  endif
 # endif
 #endif
