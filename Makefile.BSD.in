@@ -4,7 +4,7 @@
 # This file Copyright (C) by Planix, Inc.
 # - see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.14 2003/07/08 18:27:13 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.15 2003/08/02 17:29:52 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
@@ -202,7 +202,9 @@ SOELIM = soelim
 	@rm -f ${.TARGET}
 	${SOELIM} -I ${.CURDIR} ${.IMPSRC} > ${.TARGET} || (rm -f ${.TARGET}; exit 1)
 
-.include <bsd.prog.mk>
+.ifndef HOSTPROG
+. include <bsd.prog.mk>
+.endif
 
 .if !target(clobber)
 clobber: .NOTMAIN cleandir
