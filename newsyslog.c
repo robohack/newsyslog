@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.41 2002/05/04 19:36:19 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.42 2002/05/10 18:06:09 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -138,7 +138,7 @@ extern int errno;
  * MIN_PID & MAX_PID are used to sanity-check the pid_file contents.
  */
 #ifndef MIN_PID
-# define MIN_PID	5
+# define MIN_PID	5		/* probably a sane number... */
 #endif
 #ifndef MAX_PID
 # ifdef MAXPID
@@ -147,12 +147,13 @@ extern int errno;
 #  ifdef PID_MAX
 #   define MAX_PID	PID_MAX
 #  else
-#   define MAX_PID	30000			/* good enough for real Unix... */
+#   define MAX_PID	30000		/* good enough for real Unix... */
 #  endif
 # endif
 #endif
 
-#define MAX_PERCENTD	10		/* XXX should this be based on
+#define MAX_PERCENTD	10		/* Maximum size of printf("%d", (int));
+					 * XXX should this be based on
 					 * sizeof(int)?  the maximum number of
 					 * ASCII digits in an integer, used in
 					 * calculating pathname buffer sizes
@@ -174,7 +175,15 @@ extern int errno;
 
 #ifndef HAVE_STRCHR
 # define strchr		index
-# define strrchr	rindex
+# define strrchr	rindex	/* assume we don't have it either... */
+#endif
+
+#ifndef HAVE_RENAME
+# include "ERROR: rename() not available!"
+#endif
+
+#ifndef HAVE_MKSTEMP
+# include "ERROR: mkstemp() not available!"
 #endif
 
 #define kbytes(size)	(((size) + 1023) >> 10)
@@ -187,6 +196,10 @@ extern int errno;
 #  define DEV_BSHIFT	9		/* log2(DEV_BSIZE) */
 # endif
 # define dbtob(x)	(((unsigned long) (x)) << DEV_BSHIFT)
+#endif
+
+#ifndef MAX_FORK_RETRIES
+# define MAX_FORK_RETRIES	5	/* a reasonable effort.... */
 #endif
 
 #define CE_COMPACT	001	/* Compact the achived log files */
@@ -209,7 +222,7 @@ struct conf_entry {
 	char           *pid_file;	/* PID file */
 	uid_t           uid;		/* Owner of log */
 	uid_t           gid;		/* Group of log */
-	int             numlogs;	/* Number of logs to keep */
+	unsigned int    numlogs;	/* Number of logs to keep */
 	long            size;		/* maximum log size in KB */
 	int             hours;		/* maximum hours between log trimming */
 	time_t          trim_at;	/* time to trim log at */
@@ -227,7 +240,8 @@ const char      bugreport[] = PACKAGE_BUGREPORT;
 
 int             verbose = 0;	/* Print out what's going on */
 int             needroot = 1;	/* Root privs are necessary for default conf */
-int             noaction = 0;	/* Don't do anything, just show it */
+int             show_script = 0;/* Show sh-script on stdout instead of doing the job */
+int             debug = 0;	/* Don't do anything, don't show script (use with -v) */
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
 int             run_interval = -1;/* interval in minutes at which we are run by cron */
 int             force = 0;	/* force all files to be trimmed */
@@ -291,6 +305,8 @@ main(argc, argv)
 	char           *argv[];
 {
 	char           *s;
+	int             cstatus;
+	int             cpid;
 	struct conf_entry *p, *q;
 
 	timenow = time((time_t *) 0);
@@ -311,7 +327,7 @@ main(argc, argv)
 	daytime = ctime(&timenow) + 4;		/* trim the day name off */
 	daytime[15] = '\0';			/* trim the year off too */
 
-	if (needroot && getuid() && geteuid()) {
+	if (needroot && getuid()) {
 		fprintf(stderr, "%s: you do not have root privileges\n", argv0);
 		exit(1);
 	}
@@ -323,16 +339,48 @@ main(argc, argv)
 	while (p) {
 		do_entry(p);
 		p = p->next;
+		if (q->log)
+			free(q->log);
+		if (q->pid_file)
+			free(q->pid_file);
 		free((void *) q);
 		q = p;
 	}
-	return (0);
+
+	/* Wait for any children (log compressors) to finish.... */
+	errno = 0;
+	while (((cpid = wait(&cstatus)) != -1) || errno == EINTR) {
+		if (WIFEXITED(cstatus)) {
+			if (verbose || (WEXITSTATUS(cstatus) != 0)) {
+				fprintf(verbose ? stdout : stderr,
+					"%s: child process[%d] exited status %d\n",
+					argv0, cpid, WEXITSTATUS(cstatus));
+			}
+		} else if (WIFSIGNALED(cstatus)) {
+			fprintf(stderr, "%s: child process[%d] died with signal %d\n",
+				argv0, cpid, WTERMSIG(cstatus));
+		} else if (WIFSTOPPED(cstatus)) {
+			fprintf(stderr, "%s: child process[%d] stopped with signal %d, continuing...\n",
+				argv0, cpid, WSTOPSIG(cstatus));
+			kill(cpid, SIGCONT);
+		} else {
+			fprintf(stderr, "%s: child process[%d] died with bad status \\0%o\n",
+				argv0, cpid, cstatus);
+		}
+		errno = 0;
+	}
+	if (errno != ECHILD) {
+		fprintf(stderr, "%s: wait() failed: %s\n", argv0, strerror(errno));
+		exit(1);
+	}
+
+	exit (0);
+	/* NOTREACHED */
 }
 
 static void
 do_entry(ent)
 	struct conf_entry *ent;
-
 {
 	int             we_trim_it = 0;
 	long            size;			/* in kbytes */
@@ -340,7 +388,7 @@ do_entry(ent)
 
 	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 	if (verbose) {
-		printf("%s <#%d,%s%s%s%s%s>: ", ent->log, ent->numlogs,
+		printf("====> %s <#%u,%s%s%s%s%s>: ", ent->log, ent->numlogs,
 		       (ent->flags & CE_NOCREATE) ? "C" : "",
 		       (ent->flags & CE_COMPACT) ? "Z" : "",
 		       (ent->flags & CE_BINARY) ? "b" : "",
@@ -368,7 +416,7 @@ do_entry(ent)
 		if (ent->hours > 0) {
 			modtime = check_old_log_age(ent);
 			if (verbose)
-				printf(" age (hr): %d [allow %d] ", modtime, ent->hours);
+				printf("age (hr): %d [allow %d] ", modtime, ent->hours);
 			/* always trim if timestamp FUBAR */
 			if (modtime >= ent->hours || modtime < 0)
 				we_trim_it = 1;
@@ -412,16 +460,12 @@ do_entry(ent)
 	}
 	if (we_trim_it) {
 		if (verbose)
-			printf("--> trimming log...\n");
+			puts(": trimming log...");
 		do_trim(ent);
 	} else {
 		if (verbose)
-			printf("--> skipping.\n");
+			putchar('\n');
 	}
-	if (ent->log)
-		free(ent->log);
-	if (ent->pid_file)
-		free(ent->pid_file);
 
 	return;
 }
@@ -442,7 +486,7 @@ parse_options(argc, argv)
 
 	optind = 1;		/* Start options parsing */
 	opterr = 0;
-	while ((c = getopt(argc, argv, "FMT:Vf:hi:mnp:rt:v")) != -1) {
+	while ((c = getopt(argc, argv, "FMT:Vdf:hi:mnp:rt:v")) != -1) {
 		switch (c) {
 		case 'F':
 			force = 1;
@@ -477,12 +521,16 @@ parse_options(argc, argv)
 			if (timenow < time((time_t *) NULL))
 				timenow += 24*60*60; /* go to tomorrow */
 			if (verbose)
-				printf("%s: have adjusted timenow to: %s", argv0, ctime(&timenow));
+				printf("----> have adjusted timenow to: %s", ctime(&timenow));
 			break;
 		case 'V':
 			printf("%s: version %s-%s.\n", argv0, package, version);
 			exit(0);
 			/* NOTREACHED */
+		case 'd':
+			debug++;
+			needroot = 0;	/* don't need root */
+			break;
 		case 'f':
 			config_file = optarg;
 			break;
@@ -516,8 +564,8 @@ parse_options(argc, argv)
 			domidnight = 1;	/* the midnight run */
 			break;
 		case 'n':
-			noaction++;
-			needroot = 0;	/* don't need needroot */
+			show_script++;
+			needroot = 0;	/* don't need root */
 			break;
 		case 'p':
 			syslogd_pidfile = optarg;
@@ -541,7 +589,7 @@ parse_options(argc, argv)
 	return;
 }
 
-#define USAGE_FMT	"Usage: %s [-V] [-T hh:mm] [-M|-m|-i interval] [-Fnrv] [-f config-file] [-p syslogd-pidfile] [file ...]\n"
+#define USAGE_FMT	"Usage: %s [-V] [-T hh:mm] [-M|-m|-i interval] [-Fdnrv] [-f config-file] [-p syslogd-pidfile] [file ...]\n"
 
 static void
 usage()
@@ -562,14 +610,15 @@ help()
 	printf("	-M		select normal periodic processing [opposite of -m]\n");
 	printf("	-T hh:mm	adjust current time\n");
 	printf("	-V		display version and exit\n");
+	printf("	-d		don't do anything, just debug (repeat as desired)\n");
 	printf("	-f config_fn	configuration file [default: %s]\n", config_file);
 	printf("	-h		print this help and exit\n");
 	printf("	-i minutes	specify how often %s is invoked\n", argv0);
 	printf("	-m		select 'midnight' processing [opposite of -M]\n");
-	printf("	-n		don't actually do anything -- just show script\n");
+	printf("	-n		show sh-script on stdout instead of doing work\n");
 	printf("	-p syslogd-pid	syslogd PID file [default: %s]\n", syslogd_pidfile);
 	printf("	-r		remove restriction to superuser\n");
-	printf("	-v		show verbose (debugging) messages\n");
+	printf("	-v		show verbose explanitory messages\n");
 	printf("\n");
 	printf("	file		only trim specified file(s)\n");
 	printf("\n");
@@ -606,7 +655,7 @@ parse_file(files )
 		fp = stdin;
 		config_file = "STDIN";
 	} else {
-		int	fd;
+		int             fd;
 
 #ifdef HAVE_FLOCK
 		/*
@@ -680,7 +729,7 @@ parse_file(files )
 			}
 			if (!*p) {
 				if (verbose)
-					printf("skipping %s...\n", q);
+					printf("skipping over %s...\n", q);
 				continue;
 			}
 		}
@@ -783,7 +832,7 @@ parse_file(files )
 			exit(1);
 		}
 		*parse = '\0';
-		if (!sscanf(q, "%d", &working->numlogs)) {
+		if (!sscanf(q, "%u", &working->numlogs)) {
 			fprintf(stderr,
 				"%s: error in config file; bad number: '%s', in line\n%6d:\t'%s'\n",
 				argv0,
@@ -1001,10 +1050,11 @@ missing_field(p, lnum, errline)
 }
 
 
-
 /*
- * Do the actual aging and trimming of log files.  Note that errors in this
- * stage are not fatal.
+ * Do the actual aging and trimming of log files, notify the daemon if
+ * necessary, and compress any old file that needs compression.
+ *
+ * Note that errors in this stage are not fatal.
  */
 static void
 do_trim(ent)
@@ -1014,13 +1064,17 @@ do_trim(ent)
 	char            file2[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAX_PERCENTD - 1];
 	char            zfile1[PATH_MAX];
 	char            zfile2[PATH_MAX];
+	char            newlog[PATH_MAX];
 	int             log_exists;
-	int             notified;
-	int             need_notification;
         int             fd;
-	int             o_numlogs;
+	unsigned int    numlogs;
 	struct stat     st;
-	pid_t           pid;
+	pid_t           pid = 0;
+	int             might_need_newlog = 0;
+	int             need_compress = 0;
+	int             might_timestamp = 0;
+	int             notified = 0;		/* we could combine these... */
+	int             need_notification= 0;	/* ... but this reads better */
 
 	/*
 	 * first learn about the existing log file, if it exists
@@ -1046,61 +1100,99 @@ do_trim(ent)
 		log_exists = TRUE;
 		/*
 		 * preserve the file's UID/GID if none specified in the config.
-		 * Note that we also "clobber" the ownerships of aged files too.
+		 * Note that we also "clobber" the ownerships of aged files too
+		 * under the assumption that they should be "protected" in the
+		 * same way as the current file.
 		 */
 		if (ent->uid == NO_ID)
 			ent->uid = st.st_uid;
 		if (ent->gid == NO_ID)
 			ent->gid = st.st_gid;
 	}
-	/* Remove oldest log */
-	if (snprintf(file1, sizeof(file1), "%s.%d", ent->log, ent->numlogs) >= sizeof(file1)) {
+	/* prepare the temporary name for a newly created log file */
+	if (snprintf(newlog, sizeof(file1), "%s.XXXXXX", ent->log) >= sizeof(file1)) {
 		fprintf(stderr, "%s: filename too long: %s.\n", argv0, ent->log);
 		return;
 	}
+	/* form the uncompressed name of the oldest expected log */
+	if (snprintf(file1, sizeof(file1), "%s.%u", ent->log, ent->numlogs) >= sizeof(file1)) {
+		fprintf(stderr, "%s: filename too long: %s.\n", argv0, ent->log);
+		return;
+	}
+	/* form the compressed name of the oldest expected log */
 	(void) strcpy(zfile1, file1);
 	(void) strcat(zfile1, COMPRESS_SUFFIX);
 
-	if (noaction) {
+	/*
+	 * Remove the oldest expected log, compressed or not.
+	 *
+	 * We don't really care if that last log exists or not... we just need
+	 * to remove it if it does, so we explicitly ignore any errors.
+	 */
+	if (verbose && debug > 1)
+		printf("--> removing oldest (expected) log: %s and/or %s\n", file1, zfile1);
+	if (show_script) {
 		printf("rm -f %s\n", file1);
 		printf("rm -f %s\n", zfile1);
-	} else {
-		/* don't really care if the last in rotation exists or not */
+	} else if (!debug) {
 		(void) unlink(file1);
 		(void) unlink(zfile1);
 	}
-	/* Move down log files */
-	o_numlogs = ent->numlogs;	/* preserve */
-	while (ent->numlogs--) {
+	numlogs = ent->numlogs;		      /* we don't modify ent's contents */
+	/*
+	 * Now move backwards down the list of archived log files, incrementing
+	 * their generation number by renaming the previous one to the next one
+	 * in reverse order.  We don't care if the log is compressed or not,
+	 * but we only expect there to be either an uncompressed copy, or a
+	 * compressed copy, not both.  This allows an admin to uncompress a
+	 * file and look at it in place, and then later recompress it, so long
+	 * as the manual (un)compress isn't running when the next rotation
+	 * happens.
+	 */
+	if (verbose && debug <= 2)
+		printf("--> rotating archived logs up by one...\n");
+	while (numlogs--) {
 		(void) strcpy(file2, file1);
-		(void) sprintf(file1, "%s.%d", ent->log, ent->numlogs); /* sprintf() OK here */
-		(void) strcpy(zfile1, file1);
+		(void) sprintf(file1, "%s.%u", ent->log, numlogs); /* sprintf() OK here */
+		(void) strcpy(zfile1, file1);	/* strcpy() OK here */
 		(void) strcpy(zfile2, file2);
-		if (stat(file1, &st) < 0) {
-			(void) strcat(zfile1, COMPRESS_SUFFIX);
+		if (stat(file1, &st) < 0) {	/* is the file uncompressed? */
+			(void) strcat(zfile1, COMPRESS_SUFFIX);	/* strcat() OK too */
 			(void) strcat(zfile2, COMPRESS_SUFFIX);
-			if (stat(zfile1, &st) < 0)
+			if (debug <= 4 && stat(zfile1, &st) < 0)
 				continue; /* not this many aged files yet... */
 		}
-		if (noaction) {
+		if ((ent->flags & CE_COMPACT) && (numlogs == (ent->flags & CE_PLAIN0) ? 1 : 0))
+			need_compress = 1;	/* expect to compress 'file1'... */
+		if (verbose && debug > 2)
+			printf("-> renaming %s to %s\n", zfile1, zfile2);
+		if (show_script)
 			printf("mv %s %s\n", zfile1, zfile2);
+		if (verbose && debug > 3) {
+			printf("-> forcing owner/perms of %s to %d:%d/0%o\n",
+			       zfile2, ent->uid, ent->gid, ent->permissions);
+		}
+		if (show_script) {
 			printf("chmod %o %s\n", ent->permissions, zfile2);
 			printf("chown %d:%d %s\n",
 			       ent->uid, ent->gid, zfile2);
-		} else {
+		} else if (!debug) {
 			(void) rename(zfile1, zfile2); /* XXX error check (non-fatal?) */
 			(void) chmod(zfile2, ent->permissions); /* XXX error check (non-fatal?) */
 			(void) chown(zfile2, ent->uid, ent->gid); /* XXX error check (non-fatal?) */
 		}
 	}
 	if (log_exists && st.st_size > 0) {
+		might_need_newlog = 1;
 		/*
 		 * are we keeping any aged files at all?
 		 */
-		if (o_numlogs) {
-			if (noaction)
+		if (ent->numlogs) {
+			if (verbose && debug > 2)
+				printf("-> renaming %s to %s\n", ent->log, file1);
+			if (show_script)
 				printf("mv %s %s\n", ent->log, file1);
-			else {
+			else if (!debug) {
 				if (rename(ent->log, file1) < 0) {
 					fprintf(stderr,
 						"%s: can't rename file: %s to %s: %s.\n",
@@ -1110,22 +1202,16 @@ do_trim(ent)
 						strerror(errno));
 				}
 			}
-			if (!(ent->flags & CE_BINARY)) {
-				if (note_trim(file1)) {
-					fprintf(stderr,
-						"%s: can't add final status message to log: %s: %s.\n",
-						argv0,
-						file1,
-						strerror(errno));
-				}
-			}
+			might_timestamp = 1;
 		} else {
 			/*
 			 * if not just remove the current file...
 			 */
-			if (noaction)
+			if (verbose)
+				printf("--> not keeping multiples archives, just removing %s\n", ent->log);
+			if (show_script)
 				printf("rm %s\n", ent->log);
-			else {
+			else if (!debug) {
 				if (unlink(ent->log) < 0) {
 					fprintf(stderr,
 						"%s: can't unlink file: %s: %s.\n",
@@ -1136,85 +1222,104 @@ do_trim(ent)
 			}
 		}
 	}
-	if (noaction && !(ent->flags & CE_NOCREATE)) {
-		printf("touch %s\n", ent->log);
-		printf("chown %d:%d %s\n", ent->uid, ent->gid, ent->log);
-	} else if (!(ent->flags & CE_NOCREATE)) {
-		fd = creat(ent->log, ent->permissions);
-		if (fd < 0) {
-			fprintf(stderr,
-				"%s: can't create new log: %s: %s.\n",
-				argv0,
-				ent->log,
-				strerror(errno));
-		} else {
-			if (fchown(fd, ent->uid, ent->gid)) {
+	/* logic is split here to keep indentation sane.... */
+	if (might_need_newlog && !(ent->flags & CE_NOCREATE)) {
+		if (verbose && debug > 1) {
+			printf("--> creating new %s as %d:%d, mode 0%o\n",
+			       ent->log, ent->uid, ent->gid, ent->permissions);
+		}
+		if (show_script) {
+			printf("newlog=$(mktemp %s)", newlog);
+			printf("touch $newlog\n");
+			printf("chown %d:%d $newlog\n", ent->uid, ent->gid);
+			printf("chmod 0%o $newlog\n", ent->permissions);
+			printf("mv $newlog %s\n", ent->log);
+		} else if (!debug && !(ent->flags & CE_NOCREATE)) {
+			if ((fd = mkstemp(newlog)) < 0) {
 				fprintf(stderr,
-					"%s: can't chown new log file: %s: %s.\n",
+					"%s: can't create new log: %s: %s.\n",
 					argv0,
-					ent->log,
+					newlog,
 					strerror(errno));
-			}
-			if (close(fd) < 0) {
+			} else if (fchown(fd, ent->uid, ent->gid)) {
+				fprintf(stderr,
+					"%s: can't chown %d:%d new log file: %s: %s.\n",
+					argv0,
+					ent->uid, ent->gid,
+					newlog,
+					strerror(errno));
+			} else if (fchmod(fd, ent->permissions)) {
+				fprintf(stderr,
+					"%s: can't chmod 0%o new log file: %s: %s.\n",
+					argv0,
+					ent->permissions,
+					newlog,
+					strerror(errno));
+			} else if (close(fd) < 0) {
 				fprintf(stderr,
 					"%s: failed to close new log file: %s: %s.\n",
 					argv0,
+					newlog,
+					strerror(errno));
+			} else if (rename(newlog, ent->log)) {
+				fprintf(stderr,
+					"%s: failed to rename new log file: %s -> %s: %s.\n",
+					argv0,
+					newlog,
 					ent->log,
 					strerror(errno));
 			}
 		}
-	}
 #ifdef LOG_TURNOVER_IN_NEW_FILE_TOO
-	/*
-	 * this is probably a bad idea -- it'll screw up the size test above,
-	 * may use the wrong format entry, etc.; though of course if you want
-	 * to cycle logs regardless of whether they're used, this is one way to
-	 * do it....
-	 */
-	if (!(ent->flags & CE_BINARY) && (ent->flags & CE_NOCREATE)) {
-		if (note_trim(ent->log)) {
-			fprintf(stderr,
-				"%s: can't add status message to log: %s: %s.\n",
-				argv0,
-				ent->log,
-				strerror(errno));
+		/*
+		 * this is probably a bad idea -- it'll screw up the size test
+		 * above, may use the wrong format entry, etc.; though of
+		 * course if you want to cycle logs regardless of whether
+		 * they're used, this is one way to do it....
+		 *
+		 * Note also this might not end up the first entry since it
+		 * happens after the temporary new file has been renamed to
+		 * become the live log file.
+		 */
+		if (!(ent->flags & CE_BINARY) && (ent->flags & CE_NOCREATE)) {
+			if (note_trim(ent->log)) {
+				fprintf(stderr,
+					"%s: can't add status message to log: %s: %s.\n",
+					argv0,
+					ent->log,
+					strerror(errno));
+			}
 		}
-	}
 #endif
-	if (noaction && !(ent->flags & CE_NOCREATE))
-		printf("chmod %o %s\n", ent->permissions, ent->log);
-	else if (!(ent->flags & CE_NOCREATE)) {
-		if (chmod(ent->log, ent->permissions) < 0) {
-			fprintf(stderr,
-				"%s: can't chmod log file %s: %s.\n",
-				argv0,
-				ent->log,
-				strerror(errno));
-		}
 	}
-	pid = 0;
-	need_notification = 0;			/* we could combine these... */
-	notified = 0;				/* ... but this reads better */
-	if (ent->pid_file && !(ent->flags & CE_NOSIGNAL)) {
+	if (might_need_newlog && !(ent->flags & CE_NOSIGNAL)) {
 		need_notification = 1;
-		pid = get_pid_file(ent->pid_file);
-	} else if (!(ent->flags & CE_NOSIGNAL)) {
-		need_notification = 1;
-		pid = syslogd_pid;
+		if (ent->pid_file)
+			pid = get_pid_file(ent->pid_file);
+		else
+			pid = syslogd_pid;
 	}
 	if (pid) { /* && ent->signum */
-		char signame[SIG2STR_MAX];
+		char            signame[SIG2STR_MAX];
 
 		if (sig2str(ent->signum, signame) == -1)
 			strcpy(signame, "(not a signal)");
-		if (noaction) {
-			notified = 1;
-			if (verbose)
+		if (verbose && debug > 1) {
+			printf("--> sending SIG%s to process in %s, %d\n",
+			       signame,
+			       ent->pid_file ? ent->pid_file : syslogd_pidfile,
+			       (int) pid);
+		}
+		if (show_script || debug) {
+			notified = 1;		/* pretend it works.... */
+			if (show_script)
 				printf("kill -%s %d\n", signame, (int) pid);
-			else
-				printf("kill -%d %d\n", ent->signum, (int) pid);
-			if (!(ent->flags & CE_PLAIN0))
-				puts("sleep 5");
+			if (!(ent->flags & CE_PLAIN0)) {
+				if (verbose && debug > 1)
+					puts("--> small pause now to allow daemon to close log.");
+				if (show_script)
+					puts("sleep 5");
+			}
 		} else if (kill(pid, ent->signum)) {
 			fprintf(stderr,
 				"%s: cannot notify daemon with SIG%s, pid %d: %s\n.",
@@ -1224,18 +1329,18 @@ do_trim(ent)
 				strerror(errno));
 		} else {
 			notified = 1;
-			if (verbose)
-				printf("daemon with pid %d notified with SIG%s\n", (int) pid, signame);
-			if (!(ent->flags & CE_PLAIN0)) {
+			if ((ent->flags & CE_COMPACT) && !(ent->flags & CE_PLAIN0)) {
 				if (verbose)
-					printf("small pause now to allow daemon to close log... ");
-				sleep(5);
+					printf("-> small pause now to allow daemon to close log... ");
+				(void) sleep(5);
 				if (verbose)
 					puts("done.");
 			}
 		}
 	}
-	if ((ent->flags & CE_COMPACT)) {
+	if (might_timestamp && !(ent->flags & CE_BINARY))
+		note_trim(file1);
+	if (ent->flags & CE_COMPACT) {
 		int             rt;
 
 		/* sprintf() is OK here */
@@ -1245,20 +1350,26 @@ do_trim(ent)
 			(ent->flags & CE_PLAIN0) ? "1" : "0");
 		if (!(ent->flags & CE_PLAIN0) && need_notification && !notified) {
 			fprintf(stderr,
-				"%s: %s not compressed because daemon not notified.\n",
+				"%s: %s (level zero) not compressed because daemon not notified.\n",
+				argv0, zfile1);
+		} else if (debug || show_script ||
+			   ((rt = stat(zfile1, &st)) >= 0 && (st.st_size > 0))) {
+			/*
+			 * We'll compress the file if it's there to be
+			 * compressed even if we didn't just do the rename
+			 * (i.e. even if not need_compress)....
+			 */
+			compress_log(zfile1);	/* do the deed (or say how to) */
+		} else if (verbose || need_compress) {
+			/*
+			 * .... but we'll only complain if we're being noisy or
+			 * if we really expected to have to compress it (and
+			 * we're not in debug mode or generating a script).
+			 */
+			fprintf(stderr, "%s: %s not compressed: %s.\n",
 				argv0,
-				zfile1);
-		} else {
-			if (noaction) {
-				printf("%s %s &\n", PATH_COMPRESS, zfile1);
-			} else if ((rt = stat(zfile1, &st)) >= 0 && (st.st_size > 0)) {
-				compress_log(zfile1);
-			} else if (verbose) {
-				printf("%s: %s not compressed: %s.\n",
-				       argv0,
-				       zfile1,
-				       (rt < 0) ? "no such file" : "is empty");
-			}
+				zfile1,
+				(rt < 0) ? "no such file" : "is empty");
 		}
 	}
 
@@ -1274,10 +1385,12 @@ note_trim(log)
 {
 	FILE           *fp;
 
-	if (noaction) {
-		(void) printf("echo '%s %s newsyslog[%d]: logfile turned over' >> %s\n",
-			      daytime, hostname, (int) getpid(), log);
-	} else {
+	if (verbose && (debug > 1))
+		printf("--> adding time stamp to most recent archive %s\n", log);
+	if (show_script) {
+		printf("echo '%s %s newsyslog[%d]: logfile turned over' >> %s\n",
+		       daytime, hostname, (int) getpid(), log);
+	} else if (!debug) {
 		if ((fp = fopen(log, "a")) == NULL) {
 			fprintf(stderr, "%s: failed to open log to append trim notice: %s: %s.\n",
 				argv0, log, strerror(errno));
@@ -1305,19 +1418,36 @@ compress_log(log)
 	pid_t           pid;
 	static char     c_path[] = PATH_COMPRESS;
 	char           *c_prog;
+	int             retries = MAX_FORK_RETRIES; /* try hard to fork() */
+
+	assert(retries >= 0);	/* allow no foolish -D's! */
 
 	c_prog = (c_prog = strrchr(c_path, '/')) ? c_prog + 1 : c_path;
 
-	pid = fork();
+	if (verbose && debug > 1)
+		printf("--> starting compressor [%s] as '%s -f %s &'\n", c_path, c_prog, log);
+	if (show_script)
+		printf("%s -f %s &\n", c_path, log);
+	if (debug || show_script)
+		return;
+	/*
+	 * XXX we probably could use vfork() if available since we immediately
+	 * execl() the compressor, but that means yet another configure.in test
+	 * ...  :-)
+	 */
+	while ((pid = fork()) < 0 && errno == EAGAIN && --retries >= 0) {
+		fprintf(stderr, "%s: fork(): %s\n", argv0, strerror(errno));
+		(void) sleep(2);	/* sleep a bit between retries */
+	}
 	if (pid < 0) {
 		perror("fork()");
 		return;
 	} else if (!pid) {
-		(void) execl(c_path, c_prog, "-f", log, 0);
+		(void) execl(c_path, c_prog, "-f", log, (char *) NULL);
 		perror(c_path);
 		return;
 	} else if (verbose)
-		printf("%s: started '%s %s &'\n", argv0, c_prog, log);
+		printf("-> %s: started '%s -f %s &' as pid# %d\n", argv0, c_prog, log, pid);
 	/*
 	 * NOTE: we'll just leave our zombie children to wait until we exit
 	 */
@@ -1461,19 +1591,27 @@ get_pid_file(pid_file)
 		return 0;
 	}
 	if (fgets(line, BUFSIZ, fp)) {
-		long    p;
+		unsigned long   ulval;
+		char           *ep;
+		const char     *errmsg = NULL;
 
-		p = strtol(line, (char **) NULL, 10);
-		if (p < MIN_PID || p > MAX_PID) {
-			fprintf(stderr, "%s: preposterous process number: %s.\n",
-				argv0, line);
-			pid = 0;
-		}
-		pid = (int) p;
+		errno = 0;
+		ulval = strtoul(line, &ep, 10);
+		if (line[0] == '\0' || (*ep != '\0' && *ep != '\n'))
+			errmsg = "invalid number";
+		else if (errno == ERANGE && ulval == ULONG_MAX)
+			errmsg = "number out of range";
+		else if (ulval == 0)
+			errmsg = "zero is never a valid process number";
+		else if (ulval < MIN_PID || ulval > MAX_PID)
+			errmsg = "preposterous process number";
+		if (errmsg)
+			fprintf(stderr, "%s: %s: %s: %s", argv0, pid_file, errmsg, line);
+		else
+			pid = (pid_t) ulval;
 	} else {
 		fprintf(stderr, "%s: can't read pid file: %s: %s.\n", argv0, pid_file,
 			feof(fp) ? "file is empty" : ferror(fp) ? strerror(errno) : "unknown fgets() failure");
-		pid = 0;
 	}
 	(void) fclose(fp);
 
@@ -1527,7 +1665,7 @@ getsig(sig)
 	return (-1);
 }
 
-/*-
+/*
  * Parse a cyclic time specification, the format is as follows:
  *
  *	Dhh or Wd[Dhh] or Mdd[Dhh]
@@ -1576,22 +1714,20 @@ parse_dwm(s, trim_at)
 			 * hyphen, but also allows sub-fields in the time spec
 			 * to be hyphen separated as well...
 			 */
-			t = ++s;			
+			t = ++s;
 			break;
 
 		case 'd':
 		case 'D':
 			if (Dseen) {
-				if (verbose)
-					fprintf(stderr, "%s: already saw a 'D' in trimtime!\n", argv0);
+				fprintf(stderr, "%s: already saw a 'D' in trimtime!\n", argv0);
 				return (-1);
 			}
 			Dseen++;
 			s++;
 			ul = strtoul(s, &t, 10);
 			if (ul > 23) {
-				if (verbose)
-					fprintf(stderr, "%s: nonsensical hour-of-the-day (D) value: %lu!\n", argv0, ul);
+				fprintf(stderr, "%s: nonsensical hour-of-the-day (D) value: %lu!\n", argv0, ul);
 				return (-1);
 			}
 			tms.tm_hour = (int) ul;
@@ -1600,16 +1736,14 @@ parse_dwm(s, trim_at)
 		case 'w':
 		case 'W':
 			if (WMseen) {
-				if (verbose)
-					fprintf(stderr, "%s: already saw a 'W' in trimtime!\n", argv0);
+				fprintf(stderr, "%s: already saw a 'W' in trimtime!\n", argv0);
 				return (-1);
 			}
 			WMseen++;
 			s++;
 			ul = strtoul(s, &t, 10);
 			if (ul > 6) {
-				if (verbose)
-					fprintf(stderr, "%s: nonsensical day-of-the-week (W) value: %lu!\n", argv0, ul);
+				fprintf(stderr, "%s: nonsensical day-of-the-week (W) value: %lu!\n", argv0, ul);
 				return (-1);
 			}
 			if (ul != tms.tm_wday) {
@@ -1632,8 +1766,7 @@ parse_dwm(s, trim_at)
 		case 'm':
 		case 'M':
 			if (WMseen) {
-				if (verbose)
-					fprintf(stderr, "%s: already saw a 'M' in trimtime!\n", argv0);
+				fprintf(stderr, "%s: already saw a 'M' in trimtime!\n", argv0);
 				return (-1);
 			}
 			WMseen++;
@@ -1645,13 +1778,11 @@ parse_dwm(s, trim_at)
 			} else {
 				ul = strtoul(s, &t, 10);
 				if (ul < 1 || ul > 31) {
-					if (verbose)
-						fprintf(stderr, "%s: nonsensical day-of-the-month (M) value: %lu!\n", argv0, ul);
+					fprintf(stderr, "%s: nonsensical day-of-the-month (M) value: %lu!\n", argv0, ul);
 					return (-1);
 				}
 				if (ul > nd) {
-					if (verbose)
-						fprintf(stderr, "%s: day-of-the-week (M) value out of range for month %d: %lu!\n", argv0, tms.tm_mon, ul);
+					fprintf(stderr, "%s: day-of-the-week (M) value out of range for month %d: %lu!\n", argv0, tms.tm_mon, ul);
 					return (-1);
 				}
 				tms.tm_mday = (int) ul;
@@ -1659,8 +1790,7 @@ parse_dwm(s, trim_at)
 			break;
 
 		default:
-			if (verbose)
-				fprintf(stderr, "%s: invalid trimtime specification: '%c'!\n", argv0, *s);
+			fprintf(stderr, "%s: invalid trimtime specification: '%c'!\n", argv0, *s);
 			return (-1);
 		}
 
@@ -1675,8 +1805,7 @@ parse_dwm(s, trim_at)
 	 * be changed into an unsigned integer type....
 	 */
 	if ((*trim_at = mktime(&tms)) == (time_t) -1) {
-		if (verbose)
-			fprintf(stderr, "%s: mktime() failed!\n", argv0);
+		fprintf(stderr, "%s: mktime() failed!\n", argv0);
 		return (-1);
 	}
 
