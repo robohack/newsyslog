@@ -54,7 +54,11 @@ missing
 mkinstalldirs
 newsyslog
 newsyslog.8.html
+newsyslog.8.html-dist
+newsyslog.8.ps-dist
 newsyslog.conf.5.html
+newsyslog.conf.5.html-dist
+newsyslog.conf.5.ps-dist
 newsyslog.core
 stamp-h
 stamp-h.in
