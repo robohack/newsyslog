@@ -17,7 +17,7 @@ AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 dnl Required Autoconf version.
 AC_PREREQ(2.53)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.41 2002/08/23 04:56:46 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.42 2002/11/08 23:10:52 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -73,6 +73,8 @@ fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+
+AC_CHECK_TYPES(unsigned long long)
 
 AC_TYPE_SIGNAL
 
