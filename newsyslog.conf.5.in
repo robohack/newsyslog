@@ -1,4 +1,4 @@
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5.in,v 1.5 1998/03/15 22:10:43 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5.in,v 1.6 1998/03/16 00:45:08 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -20,17 +20,16 @@
 .Sh NAME
 .Nm newsyslog.conf
 .Nd
-.Xr newsyslog 8
+.Nm newsyslog
 configuration file
 .Sh DESCRIPTION
 The
-.Nm syslog.conf
+.Dq Pa @path_config@
 file is the configuration file for the
-.Xr newsyslog 8
-program.
-Each line of this file contains information about how a particular log
-file should be handled by
-.Xr newsyslog 8 .
+.Nm newsyslog
+program.  Each line of this file contains information about how a
+particular log file should be handled by
+.Nm newsyslog .
 Each line has five mandatory fields and three optional fields, with a
 whitespace separating each field.  Blank lines or lines beginning with
 .Dq #
@@ -100,9 +99,9 @@ The
 .Ar Z
 flag will make the archive files compress to save space by
 using
-.Xr compress 1
+.Nm compress
 or
-.Xr gzip 1 ,
+.Nm gzip ,
 depending on which was selected at compile time.
 .Pp
 The
@@ -123,14 +122,14 @@ should not be compressed even when the
 .Ar Z
 flag is given.  This flag is necessary when managing log files written
 directly to by long-running processes (eg.\ 
-.Xr smail 8 ,
-.Xr httpd 8 ,
+.Nm smail ,
+.Nm httpd ,
 etc.).  This flag also makes it more convenient to browse through the
 most recently archived log file without having to first uncompress it or
 use tools like
-.Xr zmore 1 ,
+.Nm zmore ,
 or
-.Xr zgrep 1 ,
+.Nm zgrep ,
 etc.
 .Pp
 The
@@ -158,19 +157,23 @@ A configuration file might appear as follows:
 .Bl -tag -width @path_config@ -compact
 .It Pa @path_config@
 The
-.Xr newsyslog 8
+.Nm newsyslog
 configuration file.
 .It Pa @syslog_pidfile@
 The default location of the PID for
-.Xr syslogd 8 .
+.Nm syslogd .
 .El
 .Sh "SEE ALSO"
 .Xr compress 1 ,
 .Xr cron 8 ,
 .Xr gzip 1 ,
+.Xr httpd 8 ,
 .Xr newsyslog 8 ,
+.Xr smail 8 ,
 .Xr syslog 3 ,
-.Xr syslogd 8
+.Xr syslogd 8 ,
+.Xr zgrep 1 ,
+.Xr zmore 1
 .Sh STANDARDS
 None.
 .Sh HISTORY
@@ -205,8 +208,9 @@ field could be followed by yet another optional field to specify the
 appropriate signal number.
 .Pp
 The age of the log file may be impossible to determine, especially for
-binary format files, if the most recent archive copy (file.0*) does not
-exist.
+binary format files, if the most recent archive copy
+.Pa ( logfile.0* )
+does not exist.
 .Pp
 Anyone messing with the modification time of the most recent archive
 copy will possibly break the file age determination algorithm and thus
