@@ -3,7 +3,7 @@
 #
 # Copyright (C) 1997 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.12 2000/11/27 00:34:16 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.13 2000/12/01 20:38:45 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
 MAINT_CHARSET = latin1
@@ -16,7 +16,7 @@ catman_MANS = newsyslog.conf.cat5 newsyslog.cat8
 soelim_MANS = newsyslog.conf.5so newsyslog.8so
 
 # things that exist in the repository
-DIST_OTHER = README.developers ToDo
+DIST_OTHER = README.developers ToDo compat/machine/ansi.h compat/sys/cdefs.h
 
 # things that must be made during 'make dist'
 DIST_MAKE = $(soelim_MANS) $(catman_MANS) Makefile.BSD-dist
@@ -53,7 +53,7 @@ CLEANFILES = $(catman_MANS) $(man_MANS)
 # hard-coded dependencies
 #
 
-$(PROGRAMS): Makefile
+$(PROGRAMS): Makefile Makefile.BSD
 
 $(man_MANS): config.status
 
@@ -65,6 +65,8 @@ newsyslog.8: newsyslog.8so
 Makefile.BSD-dist: Makefile.BSD
 	@rm -f $@
 	cp $? $@
+
+Makefile.BSD: Makefile.BSD.in config.status
 
 newsyslog.o: config.h
 version.o: config.h
