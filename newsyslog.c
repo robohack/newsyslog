@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.22 1999/02/24 19:16:14 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.23 1999/08/25 00:59:02 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -552,8 +552,8 @@ do_trim(ent)
 	struct conf_entry *ent;
 {
 #define MAX_PERCENTD 10	/* XXX maximum number of ascii digits in an integer */
-	char            file1[PATH_MAX - sizeof(COMPRESS_POSTFIX) - MAX_PERCENTD - 1];
-	char            file2[PATH_MAX - sizeof(COMPRESS_POSTFIX) - MAX_PERCENTD - 1];
+	char            file1[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAX_PERCENTD - 1];
+	char            file2[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAX_PERCENTD - 1];
 	char            zfile1[PATH_MAX];
 	char            zfile2[PATH_MAX];
 	int             notified;
@@ -579,7 +579,7 @@ do_trim(ent)
 		return;
 	}
 	(void) strcpy(zfile1, file1);
-	(void) strcat(zfile1, COMPRESS_POSTFIX);
+	(void) strcat(zfile1, COMPRESS_SUFFIX);
 
 	if (noaction) {
 		printf("rm -f %s\n", file1);
@@ -597,8 +597,8 @@ do_trim(ent)
 		(void) strcpy(zfile1, file1);
 		(void) strcpy(zfile2, file2);
 		if (lstat(file1, &st) < 0) {
-			(void) strcat(zfile1, COMPRESS_POSTFIX);
-			(void) strcat(zfile2, COMPRESS_POSTFIX);
+			(void) strcat(zfile1, COMPRESS_SUFFIX);
+			(void) strcat(zfile2, COMPRESS_SUFFIX);
 			if (lstat(zfile1, &st) < 0)
 				continue; /* not this many aged files yet... */
 		}
@@ -822,13 +822,13 @@ check_old_log_age(ent)
 	struct stat     sb;
 	char            *tmp;
 
-	if (!(tmp = malloc(strlen(file) + sizeof(".0") + sizeof(COMPRESS_POSTFIX)))) {
+	if (!(tmp = malloc(strlen(file) + sizeof(".0") + sizeof(COMPRESS_SUFFIX)))) {
 		perror(argv0);
 		return (-1);
 	}
 	(void) strcpy(tmp, file);
 	if (stat(strcat(tmp, ".0"), &sb) < 0) {
-		if (stat(strcat(tmp, COMPRESS_POSTFIX), &sb) < 0) {
+		if (stat(strcat(tmp, COMPRESS_SUFFIX), &sb) < 0) {
 			if (ent->flags & CE_BINARY)
 				return (-1); /* can't get tmstamp from a binary! */
 			else if ((sb.st_mtime = read_first_timestamp(file)) <= 0)

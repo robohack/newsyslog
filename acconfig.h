@@ -1,4 +1,4 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.3 1999/01/17 06:30:38 woods Exp $";
+#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.4 1999/08/25 00:59:20 woods Exp $";
 
 /*
  * Copyright (C) 1997 Planix, Inc. - All rights reserved.
@@ -22,4 +22,4 @@
 #define PATH_COMPRESS		"/usr/ucb/compress"
 
 /* Suffix string */
-#define COMPRESS_POSTFIX	".Z"
+#define COMPRESS_SUFFIX		".Z"
