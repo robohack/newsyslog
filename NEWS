@@ -5,9 +5,27 @@ This file:  Copyright (C) 1997 Planix, Inc.
 Please send bug reports to bugs@robohack.planix.com
 
 
+* User-visible changes new in newsyslog-1.0.95.
+
+- just bug fixes.
+
+* User-visible changes new in newsyslog-1.0.94.
+
+- improved usefulness of '-n'.  It now output strictly a shell script
+  that would mimic actions without '-n'.  All extra information is only
+  output with '-v' now.
+
+- bug fixes.
+
+* User-visible changes new in newsyslog-1.0.93.
+
+- added '-p syslogd_pidfile' option (as in FreeBSD)
+
+- lots of internal cleanups, logic fixes, portability fixes, etc.
+
 * User-visible changes new in newsyslog-1.0.92.
 
-- added '-F' (force) flag ala FreeBSD's latest version (rev.1.16)
+- added '-F' (force) flag as in FreeBSD's latest version (rev.1.16)
 
 - native BSD builds are supported without requiring ./configure.
 
@@ -42,4 +60,4 @@ from being rolled over unnecessarily).
 - separated out newsyslog.conf.5 manual page
 - improved documentation
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.6 1998/03/16 01:29:49 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.7 1999/02/24 18:28:20 woods Exp $"
