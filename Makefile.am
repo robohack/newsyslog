@@ -1,10 +1,10 @@
 #
 #	Makefile.am - input for automake
 #
-# Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
+# Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.25 2002/05/04 19:35:05 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.26 2002/05/10 17:46:13 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.6
 MAINT_CHARSET = latin1

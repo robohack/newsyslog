@@ -1,6 +1,6 @@
 Original software and documentation (newsyslog.c & manual pages):
 
-Copyright 1988, 1989 by the Massachusetts Institute of Technology
+Copyright 1987, 1988, 1989 by the Massachusetts Institute of Technology
 
 Permission to use, copy, modify, and distribute this software
 and its documentation for any purpose and without fee is
@@ -22,7 +22,9 @@ inspect each for any additional copyright terms.
 Complete Package and noted individual files:
 
 /*
- * Copyright (c) 2000,2001 Planix, Inc.
+ * Copyright (c) by Planix, Inc.
+ *
+ * Years of publication: 1997,1998,1999,2000,2001,2002
  *
  * Contact:  Greg A. Woods <woods@planix.com>
  * 
