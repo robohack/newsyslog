@@ -6,7 +6,7 @@ This file:  Copyright (C) Planix, Inc.
 Please send bug reports to bugs@robohack.planix.com
 
 
-* User-visible changes new in newsyslog-1.0.104.
+* User-visible changes since newsyslog-1.0.103.
 
 - fix portability issues with PID value sanity checks on GNU/Linux.
 
@@ -15,7 +15,7 @@ Please send bug reports to bugs@robohack.planix.com
   to their values (eg. SIGUSR1, which is 10 is sent as 11, which SIGSEGV)
 
 
-* User-visible changes new in newsyslog-1.0.103.
+* User-visible changes since newsyslog-1.0.102.
 
 - a new debugging (-d) option allows various levels of verbose internals
   debugging without performing any actions and is now separate from
@@ -33,14 +33,14 @@ Please send bug reports to bugs@robohack.planix.com
   just when '-v' is given.  Keep an eye out for e-mail from cron!  ;-)
 
 
-* User-visible changes new in newsyslog-1.0.102.
+* User-visible changes since newsyslog-1.0.101.
 
 - run intervals can be one minute (but not less) again.
 
 - minor portability fixes for Solaris and linux.
 
 
-* User-visible changes new in newsyslog-1.0.101.
+* User-visible changes since newsyslog-1.0.100.
 
 - a bug in parsing timespecs with "interval-trimtime" that caused
   strange errors on some machines has been fixed.
@@ -57,12 +57,12 @@ Please send bug reports to bugs@robohack.planix.com
   portable signal name translation on SunOS-5).
 
 
-* User-visible changes new in newsyslog-1.0.100.
+* User-visible changes since newsyslog-1.0.99.
 
 - just portability fixes (tested on Solaris-2.6 now)
 
 
-* User-visible changes new in newsyslog-1.0.99.
+* User-visible changes since newsyslog-1.0.98.
 
 - fixed logic bug in comparison of PID filename with /dev/null.
 
@@ -72,7 +72,7 @@ Please send bug reports to bugs@robohack.planix.com
   trim-time specifications easier to do in a timely fashion.
 
 
-* User-visible changes new in newsyslog-1.0.98.
+* User-visible changes since newsyslog-1.0.97.
 
 - the log roll-over interval may now be specified as a "trim time",
   either as an hour of the day, day of the week, or day of the month,
@@ -99,7 +99,7 @@ Please send bug reports to bugs@robohack.planix.com
   to prevent simultaneous executions from fouling each other up.
 
 
-* User-visible changes new in newsyslog-1.0.97.
+* User-visible changes since newsyslog-1.0.96.
 
 - improved error messages by including line numbers.
 
@@ -113,17 +113,17 @@ Please send bug reports to bugs@robohack.planix.com
 - various bug fixes.
 
 
-* User-visible changes new in newsyslog-1.0.96.
+* User-visible changes since newsyslog-1.0.95.
 
 - just bug fixes.
 
 
-* User-visible changes new in newsyslog-1.0.95.
+* User-visible changes since newsyslog-1.0.94.
 
 - just bug fixes.
 
 
-* User-visible changes new in newsyslog-1.0.94.
+* User-visible changes since newsyslog-1.0.93.
 
 - improved usefulness of '-n'.  It now output strictly a shell script
   that would mimic actions without '-n'.  All extra information is only
@@ -132,14 +132,14 @@ Please send bug reports to bugs@robohack.planix.com
 - bug fixes.
 
 
-* User-visible changes new in newsyslog-1.0.93.
+* User-visible changes since newsyslog-1.0.92.
 
 - added '-p syslogd_pidfile' option (as in FreeBSD)
 
 - lots of internal cleanups, logic fixes, portability fixes, etc.
 
 
-* User-visible changes new in newsyslog-1.0.92.
+* User-visible changes since newsyslog-1.0.91.
 
 - added '-F' (force) flag as in FreeBSD's latest version (rev.1.16)
 
@@ -157,28 +157,28 @@ Please send bug reports to bugs@robohack.planix.com
   make this less accurate.  PR# lib/5161 contains a patch.)
 
 
-* User-visible changes new in newsyslog-1.0.91.
+* User-visible changes since newsyslog-1.0.90.
 
 - none
 
 
-* User-visible changes new in newsyslog-1.0.90.
+* User-visible changes since newsyslog-0.1.91.
 
 - added '0' flag to leave logfile.0 uncompressed.
 
 
-* User-visible changes new in newsyslog-0.1.91.
+* User-visible changes since newsyslog-0.1.80.
 
 - don't add status message to new log file in order to ensure that
 stagnant log files stay unchanged (i.e. the "empty" check prevents them
 from being rolled over unnecessarily).
 
 
-* User-visible changes new in newsyslog-0.1.80.
+* User-visible changes since NetBSD-1.3.3.
 
 - added -M|-m option
 - separated out newsyslog.conf.5 manual page
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.22 2002/08/23 04:57:51 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.23 2002/11/15 03:55:32 woods Exp $"
