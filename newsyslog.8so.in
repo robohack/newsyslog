@@ -1,5 +1,7 @@
 .\"-*- nroff -*-
 .\"
+.\" @configure_input@
+.\"
 .\" This file contains changes from the Open Software Foundation.
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
@@ -7,7 +9,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.5 2000/11/27 00:58:55 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.6 2000/12/01 20:05:21 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -23,7 +25,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd November 26, 2000
+.Dd December 1, 2000
 .Dt NEWSYSLOG 8
 .Os
 .Sh NAME
@@ -35,6 +37,7 @@
 .Op Fl rnv
 .Op Fl f Ar config_file
 .Op Fl p Ar syslogd_pidfile
+.Op Ar log_file ...
 .Sh DESCRIPTION
 .Nm Newsyslog
 is a program that should be scheduled to run periodically by
@@ -74,6 +77,23 @@ When starting up,
 reads in a configuration file to determine which logs should be looked
 at.  By default, this configuration file is
 .Pa @path_config@ .
+Note that a POSIX advisory lock is obtained on the configuration file
+using the
+.Xr open 2
+.Dv O_EXLOCK
+flag.  This both prevents simultaneous execution of
+.Nm
+using the same configuration file, as well as preventing the reading of
+the file while it is being modified by any text editor which uses the
+same locking feature (for example
+.Xr vi 1 ) .
+.Pp
+If any
+.Ar log_file
+parameters are given then processing is restricted to just the specified
+files.  The control specifications for the specified files are taken
+from the configuration file.  Any files specified which do not
+correspond to entries in the configuration file will be ignored.
 .Sh OPTIONS
 The following options can be used with newsyslog:
 .Bl -tag -width 12345678
@@ -99,6 +119,18 @@ the age of the most recent archive file.  This option can also be useful
 to mark an important system milestone in all logs
 .Nm
 manages.
+.It Fl i Ar run_interval
+Specify the interval, in minutes, between runs of
+.Nm
+by
+.Nm cron .
+This option is necessary if the configuration file contains any
+.Ar interval
+field values which contain roll-over time specifications (i.e. time of
+day, week, or month).  If you are running
+.Nm
+by hand then just specify an interval of
+.Em 1 .
 .It Fl m
 Cause
 .Nm
@@ -186,6 +218,11 @@ command appeared in
 There was an extremely simple shell script of similar purpose,
 .Pa /usr/lib/newsyslog ,
 in SunOS-4.1.
+.Pp
+This particular version's feature set, and this separate manual page for
+the configuration file, was put together by
+.An Greg A. Woods ,
+Planix, Inc.
 .Sh AUTHOR
 .An Theodore Ts'o ,
 MIT Project Athena

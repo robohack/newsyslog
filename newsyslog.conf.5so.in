@@ -1,10 +1,12 @@
 .\"-*- nroff -*-
 .\"
+.\" @configure_input@
+.\"
 .\" This file contains changes from the Open Software Foundation.
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.6 2000/11/27 00:58:55 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.7 2000/12/01 20:05:22 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -20,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd November 26, 2000
+.Dd November 27, 2000
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -70,21 +72,111 @@ is replaced by a
 then the size of the log file is not taken into account
 when determining when to trim the log file.
 .It Ar interval
-When 
+The
+.Ar when
+field can consist of an interval, a specific time, or both.  If the
+.Ar when
+field is an asterisk
+.Pq Ql \&*
+log rotation will depend only on the contents of the
+.Ar size
+field.
+.Pp
+In the simple form of digits only they are interpreted as number of
+hours.  When
 .Ar interval
-hours have passed, the log file will be trimmed.  If this field is
-replaced by a
-.Ar * ,
-then the number of hours since the last time the log was
-trimmed will not be taken into consideration.  Note that if this value
-is an even multiple of 24 hours it may have special meaning (see the
-description of
+hours have passed, the log file will be trimmed.  Note that if this
+value is an even multiple of 24 hours it may have special meaning
+depending on the way
+.Nm newsyslog
+is invoked (see the description of the
 .Fl m
 and
 .Fl M
-in the
+options in the
 .Xr newsyslog 8
 manual page).
+.Pp
+A time specification for logfile rotation at a fixed time once per day,
+per week, or per month may also be given.  If it follows an interval
+then it must be separated by a hyphen (i.e. a minus sign,
+.Sq \- ) .
+.Pp
+.Em WARNING :
+This feature requires that
+.Nm newsyslog
+be invoked with the
+.Fl i
+flag to tell it at what interval it is being run so that it can
+approximate the time of day calculations.  Note that one full minute is
+subtracted from the interval to give the time range after which the
+specification remains valid.  For example if an interval of 15 minutes
+is specified then a time specification will match if the current time is
+within 14 minutes
+.Em after
+the specified time.
+.Pp
+The daily, weekly, and/or monthly specification is given as:
+.Sm off
+.Oo
+.Va D\&hh
+.Oc ,
+.Oo
+.Va W\&w
+.Oo
+.Va D\&hh
+.Oc
+.Oc 
+and
+.Oo
+.Va M\&dd
+.Oo
+.Va D\&hh
+.Oc
+.Oc
+.Sm on
+respectively (with letters in either uppercase or lowercase).  The
+time-of-day fields, which are optional, default to midnight.  The ranges
+and meanings for these secifications are:
+.Pp
+.Bl -tag -width Ds -compact -offset indent
+.It Ar hh
+hours, range 0 ... 23
+.It Ar w
+day of week, range 0 ... 6, 0 = Sunday
+.It Ar dd
+day of month, range 1 ... 31, or the letter
+.Em L
+or
+.Em l
+to specify the last day of the month.
+.El
+.Pp
+Some examples:
+.Pp
+.Bl -tag -width Ds -compact -offset indent
+.It Ar D0
+rotate every night at midnight
+.It Ar D23
+rotate every day at 23:00 hr
+.It Ar W0D23
+rotate every week on Sunday at 23:00 hr
+.It Ar W5
+rotate every week on Friday at midnight.
+.It Ar MLD6
+rotate at the last day of every month at 6:00 hr
+.It Ar M5
+rotate on every 5th day of month at midnight
+.El
+.Pp
+If an interval
+.Em and
+a time specification are both given, then both conditions must be met.
+I.e. the file must be as old or older than the specified interval, and
+the current time must match the time specification.  This means that it
+is most useful to specify just an hour of the day (eg.
+.Ar D6 ,
+for 6:00 hr) and an interval which is an even multiple of 24 hours.
 .Pp
 Normally the age of the log file will be determined by looking at the
 last modification time of the most recent archive copy, if one exists.
@@ -159,10 +251,12 @@ etc.
 .It Sy -
 The
 .Ar -
-flag means nothing, but can be used as a place-holder when the
-field
+flag means nothing, but can be used as a place-holder when either or
+both of the
 .Ar path_to_pid_file
-is specified for entries without any flags.
+and
+.Ar sigtype
+fields are specified for entries without any flags.
 .El
 .Pp
 Flags can be specified in either uppercase or lowercase.
@@ -209,12 +303,13 @@ The default location of the PID for
 .Sh "STANDARDS"
 None.
 .Sh "COMPATABILITY"
-The original versions of
-.Nm
-used a period
+The original version of
+.Nm newsyslog
+expected a period
 .Pq Dq "\&."
-character to separate the user and group names.  This has been changed
-to a colon
+character to separate the user and group names in the
+.Ar owner
+field.  This has been changed to a colon
 .Pq Dq "\:"
 character so that user and group names may contain a period.  This
 change is in conjunction with a similar change in the
@@ -224,6 +319,22 @@ command (as required by
 compliance).  A period is no longer accepted as a separator as there are
 already enough changes to make this version's configuration file format
 incompatible with previous versions.
+.Pp
+The
+.Fx
+version
+(and more recently the
+.Nx
+version) allows a restricted form of an ISO 8601 time format to specify
+the time of day when a log file should be rotated.  This specification
+was given by placing after an
+.So Li \&@ Sc Ns No -sign
+after the [optional] interval.  This version only allows the more useful
+daily, weekly, and/or monthly time specification (also innovated by
+.Fx ) ,
+but it uses the hypen (\-) as a separator instead of a 
+.So Li \&$ Sc Ns No -sign
+to prefix the daily, weekly, or monthly time specification.
 .Sh "HISTORY"
 Originated at MIT Project Athena.
 .Pp
@@ -242,7 +353,12 @@ The
 optoinal field was added by
 .Nx .
 .Pp
-This particular version's feature set is due to
+The optional daily, weekly, and/or monthly time specification feature
+was added by
+.Fx .
+.Pp
+This particular version's feature set, and this separate manual page for
+the configuration file, was put together by
 .An Greg A. Woods ,
 Planix, Inc.
 .Sh "AUTHOR"
@@ -250,6 +366,10 @@ Planix, Inc.
 MIT Project Athena
 .Pp
 Copyright 1987, Massachusetts Institute of Technology
+.Pp
+This version by
+.An Greg A. Woods ,
+Planix, Inc.
 .Sh "BUGS"
 .Pp
 Fields such as
@@ -258,14 +378,18 @@ and
 .Ar size
 should allow the units of measurement to be specified.
 .Pp
+There is no provision for specification of a timezone in the
+.Ar interval
+field.
+.Pp
 Listing the same
 .Ar path_to_pid_file
 multiple times will cause SIGHUP to be sent to the associated daemon
-process for every log file with the same PID file.  This is done to
-ensure that it's safe to compress the file after it has hopefully been
-closed but in theory should be optimized to only notify daemon(s) once
-(and of course to batch all the compression commands to the end of the
-process).  This behaviour is normally harmless for
+process for every log file with the same PID file which is rolled over.
+This is done to ensure that it's safe to compress the file after it has
+hopefully been closed but in theory should be optimized to only notify
+daemon(s) once (and of course to batch all the compression commands to
+the end of the process).  This behaviour is normally harmless for
 .Nm syslogd
 and multiple signals can be avoided for other daemons by ensuring their
 PID files are only listed once and that the
