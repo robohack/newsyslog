@@ -4,14 +4,14 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.30 2003/04/09 00:25:25 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.31 2003/07/08 18:09:47 woods Exp $"
 
-AUTOMAKE_OPTIONS = gnu no-dependencies 1.6
+AUTOMAKE_OPTIONS = gnu no-dependencies 1.7
 MAINT_CHARSET = latin1
 
 bin_PROGRAMS = newsyslog
-newsyslog_SOURCES = newsyslog.c signame.c
-newsyslog_LDADD = @LIBOBJS@
+newsyslog_SOURCES = newsyslog.c
+newsyslog_LDADD = $(LIBOBJS)
 
 man_MANS = newsyslog.conf.5 newsyslog.8
 
@@ -35,6 +35,7 @@ COMPAT_MANS = str2sig.3
 #
 DIST_OTHER = README.developers ToDo VERSION newsyslog.conf \
 		newsyslog2netbsd.sh .cvsignore \
+		mksigname.sh siglist.in \
 		$(COMPAT_HDRS) $(COMPAT_MANS)
 
 # things that must be made during 'make dist'
@@ -50,7 +51,7 @@ PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 # Mention here files which are created using 'auto*' tools and which
 # can be re-created by re-running them again.
 #
-# NOTE: these files were removed automatically y past automake's.
+# NOTE: these files were removed automatically by past automake's.
 # 
 GNU_AUTO_MADE_FILES = Makefile.in \
 			aclocal.m4 \
@@ -59,21 +60,28 @@ GNU_AUTO_MADE_FILES = Makefile.in \
 
 # Mention here files which are created using '--add-missing', as well
 # as files created during 'make dist' and which can be re-created.
-# (We don't mention Makefile.BSD-dist because it should be a virgin
+# (Don't list 'Makefile.BSD-dist' because it should be a virgin
 # copy, never locally edited)
 #
 MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL \
 			$(GNU_AUTO_MADE_FILES) \
 			$(catman_MANS_dist) $(psman_MANS) $(htmlman_MANS)
 
-# XXX automake isn't quite current with autoconf it seems....
+# XXX automake still isn't quite current with autoconf it seems....
 # configure makes these so we need to clean them on 'distclean'
 #
 DISTCLEANFILES = configure.lineno
 distclean-local:
 	rm -rf autom4te.cache aclocal.m4~ config.h.in~
 
-CLEANFILES = $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
+CLEANFILES = sys_signame.c $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
+
+##
+##	local custom rules
+##
+sys_signame.c: mksigname.sh siglist.in Makefile
+	@rm -f $@
+	${SHELL} $(srcdir)/mksigname.sh $(srcdir)/siglist.in $@
 
 ##
 ##	local extensions to automake
