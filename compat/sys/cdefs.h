@@ -41,7 +41,9 @@
 #ifndef	_CDEFS_H_
 #define	_CDEFS_H_
 
+#if 0
 #include <machine/cdefs.h>
+#endif
 
 #if defined(__cplusplus)
 #define	__BEGIN_DECLS	extern "C" {
