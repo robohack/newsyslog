@@ -9,7 +9,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.10 2002/05/10 17:43:12 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.11 2002/11/15 03:56:04 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -25,7 +25,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd February 10, 2002
+.Dd November 8, 2002
 .Dt NEWSYSLOG 8
 .Os BSD
 .\"
@@ -240,6 +240,11 @@ The default location of the PID for
 .Xr newsyslog.conf 5 ,
 .Xr syslog 3 ,
 .Xr syslogd 8
+.Xr zgrep 1 ,
+.Xr zmore 1
+.\"
+.Sh "STANDARDS"
+None.
 .\"
 .Sh HISTORY
 Originated at MIT Project Athena.
