@@ -4,9 +4,9 @@
 # Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.23 2002/02/09 21:46:31 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.24 2002/05/04 17:24:11 woods Exp $"
 
-AUTOMAKE_OPTIONS = gnu no-dependencies 1.4.5
+AUTOMAKE_OPTIONS = gnu no-define no-dependencies 1.6
 MAINT_CHARSET = latin1
 
 bin_PROGRAMS = newsyslog
@@ -19,9 +19,11 @@ soelim_MANS = newsyslog.conf.5so newsyslog.8so
 catman_MANS = newsyslog.conf.cat5 newsyslog.cat8
 catman_MANS_dist = newsyslog.conf.cat5-dist newsyslog.cat8-dist
 psman_MANS = newsyslog.conf.5.ps newsyslog.8.ps
+psman_MANS_dist = newsyslog.conf.5.ps-dist newsyslog.8.ps-dist
 htmlman_MANS = newsyslog.conf.5.html newsyslog.8.html
+htmlman_MANS_dist = newsyslog.conf.5.html-dist newsyslog.8.html-dist
 
-DIST_MANS = $(catman_MANS_dist) $(psman_MANS) $(htmlman_MANS)
+DIST_MANS = $(catman_MANS_dist) $(psman_MANS_dist) $(htmlman_MANS_dist)
 
 catmandir = @mandir@
 
@@ -66,7 +68,8 @@ PIC = pic
 TBL = tbl
 SOELIM = soelim
 
-SUFFIXES = .5 .8 .5so .8so .cat5 .cat8 .5.html .8.html .5.ps .8.ps
+SUFFIXES = .5 .8 .5so .8so .cat5 .cat5-dist .cat8 .cat8-dist .5.html .8.html \
+		.5.ps .8.ps .ps .ps-dist .html .html-dist
 
 .5so.5 .8so.8:
 	@rm -f $@
@@ -92,6 +95,18 @@ SUFFIXES = .5 .8 .5so .8so .cat5 .cat8 .5.html .8.html .5.ps .8.ps
 	@rm -f $@
 	($(TBL) $< | $(NROFF) -mdoc2html > $@) || (rm -f $@; exit 1)
 
+.cat5.cat5-dist:
+	@rm -f $@
+	cp $? $@
+
+.html.html-dist:
+	@rm -f $@
+	cp $? $@
+
+.ps.ps-dist:
+	@rm -f $@
+	cp $? $@
+
 #
 # hard-coded dependencies and extensions
 #
@@ -112,7 +127,7 @@ htmlman: $(htmlman_MANS)
 #
 install-data-local: install-catman-local
 
-# the normal manuals are installed by automake rules
+# the unformatted manuals are installed by automake rules
 #
 install-catman-local:
 	$(mkinstalldirs) $(catmandir)/cat5
@@ -124,26 +139,24 @@ install-catman-local:
 # something similar, to install the distributed versions of the
 # cattable manual pages.  Make this before "make install"
 #
+copy-dist-mans: copy-dist-catman copy-dist-psman copy-dist-htmlman
+
 copy-dist-catman:
 	cp newsyslog.conf.cat5-dist newsyslog.conf.cat5
 	cp newsyslog.cat8-dist newsyslog.cat8
+
+copy-dist-psman:
+	cp newsyslog.conf.5.ps-dist newsyslog.conf.5.ps
+	cp newsyslog.8.ps-dist newsyslog.8.ps
+
+copy-dist-htmlman:
+	cp newsyslog.conf.5.html-dist newsyslog.conf.5.html
+	cp newsyslog.8.html-dist newsyslog.8.html
 
 newsyslog.conf.5: newsyslog.conf newsyslog.conf.5so
 
 # (no .so's in here yet....)
 newsyslog.8: newsyslog.8so
-
-newsyslog.conf.cat5-dist: newsyslog.conf.cat5
-	@rm -f $@
-	cp $? $@
-
-newsyslog.cat8-dist: newsyslog.cat8
-	@rm -f $@
-	cp $? $@
-
-Makefile.BSD-dist: Makefile.BSD
-	@rm -f $@
-	cp $? $@
 
 Makefile.BSD: Makefile.BSD.in config.status
 
