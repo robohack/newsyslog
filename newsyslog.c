@@ -8,6 +8,10 @@
  */
 
 /*
+ * This file contains changes from Greg A. Woods; Planix, Inc.
+ */
+
+/*
  *
  * Copyright 1988, 1989 by the Massachusetts Institute of Technology
  *
@@ -31,7 +35,7 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.10 1997/11/15 07:05:14 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.11 1998/03/05 04:01:42 woods Exp $";
 #endif /* not lint */
 
 #include <config.h>
@@ -86,13 +90,18 @@ extern int errno;
 # endif
 #endif /* PATH_MAX */
 
+#ifndef _PATH_DEVNULL
+# define _PATH_DEVNULL	"/dev/null"
+#endif
+
 #define kbytes(size)	(((size) + 1023) >> 10)
 #ifdef _IBMR2
 # define dbtob(db)	((unsigned)(db) << UBSHIFT) /* Calculates (db * DEV_BSIZE) */
 #endif
 
-#define CE_COMPACT	1	/* Compact the achived log files */
-#define CE_BINARY	2	/* Logfile is in binary, don't add status messages */
+#define CE_COMPACT	01	/* Compact the achived log files */
+#define CE_BINARY	02	/* Logfile is in binary, don't add status messages */
+#define CE_PLAIN0	04	/* Keep .0 file plain (needed for smail, httpd, etc.) */
 #define NONE		-1
 
 struct conf_entry {
@@ -104,7 +113,7 @@ struct conf_entry {
 	int             size;		/* Size cutoff to trigger trimming the log */
 	int             hours;		/* Hours between log trimming */
 	int             permissions;	/* File permissions on the log */
-	int             flags;		/* Flags (CE_COMPACT & CE_BINARY)  */
+	int             flags;		/* Flags (CE_*)  */
 	struct conf_entry *next;	/* Linked list pointer */
 };
 
@@ -440,6 +449,8 @@ parse_file()
 				working->flags |= CE_COMPACT;
 			else if ((*q == 'B') || (*q == 'b'))
 				working->flags |= CE_BINARY;
+			else if (*q == '0')
+				working->flags |= CE_PLAIN0;
 			else if (*q != '-') {
 				fprintf(stderr, "%s: illegal flag in config file -- %c.\n", argv0, *q);
 				exit(1);
@@ -624,7 +635,7 @@ dotrim(log, pid_file, numdays, flags, perm, owner_uid, owner_gid)
 		else if (noaction) {
 			if (notified)
 				puts("sleep 5");
-			printf("%s %s.0\n", PATH_COMPRESS, log);
+			printf("%s %s.%s\n", PATH_COMPRESS, log, (flags & CE_PLAIN0) ? "1" : "0");
 		} else {
 			if (notified) {
 				if (verbose)
@@ -714,6 +725,9 @@ get_pid(pid_file)
 	FILE           *f;
 	char            line[BUFSIZ];
 	pid_t           pid = 0;
+
+	if (strcmp(_PATH_DEVNULL, pid_file) == 0)
+		return 0;
 
 	if ((f = fopen(pid_file, "r")) == NULL) {
 		fprintf(stderr, "%s: can't open %s pid file to restart a daemon: %s.\n",
