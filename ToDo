@@ -3,6 +3,12 @@ NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
 Patches to close any of these items will be gratefully accepted!  Other
 suggestions and comments are also encouraged.
 
+- fix handling of log file timestamps to take into account timezones.
+  Note that the common log format actually includes " {+-}TZOFF" after
+  the time, but strptime() doesn't seem to have a way to parse and use
+  this value.  Syslog timestamps are in local time, so watch out for
+  stupid daylight savings confusion too!
+
 - Add one more optional field:  the format of the turnover message, with
   the default to be the "syslog" style:
 
@@ -57,4 +63,8 @@ suggestions and comments are also encouraged.
   feature in their 1.20 because "F.e. apache restarts less agressively
   on USR1 then on HUP."
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.4 1999/01/17 06:36:11 woods Exp $"
+- think about adding an optional way to specify a process to be run
+  after a given logfile has been rotated.  This could be used to run
+  logfile analysis tools, etc.
+
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.5 1999/08/25 01:21:09 woods Exp $"
