@@ -10,6 +10,11 @@ Please send bug reports to bugs@robohack.planix.com
 
 - fixed logic bug in comparison of PID filename with /dev/null.
 
+- fixed logic bug in setting of internal flag for trim-time specs.
+
+- a new test parameter, '-T timenow' has been added to make testing of
+  trim-time specifications easier to do in a timely fashion.
+
 * User-visible changes new in newsyslog-1.0.98.
 
 - the log roll-over interval may now be specified as a "trim time",
@@ -108,4 +113,4 @@ from being rolled over unnecessarily).
 - separated out newsyslog.conf.5 manual page
 - improved documentation
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.13 2000/12/08 20:46:31 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.14 2001/02/23 00:49:26 woods Exp $"
