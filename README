@@ -110,14 +110,27 @@ just an incompatible version of "soelim"), you can still install and
 read the distributed 'cat'-table manual pages.
 
 For example if you get an error during the first "make" that says
-something like "nroff: Cannot find library -mandoc", or "nroff: not
+something like "nroff: Cannot find library -mdoc", or "nroff: not
 found", or "-I: No such file or directory", then run the following
 command instead of running "make install":
 
 	make copy-dist-mans install
 
 This does not guarantee your "man" command will be able to find and
-present the resulting files, of course.
+present the resulting files, of course.  If you really get into a bind
+over this the best I can suggest is to write a small "wrapper" manual
+page using the old-style man(7) macros that directs readers to view the
+pre-formatted file in whatever location it gets installed in.  On some
+systems you might be able to fool the "man" command into displaying the
+pre-formatted version if you supply a dummy nroff source file that has
+an older timestamp than the pre-formatted file.  Fooling "catman" to get
+a proper index entry for "apropos" ("man -k") might be harder, but on
+most systems the index file is just plain text (though in some
+particular sorted order and with each line having a specific format).
+If anyone wants to contribute a "mdoc" to "man" translator, I'm all for
+it, but I will not try to maintain documents in both formats
+simultaneously -- whatever support for "man" there is, it must be
+completely mechanical and automatable.
 
 
 CUSTOM CONFIGURATION OPTIONS
@@ -167,10 +180,11 @@ or:
 
 	<URL:ftp://ftp.weird.com/pub/local/newsyslog.tar.gz>
 
+
 -- 
 						Greg A. Woods
 						<woods-newsyslog@planix.com>
 						<woods-newsyslog@weird.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.13 2002/11/08 23:19:10 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.14 2003/04/09 00:22:55 woods Exp $"
