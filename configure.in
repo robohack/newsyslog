@@ -7,10 +7,10 @@ dnl Copyright (C) 1997 Planix, Inc. - All rights reserved.
 AC_INIT(newsyslog.c)
 AC_PREREQ(2.12)dnl Required Autoconf version.
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.14 1998/03/16 03:03:47 woods Exp $"])dnl
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.15 1999/01/17 06:48:28 woods Exp $"])dnl
 
 PACKAGE=newsyslog
-VERSION=1.0.92
+VERSION=1.0.93-Preview
 
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
@@ -63,8 +63,15 @@ AC_C_CONST
 AC_TYPE_SIGNAL
 
 dnl Checks for library functions.
-AC_REPLACE_FUNCS(strdup strerror strtok)
-AC_CHECK_FUNCS(strchr)
+AC_REPLACE_FUNCS(snprintf strdup strerror strtok strptime)
+
+dnl Note that although bzero() is deprectated and non-standard we only
+dnl need its capabilities, not those of the fancier and more standard
+dnl memset(), so because bzero() can be defined in terms of memset()
+dnl by a macro, but not the other way around, we use bzero() in the
+dnl code and account for its absense with a macro.
+
+AC_CHECK_FUNCS(bzero strchr)
 
 AC_MSG_CHECKING(for name of archive compression program)
 AC_ARG_WITH(gzip,
@@ -93,14 +100,14 @@ case "$localstatedir" in
 	prefix=$oldprefix
 	;;
 esac
-AC_ARG_WITH(syslog_pid,
-	[  --with-syslog_pid=path syslogd's PID file ($expandedlocalstatedir/run/syslog.pid)],
-	[syslog_pidfile=$withval],
-	[syslog_pidfile=$expandedlocalstatedir/run/syslog.pid]
+AC_ARG_WITH(syslogd_pid,
+	[  --with-syslogd_pid=path syslogd's PID file (localstatedir/run/syslog.pid)],
+	[syslogd_pidfile=$withval],
+	[syslogd_pidfile=$expandedlocalstatedir/run/syslog.pid]
 )dnl
-AC_SUBST(syslog_pidfile)
-AC_DEFINE_UNQUOTED(PATH_SYSLOG_PIDFILE, "$syslog_pidfile")
-AC_MSG_RESULT($syslog_pidfile)
+AC_SUBST(syslogd_pidfile)
+AC_DEFINE_UNQUOTED(PATH_SYSLOGD_PIDFILE, "$syslogd_pidfile")
+AC_MSG_RESULT($syslogd_pidfile)
 
 AC_MSG_CHECKING(for name of config file)
 case "$sysconfdir" in
@@ -117,7 +124,7 @@ case "$sysconfdir" in
 	;;
 esac
 AC_ARG_WITH(newsyslog_conf,
-	[  --with-newsyslog_conf=path configuration file ($expandedsysconfdir/newsyslog.conf)],
+	[  --with-newsyslog_conf=path configuration file (sysconfdir/newsyslog.conf)],
 	[path_config=$withval],
 	[path_config=$expandedsysconfdir/newsyslog.conf]
 )dnl
