@@ -86,11 +86,21 @@ run it:
 	# inspect and/or edit newsyslog2netbsd.sh
 	sh newsyslog2netbsd.sh
 	cd import.d
+	# inspect and/or edit Makefile
 	make
-	make istall
+	make install
 
-Newsyslog can also be built using the GNU Autoconf based build system
-and a ``normal'' (i.e. Unix compatible) "make".
+The same procedure should work fine for FreeBSD if you add
+"__FreeBSD__=1" to the make commands above.  OpenBSD may masquerade well
+enough as NetBSD, w.r.t. how makefiles work anyway, for OpenBSD users to
+pretend while running make that they are using NetBSD.  :-)
+
+If you actually do copy the contents of the import.d directory into your
+system source tree to replace your native newsyslog then you should add
+the appropriate __*BSD__ definition to the Makefile.
+
+Of course newsyslog can also be built using the GNU Autoconf based build
+system and a ``normal'' (i.e. Unix compatible) "make".
 
 Please see the file "INSTALL" for overall instructions on how to
 configure and build this package using the GNU Autoconf generated
@@ -187,4 +197,4 @@ or:
 						<woods-newsyslog@weird.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.14 2003/04/09 00:22:55 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.15 2003/07/08 18:48:40 woods Exp $"
