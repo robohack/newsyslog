@@ -41,19 +41,20 @@ If and only when everything seems OK run:
 This will automatically 'cvs tag', 'cvs export', prepare and check the
 completeness of the distribution by doing a build followed by a 'make
 distclean', and finally tar and gzip the results into
-"/place-to-build-releases/PACKAGE-VERSION.tar.gz".
+"/place-to-build-releases/PACKAGE-VERSION.tar.gz".  If you don't specify
+releasedir then it'll default to $HOME/release.d.
 
 
 After Making a New Release:
 
-After you've made a new release don't forget to again update the
-"VERSION" identifier in configure.in again for the pre-release of the
-next most likely release (eg. set 1.0.0.80-Pre after making 1.0).  See
-below for release number ideas.
+After you've made a new release don't forget to update the "VERSION"
+identifier in configure.in for the pre-release of the next most likely
+release (eg. set 1.0.0.80-Pre after making 1.0).  See below for release
+number ideas.
 
-If doing release branch maintenance then you should instead create a
-release branch for every N.N release and set N.N.0.80-Pre on the branch
-and N.N+1.80-Pre on the trunk.
+If you plan on doing release maintenance using branches then you should
+instead create a release branch for every N.N release and set the
+"VERSION" to N.N.0.80-Pre on the branch and N.N+1.80-Pre on the trunk.
 
 
 Other Notes:
@@ -123,4 +124,4 @@ it is finally officially released.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.4 1998/03/15 22:09:33 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.5 1998/03/16 01:48:07 woods Exp $"
