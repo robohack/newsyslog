@@ -1,9 +1,3 @@
-/*	$NetBSD: newsyslog.c,v 1.12 1996/09/27 01:56:56 thorpej Exp $	*/
-
-/*
- * This file contains changes from the Open Software Foundation.
- */
-
 /*
 
 Copyright 1988, 1989 by the Massachusetts Institute of Technology
@@ -23,12 +17,21 @@ provided "as is" without express or implied warranty.
 */
 
 /*
+ * This file contains changes from the Open Software Foundation.
+ */
+
+/*
  *      newsyslog - roll over selected logs at the appropriate time,
  *              keeping the a specified number of backup files around.
  */
 
+#include <sys/cdefs.h>
+
 #ifndef lint
-static char rcsid[] = "$NetBSD: newsyslog.c,v 1.12 1996/09/27 01:56:56 thorpej Exp $";
+static const char netbsd_rcsid[] =
+	"$NetBSD: newsyslog.c,v 1.13 1997/10/19 06:23:50 lukem Exp $";
+static const char planix_rcsid[] =
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.3 1997/10/28 02:01:57 woods Exp $";
 #endif /* not lint */
 
 #ifndef CONF
@@ -44,18 +47,21 @@ static char rcsid[] = "$NetBSD: newsyslog.c,v 1.12 1996/09/27 01:56:56 thorpej E
 #define COMPRESS_POSTFIX ".Z"
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <signal.h>
-#include <pwd.h>
-#include <grp.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <sys/wait.h>
+
+#include <ctype.h>
+#include <fcntl.h>
+#include <grp.h>
+#include <pwd.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #define kbytes(size)  (((size) + 1023) >> 10)
 #ifdef _IBMR2
@@ -80,9 +86,6 @@ struct conf_entry {
         struct conf_entry       *next; /* Linked list pointer */
 };
 
-extern int      optind;
-extern char     *optarg;
-
 char    *progname;              /* contains argv[0] */
 int     verbose = 0;            /* Print out what's going on */
 int     needroot = 1;           /* Root privs are necessary */
@@ -100,8 +103,25 @@ char    hostname[64];           /* hostname */
 char    *daytime;               /* timenow in human readable form */
 
 
-struct conf_entry *parse_file();
-char *sob(), *son(), *strdup(), *missing_field();
+void	PRS __P((int, char **));
+int	age_old_log __P((char *));
+void	compress_log __P((char *));
+void	dotrim __P((char *, int, int, int, int, int));
+void	do_entry __P((struct conf_entry *));
+int	isnumber __P((char *));
+int	log_trim __P((char *));
+int	main __P((int, char **));
+char   *missing_field __P((char *, char *));
+struct conf_entry *parse_file __P((void));
+int	sizefile __P((char *));
+char   *sob __P((char *));
+char   *son __P((char *));
+void	usage __P((void));
+
+
+extern int      optind;
+extern char     *optarg;
+
 
 int
 main(argc,argv)
@@ -126,9 +146,9 @@ main(argc,argv)
 	/* NOTREACHED */
 }
 
+void
 do_entry(ent)
         struct conf_entry       *ent;
-        
 {
         int     size, modtime;
         
@@ -170,6 +190,7 @@ do_entry(ent)
         }
 }
 
+void
 PRS(argc,argv)
         int argc;
         char **argv;
@@ -196,12 +217,12 @@ PRS(argc,argv)
         (void) gethostname(hostname, sizeof(hostname));
 
 	/* Truncate domain */
-	if (p = strchr(hostname, '.')) {
+	if ((p = strchr(hostname, '.')) != NULL) {
 		*p = '\0';
 	}
 
         optind = 1;             /* Start options parsing */
-        while ((c=getopt(argc,argv,"nrvf:t:")) != EOF)
+        while ((c=getopt(argc,argv,"nrvf:t:")) != -1)
                 switch (c) {
                 case 'n':
                         noaction++; /* This implies needroot as off */
@@ -218,8 +239,9 @@ PRS(argc,argv)
                 default:
                         usage();
                 }
-        }
+}
 
+void
 usage()
 {
         fprintf(stderr,
@@ -230,7 +252,8 @@ usage()
 /* Parse a configuration file and return a linked list of all the logs
  * to process
  */
-struct conf_entry *parse_file()
+struct conf_entry *
+parse_file()
 {
         FILE    *f;
         char    line[BUFSIZ], *parse, *q;
@@ -240,6 +263,7 @@ struct conf_entry *parse_file()
         struct passwd *pass;
         struct group *grp;
 
+	working = NULL;
         if (strcmp(conf,"-"))
                 f = fopen(conf,"r");
         else
@@ -359,7 +383,8 @@ struct conf_entry *parse_file()
         return(first);
 }
 
-char *missing_field(p,errline)
+char *
+missing_field(p,errline)
         char    *p,*errline;
 {
         if (!p || !*p) {
@@ -370,6 +395,7 @@ char *missing_field(p,errline)
         return(p);
 }
 
+void
 dotrim(log,numdays,flags,perm,owner_uid,group_gid)
         char    *log;
         int     numdays;
@@ -483,6 +509,7 @@ dotrim(log,numdays,flags,perm,owner_uid,group_gid)
 }
 
 /* Log the fact that the logs were turned over */
+int
 log_trim(log)
         char    *log;
 {
@@ -499,6 +526,7 @@ log_trim(log)
 }
 
 /* Fork of /usr/ucb/compress to compress the old log file */
+void
 compress_log(log)
         char    *log;
 {
@@ -520,7 +548,8 @@ compress_log(log)
 }
 
 /* Return size in kilobytes of a file */
-int sizefile(file)
+int
+sizefile(file)
         char    *file;
 {
         struct stat sb;
@@ -531,7 +560,8 @@ int sizefile(file)
 }
 
 /* Return the age of old log file (file.0) */
-int age_old_log(file)
+int
+age_old_log(file)
         char    *file;
 {
         struct stat sb;
@@ -548,10 +578,11 @@ int age_old_log(file)
 #ifndef OSF
 /* Duplicate a string using malloc */
 
-char *strdup(strp)
-register char   *strp;
+char *
+strdup(strp)
+	char   *strp;
 {
-        register char *cp;
+        char *cp;
 
         if ((cp = malloc((unsigned) strlen(strp) + 1)) == NULL)
                 abort();
@@ -561,7 +592,7 @@ register char   *strp;
 
 /* Skip Over Blanks */
 char *sob(p)
-        register char   *p;
+        char   *p;
 {
         while (p && *p && isspace(*p))
                 p++;
@@ -569,8 +600,9 @@ char *sob(p)
 }
 
 /* Skip Over Non-Blanks */
-char *son(p)
-        register char   *p;
+char *
+son(p)
+        char   *p;
 {
         while (p && *p && !isspace(*p))
                 p++;
@@ -580,8 +612,9 @@ char *son(p)
         
 /* Check if string is actually a number */
 
+int
 isnumber(string)
-char *string;
+	char *string;
 {
         while (*string != '\0') {
             if (*string < '0' || *string > '9') return(0);
