@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.7 2000/12/01 20:05:22 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.8 2002/01/05 05:02:53 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -137,7 +137,7 @@ and
 .Sm on
 respectively (with letters in either uppercase or lowercase).  The
 time-of-day fields, which are optional, default to midnight.  The ranges
-and meanings for these secifications are:
+and meanings for these specifications are:
 .Pp
 .Bl -tag -width Ds -compact -offset indent
 .It Ar hh
@@ -267,7 +267,7 @@ associated daemon's process-id.  If this field is present, and not
 a SIGHUP is sent the process id contained in this file.  This field must
 start with a slash (i.e.\ 
 .Dq Pa / )
-in order to be recognized properly.
+in order to be recognised properly.
 .It Ar sigtype
 This optional field specifies the type of signal to be sent to the
 daemon process.  This may be a numeric or symbolic value.  By default a
@@ -326,15 +326,16 @@ version
 (and more recently the
 .Nx
 version) allows a restricted form of an ISO 8601 time format to specify
-the time of day when a log file should be rotated.  This specification
-was given by placing after an
+the time of day when a log file should be rotated.  In those versions
+such a specification was given by placing it after an
 .So Li \&@ Sc Ns No -sign
-after the [optional] interval.  This version only allows the more useful
-daily, weekly, and/or monthly time specification (also innovated by
+following the [optional] interval.  This version only allows the
+sufficiently useful daily, weekly, and/or monthly time specification
+(also innovated by
 .Fx ) ,
-but it uses the hypen (\-) as a separator instead of a 
-.So Li \&$ Sc Ns No -sign
-to prefix the daily, weekly, or monthly time specification.
+but it uses the hyphen (\-) as a separator from the optional interval
+instead of the more confusing
+.So Li \&$ Sc Ns No -sign.
 .Sh "HISTORY"
 Originated at MIT Project Athena.
 .Pp
@@ -350,7 +351,7 @@ optional field was added by
 .Pp
 The
 .Ar sigtype
-optoinal field was added by
+optional field was added by
 .Nx .
 .Pp
 The optional daily, weekly, and/or monthly time specification feature
@@ -387,7 +388,7 @@ Listing the same
 multiple times will cause SIGHUP to be sent to the associated daemon
 process for every log file with the same PID file which is rolled over.
 This is done to ensure that it's safe to compress the file after it has
-hopefully been closed but in theory should be optimized to only notify
+hopefully been closed but in theory should be optimised to only notify
 daemon(s) once (and of course to batch all the compression commands to
 the end of the process).  This behaviour is normally harmless for
 .Nm syslogd
