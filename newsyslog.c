@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.37 2002/01/04 03:40:59 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.38 2002/01/05 17:55:14 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -344,8 +344,14 @@ do_entry(ent)
 		       (ent->flags & CE_BINARY) ? "b" : "",
 		       (ent->flags & CE_NOSIGNAL) ? "n" : "",
 		       (ent->flags & CE_PLAIN0) ? "0" : "");
-		if (ent->flags & CE_TRIMAT)
-			printf("(T:%ld) ", (long) ent->trim_at);
+		if (ent->flags & CE_TRIMAT) {
+			struct tm tms;
+			char trimtime[20];
+
+			tms = *localtime(&(ent->trim_at));
+			strftime(trimtime, sizeof(trimtime), "%Y/%m/%d-%T", &tms);
+			printf("(T:%s) ", trimtime);
+		}
 	}
 	size = check_file_size(ent->log);
 	if (size < 0 && verbose)
@@ -1175,8 +1181,8 @@ do_trim(ent)
 		}
 	}
 	pid = 0;
-	need_notification = 0;
-	notified = 0;
+	need_notification = 0;			/* we could combine these... */
+	notified = 0;				/* ... but this reads better */
 	if (ent->pid_file && !(ent->flags & CE_NOSIGNAL)) {
 		need_notification = 1;
 		pid = get_pid_file(ent->pid_file);
@@ -1184,19 +1190,22 @@ do_trim(ent)
 		need_notification = 1;
 		pid = syslogd_pid;
 	}
-	if (pid) {
+	if (pid) { /* && ent->signum */
+		char signame[SIG2STR_MAX];
+
+		if (sig2str(ent->signum, signame) == -1)
+			strcpy(signame, "(not a signal)");
 		if (noaction) {
 			notified = 1;
-			printf("kill -%d %d\n", ent->signum, (int) pid);
+			if (verbose)
+				printf("kill -%s %d\n", signame, (int) pid);
+			else
+				printf("kill -%d %d\n", ent->signum, (int) pid);
 			if (!(ent->flags & CE_PLAIN0))
 				puts("sleep 5");
 		} else if (kill(pid, ent->signum)) {
-			char signame[SIG2STR_MAX];
-
-			if (sig2str(ent->signum, signame) == -1)
-				strcpy(signame, "(not a signal)");
 			fprintf(stderr,
-				"%s: can't notify daemon with SIG%s, pid %d: %s\n.",
+				"%s: cannot notify daemon with SIG%s, pid %d: %s\n.",
 				argv0,
 				signame,
 				(int) pid,
@@ -1204,7 +1213,7 @@ do_trim(ent)
 		} else {
 			notified = 1;
 			if (verbose)
-				printf("daemon with pid %d notified\n", (int) pid);
+				printf("daemon with pid %d notified with SIG%s\n", (int) pid, signame);
 			if (!(ent->flags & CE_PLAIN0)) {
 				if (verbose)
 					printf("small pause now to allow daemon to close log... ");
@@ -1518,17 +1527,15 @@ parse_dwm(s, trim_at)
 	char *s;
 	time_t *trim_at;
 {
-	char *t;
+	char *t = NULL;
 	struct tm tms;
-	struct tm *tmsp;
 	u_long ul;
 	int nd;
 	static int mtab[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 	int WMseen = 0;
 	int Dseen = 0;
 
-	tmsp = localtime(&timenow);
-	tms = *tmsp;
+	tms = *localtime(&timenow);
 
 	/* set up the no. of days per month */
 
@@ -1548,9 +1555,9 @@ parse_dwm(s, trim_at)
 		case '-':
 			/* this is primarily just to skip any optional initial
 			 * hyphen, but also allows sub-fields in the time spec
-			 * to be hyphen separated...
+			 * to be hyphen separated as well...
 			 */
-			s++;			
+			t = ++s;			
 			break;
 
 		case 'd':
