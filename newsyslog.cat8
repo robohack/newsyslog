@@ -1,198 +1,146 @@
-NEWSYSLOG(8)                                         NEWSYSLOG(8)
-
-
-
-
+NEWSYSLOG(8)            NetBSD System Manager's Manual            NEWSYSLOG(8)
 
 NNAAMMEE
-       newsyslog - maintain system log files to manageable sizes
+     nneewwssyysslloogg - maintain system log files to manageable sizes
 
 SSYYNNOOPPSSIISS
-       //uussrr//bbiinn//nneewwssyysslloogg [ --vvnnrr ] [ --ff _c_o_n_f_i_g_u_r_a_t_i_o_n _f_i_l_e ]
+     nneewwssyysslloogg [--rrnnvv] [--ff _c_o_n_f_i_g___f_i_l_e]
 
 DDEESSCCRRIIPPTTIIOONN
-       _N_e_w_s_y_s_l_o_g  is  a  program  that should be scheduled to run
-       periodically by _c_r_o_n_t_a_b.  When it is executed it  archives
-       log  files  if  necessary.  If a log file is determined to
-       require archiving, _n_e_w_s_y_s_l_o_g rearranges the files so  that
-       ``logfile''  is empty, ``logfile.0'' has the last period's
-       logs in it, ``logfile.1'' has the next  to  last  period's
-       logs  in  it,  and so on, up to a user-specified number of
-       archived logs.  Optionally the archived logs can  be  com­
-       pressed to save space.
+     NNeewwssyysslloogg is a program that should be scheduled to run periodically by
+     cron(8).  When it is executed it archives log files if necessary.  If a
+     log file is determined to require archiving, nneewwssyysslloogg rearranges the
+     files so that ``logfile'' is empty, ``logfile.0'' has the last period's
+     logs in it, ``logfile.1'' has the next to last period's logs in it, and
+     so on, up to a user-specified number of archived logs.  The archived logs
+     may also be compressed to save space.  After all file operations are done
+     nneewwssyysslloogg notifies the ssyyssllooggdd daemon and optionally other log-file spe-
+     cific daemons.
 
-       A  log  can  be  archived because of two reasons.  The log
-       file can have grown bigger than a  preset  size  in  kilo­
-       bytes,  or a preset number of hours may have elapsed since
-       the last log archive.  The  granularity  of  _n_e_w_s_y_s_l_o_g  is
-       dependent  on how often it is scheduled to run in crontab.
-       Since the program is quite fast, it may  be  scheduled  to
-       run every hour without any ill effects.
+     A log can be archived because of two reasons.  The log file can have
+     grown bigger than a preset size in kilobytes, or a preset number of hours
+     may have elapsed since the last log archive.  The granularity of nneewwssyyss--
+     lloogg is dependent on how often it is scheduled to run by cron(8).  Since
+     the program is quite fast, it may be scheduled to run at least every hour
+     without any ill effects, which will achieve near the maximum granularity
+     for elapsed time specification.  More frequent runs may be necessary to
+     catch extremely fast growing log files.
 
-       When  starting up, _n_e_w_s_y_s_l_o_g reads in a configuration file
-       to determine which logs should be looked at.  By  default,
-       this configuration file is _/_e_t_c_/_n_e_w_s_y_s_l_o_g_._c_o_n_f.  Each line
-       of the file contains information about  a  particular  log
-       file  that  should be handled by _n_e_w_s_y_s_l_o_g.  Each line has
-       five mandatory fields and  two  optional  fields,  with  a
-       whitespace  separating  each  field.  Blank lines or lines
-       beginning with ``#'' are ignored.  The fields of the  con­
-       figuration file are as follows:
-            logfile name
-            owner.group of archives (optional)
-            mode of logfile & archives
-            number of archives
-            size of archives
-            archive interval
-            flags (optional)
+     When starting up, nneewwssyysslloogg reads in a configuration file to determine
+     which logs should be looked at.  By default, this configuration file is
+     _/_e_t_c_/_n_e_w_s_y_s_l_o_g_._c_o_n_f. Each line of the file contains information about a
+     particular log file that should be handled by nneewwssyysslloogg. Each line has
+     five mandatory fields and three optional fields, with a whitespace sepa-
+     rating each field.  Blank lines or lines beginning with ``#'' are ig-
+     nored.  The fields of the configuration file are as follows:
 
-       The  _l_o_g_f_i_l_e _n_a_m_e entry is the name of the system log file
-       to be archived.
+     _l_o_g_f_i_l_e___n_a_m_e
+             Name of the system log file to be archived.
 
-       The optional _o_w_n_e_r_._g_r_o_u_p entry specifies an ownership  and
-       group for the archive file.  The "." is essential, even if
-       the _o_w_n_e_r or _g_r_o_u_p field is left blank. The fields may  be
-       numeric,  or  a  name which is looked up in _/_e_t_c_/_p_a_s_s_w_d or
-       _/_e_t_c_/_g_r_o_u_p.
+     _o_w_n_e_r_._g_r_o_u_p
+             This optional field specifies the owner and group for the archive
+             file.  The subfields may be numeric, or a name which is present
+             in _/_e_t_c_/_p_a_s_s_w_d or _/_e_t_c_/_g_r_o_u_p.
 
-       The _n_u_m_b_e_r _o_f  _a_r_c_h_i_v_e_s  entry  specifies  the  number  of
-       archives to be kept besides the log file itself.
+     _m_o_d_e    Specifies the file permissions of the log file and its archival
+             copies in the standard three-digit octal format.
 
+     _c_o_u_n_t   Specify the number of archive files to be kept besides the log
+             file itself.
 
+     _s_i_z_e    When the size of the log file reaches the number of kilobytes
+             specified by _s_i_z_e, the log file will be trimmed as described
+             above.  If this field is replaced by a _*, then the size of the
+             log file is not taken into account when determining when to trim
+             the log file.
 
+     _i_n_t_e_r_v_a_l
+             When _i_n_t_e_r_v_a_l hours have passed, the log file will be trimmed.
+             If this field is replaced by a _*, then the number of hours since
+             the last time the log was trimmed will not be taken into consid-
+             eration.
 
-Project Athena           January 12, 1989                       1
-
-
-
-
-
-NEWSYSLOG(8)                                         NEWSYSLOG(8)
+     _f_l_a_g_s   This optional field specifies if the archive should have any spe-
+             cial processing done to the archived log files.
 
 
-       When the size of the logfile reaches _s_i_z_e _o_f _a_r_c_h_i_v_e_s, the
-       logfile becomes trimmed as described above.  If this field
-       is  replaced  by  a ``*'', then the size of the logfile is
-       not taken into account when determining when to  trim  the
-       log file.
+             The _Z flag will make the archive files compress to save space by
+             using compress(1) or gzip(1),  depending on which was selected at
+             compile time.
 
-       The  _n_u_m_b_e_r  _o_f  _h_o_u_r_s entry specifies the time separation
-       between the trimming of the log file.  If  this  field  is
-       replaced  by  a  ``*'', the number of hours since the last
-       time the log was trimmed will not be taken into considera­
-       tion.
+             The _B flag means that the file is a binary file, and so the ASCII
+             message which nneewwssyysslloogg inserts to indicate the fact that the
+             logs have been turned over should not be included.
 
-       The  _f_l_a_g_s field specifies if the archives should have any
-       special processing done to the archived  log  files.   The
-       ``Z''  flag will make the archive files compressed to save
-       space using /usr/bin/gzip.  The ``B'' flag means that  the
-       file  is  a  binary  file,  and so the ascii message which
-       _n_e_w_s_y_s_l_o_g inserts to indicate the fact that the logs  have
-       been turned over should not be included.
+             The _- flag means nothing, but can be used as a placeholder when
+             the field _p_a_t_h___t_o___p_i_d___f_i_l_e is specified for entries without any
+             flags.
 
+     _p_a_t_h___t_o___p_i_d___f_i_l_e
+             This optional field specifies the file name to read to find the
+             daemon process id.  If this field is present, a SIGHUP is sent
+             the process id contained in this file.  This field must start
+             with a slash (``/'') in order to be recognized properly.
 
 OOPPTTIIOONNSS
-       The following options can be used with newsyslog:
+     The following options can be used with newsyslog:
 
-       --ff _c_o_n_f_i_g_-_f_i_l_e
-              instructs  newsyslog  to use _c_o_n_f_i_g_-_f_i_l_e instead of
-              /etc/newsyslog.conf for its configuration file.
+     --ff _c_o_n_f_i_g___f_i_l_e
+             Instruct newsyslog to use _c_o_n_f_i_g___f_i_l_e instead of
+             _/_e_t_c_/_n_e_w_s_y_s_l_o_g_._c_o_n_f for its configuration file.
 
-       --vv     places _n_e_w_s_y_s_l_o_g in verbose mode.  In this mode  it
-              will  print out each log and its reasons for either
-              trimming that log or skipping it.
+     --vv      Place nneewwssyysslloogg in verbose mode.  In this mode it will print out
+             each log and its reasons for either trimming that log or skipping
+             it.
 
-       --nn     causes _n_e_w_s_y_s_l_o_g not to trim the logs, but to print
-              out what it would do if this option were not speci­
-              fied.
+     --nn      Cause nneewwssyysslloogg not to trim the logs, but to print out what it
+             would do if this option were not specified.  If used without the
+             --vv (verbose) flag the result should be a shell script that would
+             duplicate the actions of nneewwssyysslloogg were it to be run without the
+             --nn flag (and assuming of course the script were run by root).
 
-       --rr     removes the restriction that _n_e_w_s_y_s_l_o_g must be run­
-              ning  as  root.   Of  course, _n_e_w_s_y_s_l_o_g will not be
-              able to send a  HUP  signal  to  _s_y_s_l_o_g_d,  so  this
-              option should only be used in debugging.
+     --rr      Remove the restriction that nneewwssyysslloogg must be running as root.
+             Of course, nneewwssyysslloogg will not be able to send a HUP signal to
+             syslogd(8) or most other daemons so this option should only be
+             used in debugging.
 
 FFIILLEESS
-       /etc/newsyslog.conf
+     /etc/newsyslog.conf      nneewwssyysslloogg configuration file.
+
+HHIISSTTOORRYY
+     Originated at MIT Project Athena.
+
+     Someone at OSF hacked on it too.
+
+     A nneewwssyysslloogg command appeared in 4.4BSD.
+
+     The _p_a_t_h___t_o___p_i_d___f_i_l_e optional field was added by FreeBSD.
+
+     There was an extremely simple shell script of similar purpose,
+     _/_u_s_r_/_l_i_b_/_n_e_w_s_y_s_l_o_g, in SunOS-4.1.
 
 BBUUGGSS
-       Doesn't  yet  automatically read the logs to find security
-       breaches.
+     Log files will not be rolled over at the same time of day unless nneewwssyyss--
+     lloogg is run only once per day at a regular time.  In fact the roll-over
+     time will creep around the clock.  This could be overcome by adding an
+     optional _t_i_m_e___t_o___a_r_c_h_i_v_e subfield to the _i_n_t_e_r_v_a_l field (eg.
+     ``168@Sun:00'' to roll over Sunday at midnight).
+
+     Fields such as _i_n_t_e_r_v_a_l and _s_i_z_e should allow the units of measurement to
+     be specified.
 
 
+     There should be a separate newsyslog.conf(5) manual page.
+
+     If compression is turned on after the series of archival copies has been
+     created, old uncompressed archives will not be compressed.
 
 AAUUTTHHOORR
-       Theodore Ts'o, MIT Project Athena
-       Copyright 1987, Massachusetts Institute of Technology
+     Theodore Ts'o, MIT Project Athena
 
-
-
-
-Project Athena           January 12, 1989                       2
-
-
-
-
-
-NEWSYSLOG(8)                                         NEWSYSLOG(8)
-
+     Copyright 1987, Massachusetts Institute of Technology
 
 SSEEEE AALLSSOO
-       syslogd(8), syslog(3), gzip(1)
+     compress(1),  cron(8),  gzip(1),  syslog(3),  syslogd(8)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Project Athena           January 12, 1989                       3
-
-
+BSD Experimental               October 27, 1997                              3
