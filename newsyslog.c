@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.21 1999/02/24 19:08:53 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.22 1999/02/24 19:16:14 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -701,18 +701,21 @@ do_trim(ent)
 		if (noaction) {
 			notified = 1;
 			printf("kill -HUP %d\n", (int) pid);
-			puts("sleep 5");
+			if (!(ent->flags & CE_PLAIN0))
+				puts("sleep 5");
 		} else if (kill(pid, SIGHUP))
 			fprintf(stderr, "%s: can't notify daemon, pid %d: %s\n.", argv0, (int) pid, strerror(errno));
 		else {
 			notified = 1;
-			if (verbose) {
-				printf("daemon with pid %d notified\n", (int) pid);
-				printf("small pause now to allow daemon to close log... ");
-			}
-			sleep(5);
 			if (verbose)
-				puts("done.");
+				printf("daemon with pid %d notified\n", (int) pid);
+			if (!(ent->flags & CE_PLAIN0)) {
+				if (verbose)
+					printf("small pause now to allow daemon to close log... ");
+				sleep(5);
+				if (verbose)
+					puts("done.");
+			}
 		}
 	}
 	if ((ent->flags & CE_COMPACT)) {
