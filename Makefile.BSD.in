@@ -3,7 +3,7 @@
 #
 # This file Copyright (C) 1998,1999 Planix, Inc. -- see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.4 1999/08/25 01:21:43 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.5 2000/11/27 00:41:24 woods Exp $"
 
 
 CPPFLAGS+= -DPATH_COMPRESS=\"@PATH_COMPRESS@\"
@@ -42,7 +42,7 @@ SOELIM = soelim
 .SUFFIXES: .5so .5
 
 .5so.5:
-	@rm -f $@
-	$(SOELIM) $< > $@ || (rm -f $@; exit 1)
+	@rm -f ${.TARGET}
+	${SOELIM} -I ${.CURDIR} ${.IMPSRC} > ${.TARGET} || (rm -f ${.TARGET}; exit 1)
 
 .include <bsd.prog.mk>
