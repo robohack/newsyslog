@@ -26,6 +26,12 @@ _$*
 *.ln
 core
 # CVS default ignores end
+*.8
+*.8so
+*.cat8
+*.5
+*.5so
+*.cat5
 INSTALL
 Makefile
 Makefile.BSD
@@ -41,9 +47,5 @@ install-sh
 missing
 mkinstalldirs
 newsyslog
-newsyslog.8
-newsyslog.cat8
-newsyslog.conf.5
-newsyslog.conf.cat5
 stamp-h
 stamp-h.in
