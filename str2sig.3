@@ -1,0 +1,80 @@
+.Dd January 3, 2002
+.Dt str2sig 3
+.Os
+.Sh NAME
+.Nm str2sig, sig2str
+.Nd translation between signal name and signal number
+.Sh LIBRARY
+.Lb libc
+.Sh SYNOPSIS
+.Fd #include <signal.h>
+.Ft int
+.Fn str2sig "const char * str" "int * signum"
+.Ft int
+.Fn sig2str "int * signum" "char * str"
+.Sh DESCRIPTION
+The
+.Fm str2sig
+function uses the
+.Va sys_signame
+list to translate the signal name
+.Fa str
+to a signal number, and stores the integer result in the location
+referenced by
+.Fa signum .
+The name in
+.Fa str
+can be either the symbol for that signal, without the ``SIG'' prefix, or
+a decimal number.
+.\" All the signal symbols defined in
+.\" .Aq Pa sys/signal.h
+.\" are recognized.  This means that both
+.\" .Dv CLD
+.\" and
+.\" .Dv CHLD
+.\" are recognized and return the same signal number, as do both
+.\" .Dv POLL
+.\" and
+.\" .Dv IO .
+.Pp
+The
+.Fn sig2str
+function looks up the signal number
+.Fa signum
+in the
+.Va sys_signame
+array to find the symbolic name for that signal and stores it, without
+the ``SIG'' prefix, at the location specified by
+.Fa str .
+The storage referenced by
+.Fa str
+should be large enough to hold the symbol and a terminating NUL byte.
+The symbol
+.Dv SIG2STR_MAX ,
+which is defined in
+.Aq Pa signal.h ,
+gives the maximum size, in bytes, that could ever be required by any
+symbolic signal name.
+.Sh RETURN VALUES
+The
+.Fn str2sig
+function will return 0 if it recognizes the signal name specified in
+.Fa str ;
+otherwise, it returns \-1.
+.Pp
+The
+.Fn sig2str()
+function will return 0 if the value
+.Fa signum
+corresponds to a valid signal number; otherwise, it returns \-1.
+.Sh SEE ALSO
+.Xr kill 1 ,
+.Xr psignal 3 ,
+.Xr strsignal 3 ,
+.Xr sys_signame 3 ,
+.Xr signal 7
+.Sh HISTORY
+.Fn sig2str
+and
+.Fn str2sig
+first appeared in SunOS 5.4.
