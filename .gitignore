@@ -26,4 +26,23 @@ _$*
 *.ln
 core
 # CVS default ignores end
+INSTALL
+Makefile
+Makefile.in
+aclocal.m4
+config.cache
+config.h
+config.h.in
+config.log
+config.status
+configure
+install-sh
+missing
+mkinstalldirs
 newsyslog
+newsyslog.8
+newsyslog.cat8
+newsyslog.conf.5
+newsyslog.conf.cat5
+stamp-h
+stamp-h.in
