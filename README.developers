@@ -1,12 +1,116 @@
 
-	README.developers - Instructions for developers
+	README.developers - Instructions for developers with CVS access.
+
+
+Initial Builds:
 
 In order to pre-build the necessary config files from a freshly checked
 out repository you must run the following commands:
 
-	autoheader
 	aclocal
+	autoheader
 	automake --add-missing
 	autoconf
 
 Now you can proceed with the normal build process (./configure && make).
+
+
+Making a New Release:
+
+In order to build releases you *MUST* be using a version of GNU Automake
+that includes support for proper CVS-based release management using the
+'make dist' approach.
+
+New releases should be adequately tested, of course, and that all
+changes have been checked in.  Once you're ready to try one, update the
+"VERSION" specification in configure.in (see the notes below on release
+numbers), and check this in.  Run 'make && make' again to ensure
+everything is kosher with your final check-in.
+
+Now run 'make releasedir=/place-to-build-releases dist'.  This will
+automatically 'cvs tag', 'cvs export', prepare and check the
+completeness of the distribution by doing a full build followed by a
+'make distclean', and finally tar and gzip the results into
+"/place-to-build-releases/PACKAGE-VERSION.tar.gz".
+
+
+After Making a New Release:
+
+After you've made a new release don't forget to again update the
+"VERSION" identifier in configure.in again for the pre-release of the
+next most likely release (eg. set 1.0.0.80-Pre after making 1.0).  See
+below for release number ideas.
+
+If doing release branch maintenance then you should instead create a
+release branch for every N.N release and set N.N.0.80-Pre on the branch
+and N.N+1.80-Pre on the trunk.
+
+
+Other Notes:
+
+You can use the magic CONFIGUREFLAGS variable for special build hooks
+during the 'make dist', such as adding "--verbose", or other things
+needed specially for a "generic" build suitable for distributions, etc.
+
+It seems that for some as yet unknown reason aclocal sometimes fails.
+If it does you can try running:
+
+	make ACLOCAL="aclocal --verbose" prepare-distdir
+
+You will have to manually tar and compress or whatever....  (Try running
+'make -n dist' to see what all the steps should be.)
+
+
+Release Numbers:
+
+We essentially follow the essence of the Berkeley CSRG version numbering
+scheme for identifying releases.  That is to say we increment the third
+number (3.7, 3.7.1, 3.7.2, etc.)  whenever we generate a release of bug
+fixes (what might traditionally be also known as a "patch" release), and
+we increment the second number, or the minor release number, (3.7, 3.8)
+whenever we add any new features or make other important user-visible
+changes, and lastly we increment the first number, or the major release
+number, (3.*, 4.1) whenever we make major or architectural changes.
+
+We also throw in a smattering of GNU-isms too -- the alpha-test and
+beta-test releases of upcoming proper releases should have a ".80" or
+".90" (respectively) appended to the current release number (3.7.5.80
+would be the first alpha for 3.7.6, continuing with 3.7.5.81, 3.7.5.82,
+etc., 3.7.5.90 would be the first beta, continuing with 3.7.5.91,
+3.7.5.92, etc. until finally 3.7.6 is released; for another example the
+first alpha for 4.1.1 would be 4.1.0.80, continuing with 4.1.0.81,
+4.1.0.82, etc., 4.1.0.90 would be the first beta, continuing with
+4.1.0.91, 4.1.0.92, etc., until finally 4.1.1 is released).
+
+One special case rule not yet described covers the releases preceding
+the initial release, which would might start with semi-private releases
+numbered "0.x", eg. 0.1.80, 0.1.90, 0.1.91, 0.2, 0.2.80, 0.2.90, 0.3,
+etc., then full public releases numbered "1.0.x", eg. 1.0.80, 1.0.90,
+etc. until 1.1, the first fully official release is made.
+
+Note that there are no '.0' releases!  I.e. ".0" is only used as a
+separator between initial major releases and the first minor release,
+and between initial minor releases and the first patch release.
+
+Ideally patch releases will be developed on a release branch to permit
+parallel development of new features on the trunk for the next minor (or
+major) release (with folding of fixes and features as necessary back to
+the trunk).  In theory minor releases could also be developed on release
+branches, but only in situations where extreme levels of maintenance for
+existing releases must be undertaken.
+
+You'll note this effectively caps the maximum patch level, and the
+maximum minor release number, to a ceiling of ".79", and limits the
+number of alpha releases to just 10.  Unfortunately it does not limit
+the number of beta releases since things like .100 are allowed!  ;-)
+
+If you see "-Pre" appended to the release number then you're seeing an
+intermediate development copy -- i.e. an as-yet un-released copy which
+will likely have the release number given with the suffix stripped when
+it is finally officially released.
+
+
+NOTE:  This file *is* included in distributions so that users and
+contributors can see how all the release magic works!
+
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.2 1998/03/05 05:27:27 woods Exp $"
