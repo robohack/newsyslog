@@ -17,7 +17,11 @@ Please send bug reports to bugs@robohack.planix.com
 
 - new log files are created with unique temporary names and then renamed
   to their proper names only if their permissions and ownership are
-  successfully initialised.
+  successfully initialised.  (Make sure you use the 'D' flag if the
+  daemon will create its own log files on demand.)
+
+- interval trim-time parsing errors are always printed to stderr, not
+  just when '-v' is given.  Keep an eye out for e-mail from cron!  ;-)
 
 
 * User-visible changes new in newsyslog-1.0.102.
@@ -168,4 +172,4 @@ from being rolled over unnecessarily).
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.19 2002/05/10 17:46:04 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.20 2002/05/10 18:37:48 woods Exp $"
