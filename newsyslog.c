@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.24 2000/07/07 17:29:02 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.25 2000/11/26 21:42:36 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -230,8 +230,8 @@ do_entry(ent)
 
 {
 	int             we_trim_it = 0;
-	int             size;
-	int             modtime;
+	int             size;			/* in kbytes */
+	int             modtime = 0;		/* in hours */
 
 	if (verbose) {
 		printf("%s <#%d,%s%s%s%s>: ", ent->log, ent->numlogs,
@@ -253,13 +253,16 @@ do_entry(ent)
 			printf("size (Kb): %d [allow %d] ", size, ent->size);
 		if ((ent->size > 0) && (size >= ent->size))
 			we_trim_it = 1;
-		modtime = check_old_log_age(ent);
-		if (verbose && (ent->hours > 0))
-			printf(" age (hr): %d [allow %d] ", modtime, ent->hours);
-		assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
-		if (((ent->hours > 0) && ((modtime >= ent->hours) || (modtime < 0))))
-			we_trim_it = 1;
+		if (ent->hours > 0) {
+			modtime = check_old_log_age(ent);
+			if (verbose)
+				printf(" age (hr): %d [allow %d] ", modtime, ent->hours);
+			/* always trim if timestamp FUBAR */
+			if (modtime >= ent->hours || modtime < 0)
+				we_trim_it = 1;
+		}
 	}
+	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 	if (domidnight == -1 || (domidnight == 1 && (ent->hours % 24) == 0)) {
 		if (verbose && domidnight == 1 && we_trim_it)
 			printf("(daily) ");
