@@ -1,0 +1,9 @@
+This version of newsyslog was written by Theodore Ts'o of MIT Project
+Athena and is Copyright 1987, Massachusetts Institute of Technology.
+
+It has been modified by people at the Open Software Foundation.
+
+Important new features were added by the FreeBSD Inc., and this version
+began with their 1.14 revision.
+
+It has been enhanced and packaged by Greg A. Woods <woods@planix.com>.
