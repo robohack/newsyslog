@@ -6,7 +6,7 @@
 #include <sys/cdefs.h>
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.5 2002/05/10 17:39:35 woods Exp $";*/
+static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.6 2002/08/09 16:02:41 woods Exp $";*/
 #endif /* LIBC_SCCS and not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -79,7 +79,9 @@ const char *const sys_signame[] = {
 	"ILL",		/*  4 : SIGILL       Illegal instruction (ANSI).  */
 	"TRAP",		/*  5 : SIGTRAP      Trace trap (POSIX).  */
 	"ABRT",		/*  6 : SIGABRT      Abort (ANSI).  */
+#  if 0 /* this data structure only allows one name per index....  :-( */
 	"IOT",		/*  6 : SIGIOT       IOT trap (4.2 BSD).  */
+#  endif
 	"BUS",		/*  7 : SIGBUS       BUS error (4.2 BSD).  */
 	"FPE",		/*  8 : SIGFPE       Floating-point exception (ANSI).  */
 	"KILL",		/*  9 : SIGKILL      Kill, unblockable (POSIX).  */
