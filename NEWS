@@ -5,11 +5,15 @@ This file:  Copyright (C) Planix, Inc.
 
 Please send bug reports to bugs@robohack.planix.com
 
+* User-visible changes since newsyslog-1.1.
+
+
 
 * User-visible changes since newsyslog-1.0.103.
 
-- finally fixed a long-standing (since 1.0.93) locking bug that allowed
-  to instances to run with the same config file at the same time.
+- finally found and fixed a long-standing (since 1.0.93) locking bug
+  that allowed multiple instances to run with the same config file at
+  the same time.
 
 - fixed portability issues with PID value sanity checks on GNU/Linux.
 
@@ -189,4 +193,4 @@ from being rolled over unnecessarily).
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.24 2003/07/08 18:50:06 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.25 2003/07/08 20:02:56 woods Exp $"
