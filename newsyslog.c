@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.46 2002/11/08 23:24:14 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.47 2003/07/08 17:35:13 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -61,7 +61,7 @@ extern void exit();
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#if HAVE_SYS_WAIT_H
+#ifdef HAVE_SYS_WAIT_H
 # include <sys/wait.h>
 #endif
 #include <ctype.h>
@@ -84,26 +84,26 @@ extern void exit();
 # endif
 # include <sys/proc.h>
 #endif
-#if TIME_WITH_SYS_TIME
+#ifdef TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
 #else
-# if HAVE_SYS_TIME_H
+# ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 # else
 #  include <time.h>
 # endif
 #endif
-#if HAVE_STRING_H
+#ifdef HAVE_STRING_H
 # if !defined(STDC_HEADERS) && defined(HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>
 #endif
-#if HAVE_STRINGS_H
+#ifdef HAVE_STRINGS_H
 # include <strings.h>
 #endif
-#if HAVE_UNISTD_H
+#ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 #ifdef HAVE_ERRNO_H
@@ -291,25 +291,25 @@ extern int              opterr;
 extern int              optind;
 extern char            *optarg;
 
-#if !HAVE_DECL_SIG2STR
+#if !defined(HAVE_DECL_SIG2STR)
 extern int              sig2str __P((int, char *));
 #endif
-#if !HAVE_DECL_STR2SIG
+#if !defined(HAVE_DECL_STR2SIG)
 extern int              str2sig __P((const char *, int *));
 #endif
-#if !HAVE_DECL_STRCHR
+#if !defined(HAVE_DECL_STRCHR)
 extern char            *strchr __P((const char *, int));
 #endif
-#if !HAVE_DECL_STRDUP
+#if !defined(HAVE_DECL_STRDUP)
 extern char            *strdup __P((const char *));
 #endif
-#if !HAVE_DECL_STRPTIME			/* STUPID GNU/Linux/glibc */
+#if !defined(HAVE_DECL_STRPTIME)		/* STUPID GNU/Linux/glibc */
 extern char            *strptime __P((const char *, const char *, struct tm *));
 #endif
-#if !HAVE_DECL_STRRCHR
+#if !defined(HAVE_DECL_STRRCHR)
 extern char            *strrchr __P((const char *, int));
 #endif
-#if !HAVE_DECL_STRTOK
+#if !defined(HAVE_DECL_STRTOK)
 extern char            *strtok __P((char *, const char *));
 #endif
 
@@ -665,6 +665,12 @@ parse_file(files )
 	int             lnum = 0;
 	char            prev = '\0';
 
+	/*
+	 * NOTE:  we don't ever close the config file until exit() does it for
+	 * us.  If we're reading stdin then we don't need to close it, and if
+	 * we're reading any other file we need to hold the lock until we're
+	 * done to prevent collisions with new instances.
+	 */
 	if (strcmp(config_file, "-") == 0) {
 		fp = stdin;
 		config_file = "STDIN";
@@ -685,10 +691,11 @@ parse_file(files )
 		 * there if flock() is not available.
 		 */
 		/*
-		 * NOTE: because we want an  exclusive lock, we have to ask for
-		 * a "write"  lock, and on  some systems (eg.  some/all 4.4BSD)
-		 * this  means we  need to  open the  file in  read/write mode.
-		 * This is really stupid, but that's the way of POSIX!  :-/
+		 * NOTE:  because we want an exclusive lock, we have to ask for
+		 * a "write" lock, and on some systems (e.g. some/all 4.4BSD
+		 * and derivatives) this means we need to open the file for
+		 * read and write.  This is really stupid, but that's the way
+		 * of POSIX!  :-/
 		 */
 		if ((fd = open(config_file, O_RDWR, (mode_t) 0)) != -1) {
 			struct flock	lock;
@@ -1036,7 +1043,8 @@ parse_file(files )
 	}
 	if (working)
 		working->next = (struct conf_entry *) NULL;
-	(void) fclose(fp);
+
+	/* NOTE: do not fclose(fp) -- it must stay open until the process exits! */
 
 	return (first);
 }
@@ -1103,8 +1111,8 @@ do_trim(ent)
 		log_exists = FALSE;
 		/*
 		 * Most implementations of chown(2) "do the right thing" with
-		 * -1, but some don't (eg. AIX-3.1), so we'll just play it safe
-		 * and always set them to the most likely correct values.
+		 * -1, but some don't (e.g. AIX-3.1), so we'll just play it
+		 * safe and always set them to the most likely correct values.
 		 */
 		if (ent->uid == NO_ID)
 			ent->uid = geteuid();
@@ -1124,12 +1132,12 @@ do_trim(ent)
 			ent->gid = st.st_gid;
 	}
 	/* prepare the temporary name for a newly created log file */
-	if (snprintf(newlog, sizeof(file1), "%s.XXXXXX", ent->log) >= sizeof(file1)) {
+	if (snprintf(newlog, sizeof(newlog), "%s.XXXXXX", ent->log) >= (int) sizeof(file1)) {
 		fprintf(stderr, "%s: filename too long: %s.\n", argv0, ent->log);
 		return;
 	}
 	/* form the uncompressed name of the oldest expected log */
-	if (snprintf(file1, sizeof(file1), "%s.%u", ent->log, ent->numlogs) >= sizeof(file1)) {
+	if (snprintf(file1, sizeof(file1), "%s.%u", ent->log, ent->numlogs) >= (int) sizeof(file1)) {
 		fprintf(stderr, "%s: filename too long: %s.\n", argv0, ent->log);
 		return;
 	}
@@ -1618,8 +1626,10 @@ get_pid_file(pid_file)
 
 		errno = 0;
 		ulval = strtoul(line, &ep, 10);
-		if (line[0] == '\0' || (*ep != '\0' && *ep != '\n'))
-			errmsg = "invalid number";
+		if (line[0] == '\0')
+			errmsg = "does not start with a valid number";
+		else if (*ep != '\0' && *ep != '\n')
+			errmsg = "not a valid BASE-10 integer";
 		else if (errno == ERANGE && ulval == ULONG_MAX)
 			errmsg = "number out of range";
 		else if (ulval == 0)
@@ -1767,10 +1777,10 @@ parse_dwm(s, trim_at)
 				fprintf(stderr, "%s: nonsensical day-of-the-week (W) value: %lu!\n", argv0, ul);
 				return (-1);
 			}
-			if (ul != tms.tm_wday) {
+			if (ul != (unsigned long) tms.tm_wday) {
 				int save;
 
-				if (ul < tms.tm_wday) {
+				if (ul < (unsigned long) tms.tm_wday) {
 					save = 6 - tms.tm_wday;
 					save += ((int) ul + 1);
 				} else {
@@ -1802,7 +1812,7 @@ parse_dwm(s, trim_at)
 					fprintf(stderr, "%s: nonsensical day-of-the-month (M) value: %lu!\n", argv0, ul);
 					return (-1);
 				}
-				if (ul > nd) {
+				if (ul > (unsigned long) nd) {
 					fprintf(stderr, "%s: day-of-the-week (M) value out of range for month %d: %lu!\n", argv0, tms.tm_mon, ul);
 					return (-1);
 				}
