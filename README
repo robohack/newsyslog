@@ -96,20 +96,20 @@ In general you need only run the following command sequence:
 
 (see "CUSTOM CONFIGURATION OPTIONS" below for other "configure" options)
 
-On systems without the "doc" macros (or without "nroff", or even with an
-incompatible version of "soelim"), you can still install and read the
-distributed 'cat'-table manual pages.
+On systems without the "doc" macros (or without "nroff", or even with
+just an incompatible version of "soelim"), you can still install and
+read the distributed 'cat'-table manual pages.
 
 For example if you get an error during the first "make" that says
 something like "nroff: Cannot find library -mandoc", or "nroff: not
 found", or "-I: No such file or directory", then run the following
 command instead of running "make install":
 
-	make copy-dist-catman install
+	make copy-dist-mans install
 
 This does not guarantee your "man" command will be able to find and
 present the result, but it gets you to the stage of having something to
-read instead of being stuck with just the "doc" source.
+read instead of being stuck with just the raw "doc" source.
 
 
 CUSTOM CONFIGURATION OPTIONS
@@ -161,8 +161,8 @@ or:
 
 -- 
 						Greg A. Woods
-						<woods@planix.com>
-						<woods@weird.com>
+						<woods-newsyslog@planix.com>
+						<woods-newsyslog@weird.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.11 2002/05/10 17:45:15 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.12 2002/05/10 21:42:25 woods Exp $"
