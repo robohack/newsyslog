@@ -1,7 +1,7 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.7 2001/02/23 01:36:58 woods Exp $";
+#ident	"@(#)newsyslog:$Name:  $:$Id: acconfig.h,v 1.8 2001/03/06 02:03:04 woods Exp $";
 
 /*
- * Copyright (C) 1997 Planix, Inc. - All rights reserved.
+ * Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc. - All rights reserved.
  */
 
 @TOP@
@@ -38,6 +38,9 @@
 
 /* Suffix string */
 #define COMPRESS_SUFFIX		".Z"
+
+/* Define if <signal.h> doesn't declare 'sys_signame' */
+#undef SYS_SIGNAME_DECLARED
 
 @BOTTOM@
 
