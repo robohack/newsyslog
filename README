@@ -1,6 +1,6 @@
 NEWSYSLOG -- A portable and enhanced version of this old standard
 
-This file:  Copyright (C) 1997,1998,1999 Planix, Inc.
+This file:  Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc.
 	    see COPYING for details
 
 This is an updated version of a package put together by Theodore Ts'o ,
@@ -133,9 +133,14 @@ software is available at:
 
 	<URL:ftp://ftp.planix.com/pub/Planix/newsyslog.tar.gz>
 
+or:
+
+	<URL:ftp://ftp.weird.com/pub/local/newsyslog.tar.gz>
+
 -- 
 						Greg A. Woods
 						<woods@planix.com>
+						<woods@weird.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.6 2000/12/01 19:58:45 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.7 2001/03/06 02:00:56 woods Exp $"
