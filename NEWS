@@ -8,11 +8,19 @@ Please send bug reports to bugs@robohack.planix.com
 
 * User-visible changes since newsyslog-1.0.103.
 
-- fix portability issues with PID value sanity checks on GNU/Linux.
+- finally fixed a long-standing (since 1.0.93) locking bug that allowed
+  to instances to run with the same config file at the same time.
 
-- fix a bug in the signal name translation that affects all GNU/Linux
-  systems and would cause any signals above #6 to be sent with one added
-  to their values (eg. SIGUSR1, which is 10 is sent as 11, which SIGSEGV)
+- fixed portability issues with PID value sanity checks on GNU/Linux.
+
+- signal names (and their descriptions) are now printed instead of just
+  their numeric values whenever a child process (log compressor) has
+  been killed by a signal.
+
+- implemented a more portable signal name translation scheme (all
+  GNU/Linux systems suffered a bug that would cause any signals above #6
+  to be sent with one added to their values (e.g. SIGUSR1, which is 10 is
+  sent as 11, which ends up as SIGSEGV, which is bad)
 
 
 * User-visible changes since newsyslog-1.0.102.
@@ -181,4 +189,4 @@ from being rolled over unnecessarily).
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.23 2002/11/15 03:55:32 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.24 2003/07/08 18:50:06 woods Exp $"
