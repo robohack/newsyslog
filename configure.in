@@ -8,16 +8,17 @@ dnl             - see COPYING for details
 AC_INIT([NewSyslog], [0.0.0.0-Autoconf-broken], [woods-newsyslog@robohack.planix.com], [newsyslog])
 
 dnl NOTICE:  We must use the obsolete forms of the next two macros
-dnl with Autoconf-2.53 because that's the only way to keep PACKAGE
-dnl (i.e. the tarname) and VERSION dynamic at "./configure" runtime.
+dnl with Autoconf-2.53 and newer because that's the only way to keep
+dnl PACKAGE (i.e. the tarname) and VERSION dynamic at "./configure"
+dnl runtime.
 
 AC_SOURCE_VERSION(./VERSION)
 AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 
 dnl Required Autoconf version.
-AC_PREREQ(2.53)
+AC_PREREQ(2.57)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.42 2002/11/08 23:10:52 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.43 2003/07/08 18:07:18 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -78,16 +79,22 @@ AC_CHECK_TYPES(unsigned long long)
 
 AC_TYPE_SIGNAL
 
-AC_DECL_SYS_SIGNAME
-
 dnl Checks for library functions.
-AC_REPLACE_FUNCS(sig2str snprintf str2sig strdup strerror strtok strptime)
+# note sys_signame is not a function, but this test works anyway thanks to C....
+AC_REPLACE_FUNCS(sig2str snprintf str2sig strdup strerror strptime strsignal strtok sys_signame)
 
-AC_CHECK_DECLS([sig2str, str2sig], [], [], [#include <signal.h>])
-AC_CHECK_DECLS([strchr, strdup, strrchr, strtok], [], [], [#if HAVE_STRING_H
+AC_DECL_SYS_SIGNAME
+AC_DECL_SYS_NSIG
+
+AC_CHECK_DECLS([sig2str, str2sig, strsignal], [], [], [#include <signal.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif])dnl
+
+AC_CHECK_DECLS([strchr, strdup, strrchr, strtok], [], [], [#ifdef HAVE_STRING_H
 # include <string.h>
 #endif
-#if HAVE_STRINGS_H
+#ifdef HAVE_STRINGS_H
 # include <strings.h>
 #endif])dnl
 
@@ -104,7 +111,12 @@ dnl code and account for its absense with a macro.
 dnl Also note that checking for flock() here doesn't guarantee a
 dnl working flock()!
 
-AC_CHECK_FUNCS(bzero flock isnan isinf memset mkstemp rename strchr strrchr)
+dnl checking for sys_nsig won't work on SunOS-5 where it's actually
+dnl renamed by a macro to a private identifier.  However on SunOS-5
+dnl there's no sys_signame so we'll end up using our own sys_nsigname
+dnl and we won't need sys_nsig because SunOS-5 does have strsignal().
+
+AC_CHECK_FUNCS(bzero flock isnan isinf memset mkstemp rename strchr strrchr sys_nsig)
 
 AM_WITH_DMALLOC
 
