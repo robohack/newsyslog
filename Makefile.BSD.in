@@ -3,7 +3,7 @@
 #
 # This file Copyright (C) 1998,1999 Planix, Inc. -- see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.6 2000/12/01 19:46:52 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.7 2000/12/01 20:39:04 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
@@ -20,6 +20,7 @@ CPPFLAGS+= -DRETSIGTYPE=void
 CPPFLAGS+= -DSTDC_HEADERS
 CPPFLAGS+= -DTIME_WITH_SYS_TIME
 CPPFLAGS+= -DHAVE_ERRNO_H
+CPPFLAGS+= -DHAVE_FLOCK
 CPPFLAGS+= -DHAVE_STRCHR
 CPPFLAGS+= -DHAVE_STRDUP
 CPPFLAGS+= -DHAVE_STRERROR
