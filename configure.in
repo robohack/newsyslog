@@ -7,7 +7,7 @@ dnl Copyright (C) 1997 Planix, Inc. - All rights reserved.
 AC_INIT(newsyslog.c)
 AC_PREREQ(2.12)dnl Required Autoconf version.
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.10 1998/03/14 22:28:49 woods Exp $"])dnl
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.11 1998/03/15 20:44:57 woods Exp $"])dnl
 
 PACKAGE=newsyslog
 VERSION=1.0.92-Pre
@@ -46,6 +46,7 @@ AC_ISC_POSIX
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
+AC_HEADER_TIME
 AC_CHECK_HEADERS(errno.h string.h sys/types.h unistd.h)
 
 AC_MSG_CHECKING(for sys/cdefs.h)
@@ -124,4 +125,4 @@ AC_SUBST(path_config)
 AC_DEFINE_UNQUOTED(PATH_CONFIG, "$path_config")
 AC_MSG_RESULT($path_config)
 
-AC_OUTPUT([Makefile newsyslog.conf.5 newsyslog.8])
+AC_OUTPUT([Makefile Makefile.BSD newsyslog.conf.5 newsyslog.8])
