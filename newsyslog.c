@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.26 2000/11/26 21:47:47 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.27 2000/11/27 00:40:11 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -123,8 +123,9 @@ extern int errno;
 
 #define CE_COMPACT	001	/* Compact the achived log files */
 #define CE_BINARY	002	/* Logfile is in binary, don't add status messages */
-#define CE_PLAIN0	004	/* Keep .0 file plain (needed for smail, httpd, etc.) */
+#define CE_PLAIN0	004	/* Keep .0 file uncompressed (needed for smail, httpd, etc.) */
 #define CE_NOSIGNAL	010	/* Don't send a signal to any daemon when file is trimmed */
+#define CE_NOCREATE	020	/* Don't create the file -- owner may write special start record */
 
 #define NONE		-1
 
@@ -240,7 +241,8 @@ do_entry(ent)
 	int             modtime = 0;		/* in hours */
 
 	if (verbose) {
-		printf("%s <#%d,%s%s%s%s>: ", ent->log, ent->numlogs,
+		printf("%s <#%d,%s%s%s%s%s>: ", ent->log, ent->numlogs,
+		       (ent->flags & CE_NOCREATE) ? "C" : "",
 		       (ent->flags & CE_COMPACT) ? "Z" : "",
 		       (ent->flags & CE_BINARY) ? "b" : "",
 		       (ent->flags & CE_NOSIGNAL) ? "n" : "",
@@ -486,6 +488,10 @@ parse_file()
 			working->size = -1;
 
 		q = parse = missing_field(strsob(++parse), lnum, errline);
+		if (*q == '#') {
+			eol = 1;
+			q = NULL;
+		}
 		parse = strson(parse);
 		eol = !*parse;
 		*parse = '\0';
@@ -498,6 +504,10 @@ parse_file()
 			q = NULL;
 		else {
 			q = parse = strsob(++parse);	/* Optional field */
+			if (q && *q == '#') {
+				eol = 1;
+				q = NULL;
+			}
 			parse = strson(parse);
 			if (!*parse)
 				eol = 1;
@@ -505,13 +515,15 @@ parse_file()
 		}
 		working->flags = 0;
 		while (q && *q && !isspace(*q)) {
-			if ((*q == 'Z') || (*q == 'z'))
+			if ((*q == 'D') || (*q == 'd'))
+				working->flags |= CE_NOCREATE;
+			else if ((*q == 'Z') || (*q == 'z'))
 				working->flags |= CE_COMPACT;
 			else if ((*q == 'B') || (*q == 'b'))
 				working->flags |= CE_BINARY;
 			else if ((*q == 'N') || (*q == 'n'))
 				working->flags |= CE_NOSIGNAL;
-			else if (*q == '0')
+			else if ((*q == '0') || (*q == 'p') || (*q == 'P'))
 				working->flags |= CE_PLAIN0;
 			else if (*q != '-') {
 				fprintf(stderr, "%s: illegal flag in config file -- %c on line:\n%6d:\t'%s'\n", argv0, *q, lnum, errline);
@@ -524,6 +536,10 @@ parse_file()
 			q = NULL;
 		else {
 			q = parse = strsob(++parse);	/* Optional field */
+			if (q && *q == '#') {
+				eol = 1;
+				q = NULL;
+			}
 			parse = strson(parse);
 			if (!*parse)
 				eol = 1;
@@ -532,9 +548,12 @@ parse_file()
 		}
 		working->pid_file = NULL;
 		if (q && *q) {
-			if (*q == '/')
-				working->pid_file = strdup(q);
-			else {
+			if (*q == '/') {
+				if (strcmp(_PATH_DEVNULL, q) != 0)
+					working->flags |= CE_NOSIGNAL;
+				else
+					working->pid_file = strdup(q);
+			} else {
 				*parse = prev;		/* un-terminate the token */
 				parse = q - 1;		/* skip back before it */
 			}
@@ -544,6 +563,10 @@ parse_file()
 			q = NULL;
 		else {
 			q = parse = strsob(++parse);	/* Optional field */
+			if (q && *q == '#') {
+				eol = 1;
+				q = NULL;
+			}
 			*(parse = strson(parse)) = '\0';
 		}
 		working->signum = SIGHUP;
@@ -678,10 +701,10 @@ do_trim(ent)
 			}
 		}
 	}
-	if (noaction) {
+	if (noaction && !(ent->flags & CE_NOCREATE)) {
 		printf("touch %s\n", ent->log);
 		printf("chown %d:%d %s\n", ent->uid, ent->gid, ent->log);
-	} else {
+	} else if (!(ent->flags & CE_NOCREATE)) {
 		fd = creat(ent->log, ent->permissions);
 		if (fd < 0)
 			fprintf(stderr, "%s: can't create new log: %s: %s.\n", argv0, ent->log, strerror(errno));
@@ -699,14 +722,14 @@ do_trim(ent)
 	 * to cycle logs regardless of whether they're used, this is one way to
 	 * do it....
 	 */
-	if (!(ent->flags & CE_BINARY)) {
+	if (!(ent->flags & CE_BINARY) && (ent->flags & CE_NOCREATE)) {
 		if (note_trim(ent->log))
 			fprintf(stderr, "%s: can't add status message to log: %s: %s.\n", argv0, ent->log, strerror(errno));
 	}
 #endif
-	if (noaction)
+	if (noaction && !(ent->flags & CE_NOCREATE))
 		printf("chmod %o %s\n", ent->permissions, ent->log);
-	else {
+	else if (!(ent->flags & CE_NOCREATE)) {
 		if (chmod(ent->log, ent->permissions) < 0)
 			fprintf(stderr, "%s: can't chmod log file %s: %s.\n", argv0, ent->log, strerror(errno));
 	}
@@ -714,10 +737,8 @@ do_trim(ent)
 	need_notification = 0;
 	notified = 0;
 	if (ent->pid_file && !(ent->flags & CE_NOSIGNAL)) {
-		if (strcmp(_PATH_DEVNULL, ent->pid_file) != 0) {
-			need_notification = 1;
-			pid = get_pid(ent->pid_file);
-		}
+		need_notification = 1;
+		pid = get_pid(ent->pid_file);
 	} else if (!(ent->flags & CE_BINARY) && !(ent->flags & CE_NOSIGNAL)) {
 		/*
 		 * XXX is it wrong to assume that binaries without an
