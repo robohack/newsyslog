@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.44 2002/08/23 04:56:46 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.45 2002/11/08 23:09:45 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -1678,7 +1678,7 @@ getsig(sig)
 {
 	int n;
 
-	if (!strncasecmp(sig, "sig", 3))
+	if (!strncasecmp(sig, "sig", (size_t) 3))
 		sig += 3;
 	if (str2sig(sig, &n) != -1)
 		return n;
