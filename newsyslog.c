@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.42 2002/05/10 18:06:09 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.43 2002/05/10 18:36:06 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -79,6 +79,9 @@ extern void exit();
 # include <netdb.h>			/* for MAXHOSTNAMELEN */
 #endif
 #if !defined(PID_MAX) && defined(HAVE_SYS_PROC_H)
+# if defined(HAVE_SYS_USER_H)
+#  include <sys/user.h>
+# endif
 # include <sys/proc.h>
 #endif
 #if TIME_WITH_SYS_TIME
@@ -92,7 +95,7 @@ extern void exit();
 # endif
 #endif
 #if HAVE_STRING_H
-# if !STDC_HEADERS && HAVE_MEMORY_H
+# if !defined(STDC_HEADERS) && defined(HAVE_MEMORY_H)
 #  include <memory.h>
 # endif
 # include <string.h>
@@ -1237,7 +1240,7 @@ do_trim(ent)
 		} else if (!debug && !(ent->flags & CE_NOCREATE)) {
 			if ((fd = mkstemp(newlog)) < 0) {
 				fprintf(stderr,
-					"%s: can't create new log: %s: %s.\n",
+					"%s: can't create new log file: %s: %s.\n",
 					argv0,
 					newlog,
 					strerror(errno));
@@ -1268,6 +1271,13 @@ do_trim(ent)
 					newlog,
 					ent->log,
 					strerror(errno));
+				if (unlink(newlog) < 0) {
+					fprintf(stderr,
+						"%s: failed to unlink new log file template: %s: %s.\n",
+						argv0,
+						newlog,
+						strerror(errno));
+				}
 			}
 		}
 #ifdef LOG_TURNOVER_IN_NEW_FILE_TOO
