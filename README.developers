@@ -47,7 +47,8 @@ and install it in a private tree.  You should copy this distribution to
 other types of machines and platforms and build and check it there too.
 You might want to update the "VERSION" identifier in the VERSION file
 each time you go through this cycle so as to keep each copy clearly
-identifiable.  Just increment a trailing number after the "-Preview" tag.
+identifiable.  Just increment a trailing number after the "-Preview"
+suffix.  You may want to "cvs tag" the preview releases as well.
 
 Once you think you're ready to try an actual release, update the
 "VERSION" identifier in the VERSION file (see the notes below on release
@@ -66,7 +67,7 @@ run the following commands:
 	autoreconf --force --gnu
 	automake --gnu --add-missing
 	sh newsyslog2netbsd.sh
-	gmake dist
+	gmake dist			# or distcheck
 	mv $PACKAGE-$VERSION.tar.gz ..
 	rm -rf import.d
 	gmake distclean
@@ -81,18 +82,30 @@ If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access.
 If the 'diff' command reveals any files are missing then you need to go
 back, untag the whole module, fix Makefile.am, and re-test.
 
+Update the project page, and then copy new project page sub-files into
+place with these commands:
+
+	cd /place-to-build-releases/$PACKAGE-VERSION
+	sh newsyslog2netbsd.sh
+	gmake htmlman
+	cp newsyslog.conf.5.html ~/public_html/projects/newsyslog.conf.5.html
+	cp newsyslog.8.html ~/public_html/projects/newsyslog.8.html
+	cp NEWS ~/public_html/projects/newsyslog.NEWS.txt
+
+Finally post an update on http://freshmeat.net/
+
 
 After Making a New Release:
 
 IMPORTANT:  After you've made a new release don't forget to update the
 "VERSION" identifier in the VERSION file for the pre-release of the next
-most likely release (eg. set 1.0.0.80-Preview after making 1.0).  See
+most likely release (eg. set 1.0.0.80-Preview.0 after making 1.0).  See
 below for release number ideas.
 
 If you plan on doing release maintenance using branches then you should
 instead create a release branch for every N.N release and set the
-"VERSION" to N.N.0.80-Preview on the branch and N.N+1.80-Preview on the
-trunk.
+"VERSION" to N.N.0.80-Preview.0 on the branch and N.N+1.80-Preview.0 on
+the trunk.
 
 
 Release Numbers:
@@ -138,13 +151,13 @@ maximum minor release number, to a ceiling of ".79", and limits the
 number of alpha releases to just 10.  Unfortunately it does not limit
 the number of beta releases since things like .100 are allowed!  ;-)
 
-If you see "-Preview" appended to the release number then you're seeing
-an intermediate development copy -- i.e. an as-yet un-released copy
-which will likely have the release number given with the suffix stripped
-when it is finally officially released.
+If you see "-Preview.N" appended to the release number then you're
+seeing an intermediate development copy -- i.e. an as-yet un-released
+copy which will likely have the release number given with the suffix
+stripped when it is finally officially released.
 
 
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.9 2002/01/13 20:16:02 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.10 2002/02/09 21:50:52 woods Exp $"
