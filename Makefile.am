@@ -4,7 +4,7 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.27 2002/05/10 18:50:06 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.28 2002/05/10 21:51:45 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.6
 MAINT_CHARSET = latin1
@@ -54,7 +54,7 @@ PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 # 
 GNU_AUTO_MADE_FILES = Makefile.in \
 			aclocal.m4 aclocal.m4~ \
-			configure configure.lineno \
+			configure \
 			config.h.in config.h.in~
 
 # Mention here files which are created using '--add-missing', as well
@@ -63,10 +63,14 @@ GNU_AUTO_MADE_FILES = Makefile.in \
 # copy, never locally edited)
 #
 MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL \
-			$(GNU_AUTO_MADE_FILES)
+			$(GNU_AUTO_MADE_FILES) \
 			$(catman_MANS_dist) $(psman_MANS) $(htmlman_MANS)
 
-maintainer-clean-local:
+# XXX automake isn't quite current with autoconf it seems....
+# configure makes these so we need to clean them on 'distclean'
+#
+DISTCLEANFILES = configure.lineno
+distclean-local:
 	rm -rf autom4te.cache
 
 CLEANFILES = $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
@@ -83,7 +87,7 @@ TBL = tbl
 SOELIM = soelim
 
 SUFFIXES = .5 .8 .5so .8so .cat5 .cat5-dist .cat8 .cat8-dist .5.html .8.html \
-		.5.ps .8.ps .ps .ps-dist .html .html-dist
+		.5.ps .8.ps .ps .ps-dist .html .html-dist .BSD .BSD-dist
 
 .5so.5 .8so.8:
 	@rm -f $@
@@ -125,6 +129,10 @@ SUFFIXES = .5 .8 .5so .8so .cat5 .cat5-dist .cat8 .cat8-dist .5.html .8.html \
 	@rm -f $@
 	cp $? $@
 
+.BSD.BSD-dist:
+	@rm -f $@
+	cp $? $@
+
 #
 # hard-coded dependencies and extensions
 #
@@ -153,27 +161,40 @@ install-catman-local:
 	$(INSTALL_DATA) newsyslog.conf.cat5 $(catmandir)/cat5/newsyslog.conf.0
 	$(INSTALL_DATA) newsyslog.cat8 $(catmandir)/cat8/newsyslog.0
 
+# automake>=1.6 doesn't have separate uninstalls for "exec" and "data"
+#
+uninstall-local: uninstall-catman-local
+
+uninstall-catman-local:
+	rm -f $(catmandir)/cat5/newsyslog.conf.0
+	rm -f $(catmandir)/cat8/newsyslog.0
+
 # if you have no mandoc macros you might be able to use this rule, or
 # something similar, to install the distributed versions of the
 # cattable manual pages.  Make this before "make install"
 #
-copy-dist-mans: copy-dist-catman copy-dist-psman copy-dist-htmlman
+copy-dist-mans:
+	for distman in $(DIST_MANS) ; do			\
+		cp $$distman $$(basename $$distman -dist);	\
+	done
 
-copy-dist-catman:
-	cp newsyslog.conf.cat5-dist newsyslog.conf.cat5
-	cp newsyslog.cat8-dist newsyslog.cat8
+# copy project page sub-files into place
+#
+# (expects to be run from within an un-packed distribution directory)
+#
+update-project-web-files: $(htmlman_MANS_dist)
+	for htmlman in $(htmlman_MANS_dist) ; do 					\
+		cp $$htmlman ~/public_html/projects/$$(basename $$htmlman -dist); 	\
+	done
+	cp NEWS ~/public_html/projects/newsyslog.NEWS.txt
 
-copy-dist-psman:
-	cp newsyslog.conf.5.ps-dist newsyslog.conf.5.ps
-	cp newsyslog.8.ps-dist newsyslog.8.ps
-
-copy-dist-htmlman:
-	cp newsyslog.conf.5.html-dist newsyslog.conf.5.html
-	cp newsyslog.8.html-dist newsyslog.8.html
+#
+# miscellaneous dependencies follow....
+#
 
 newsyslog.conf.5: newsyslog.conf newsyslog.conf.5so
 
-# (no .so's in here yet....)
+# (no .so's in here (at least not yet...))
 newsyslog.8: newsyslog.8so
 
 Makefile.BSD: Makefile.BSD.in config.status
