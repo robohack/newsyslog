@@ -3,12 +3,12 @@
 #
 # This file Copyright (C) 1998,1999 Planix, Inc. -- see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.7 2000/12/01 20:39:04 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.8 2001/02/23 00:34:52 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
 #
-#	./configure --prefix=/usr --bindir=/usr/bin --sysconfdir=/etc --localstatedir=/var --with-newsyslog-conf=/etc/newsyslog.conf --with-syslogd_pid=/var/run/syslogd.pid --with-gzip
+#	./configure --prefix=/usr --mandir=/usr/share/man --bindir=/usr/bin --sysconfdir=/etc --localstatedir=/var --with-newsyslog-conf=/etc/newsyslog.conf --with-syslogd_pid=/var/run/syslogd.pid --with-gzip
 #
 
 CPPFLAGS+= -DPATH_COMPRESS=\"@PATH_COMPRESS@\"
