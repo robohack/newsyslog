@@ -95,10 +95,10 @@ GNU Auto* commands detailed above):
 	gmake distclean
 	. ./VERSION
 	tag=$(echo $VERSION | tr . _)
-	cvs tag -c $PACKAGE-$tag .
+	cvs tag -c ${PACKAGE}-${tag} .
 	cd $place_to_build_releases
-	cvs export -kv -r $tag -d $PACKAGE-$VERSION-export $PACKAGE
-	cd $PACKAGE-$VERSION
+	cvs export -kv -r ${PACKAGE}-${tag} -d ${PACKAGE}-${VERSION}-export $PACKAGE
+	cd ${PACKAGE}-${VERSION}-export
 	aclocal
 	autoheader
 	automake --gnu --add-missing
@@ -106,11 +106,11 @@ GNU Auto* commands detailed above):
 	sh ${PACKAGE}2netbsd.sh		# configures best default paths...
 	rm -rf import.d			# clean up after ${PACKAGE}2netbsd.sh
 	gmake dist			# or distcheck
-	mv $PACKAGE-$VERSION.tar.gz ..
+	mv ${PACKAGE}-${VERSION}.tar.gz ..
 	gmake distclean
 	cd ..
-	pax -rzf $PACKAGE-$VERSION.tar.gz
-	diff -r --brief $PACKAGE-$VERSION-export $PACKAGE-$VERSION
+	pax -rzf ${PACKAGE}-${VERSION}.tar.gz
+	diff -r --brief ${PACKAGE}-${VERSION}-export ${PACKAGE}-${VERSION}
 
 The last step ensures that everything in the CVS module is distributed.
 
@@ -120,8 +120,12 @@ back, untag the whole module, fix Makefile.am, and re-test.
 If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access and
 copy the new project page sub-files into place with this command:
 
-	cd $place_to_build_releases/$PACKAGE-VERSION
+	cd $place_to_build_releases/${PACKAGE}-${VERSION}
 	gmake update-project-web-files
+
+	# if all is OK you can clean up the release directories too:
+	cd $place_to_build_releases
+	rm -rf ${PACKAGE}-${VERSION}-export ${PACKAGE}-${VERSION}
 
 Update the actual project page in ~/public_html/projects/$PACKAGE.html
 
@@ -194,4 +198,4 @@ stripped when it is finally officially released.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.12 2002/05/10 21:52:23 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.13 2002/05/21 21:02:35 woods Exp $"
