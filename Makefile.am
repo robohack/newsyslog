@@ -4,7 +4,7 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.28 2002/05/10 21:51:45 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.29 2002/05/21 21:03:51 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.6
 MAINT_CHARSET = latin1
@@ -53,9 +53,9 @@ PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 # NOTE: these files were removed automatically y past automake's.
 # 
 GNU_AUTO_MADE_FILES = Makefile.in \
-			aclocal.m4 aclocal.m4~ \
+			aclocal.m4 \
 			configure \
-			config.h.in config.h.in~
+			config.h.in
 
 # Mention here files which are created using '--add-missing', as well
 # as files created during 'make dist' and which can be re-created.
@@ -71,7 +71,7 @@ MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL \
 #
 DISTCLEANFILES = configure.lineno
 distclean-local:
-	rm -rf autom4te.cache
+	rm -rf autom4te.cache aclocal.m4~ config.h.in~
 
 CLEANFILES = $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
 
