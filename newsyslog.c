@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.18 1999/01/17 18:35:15 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.19 1999/02/24 18:15:32 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -619,18 +619,22 @@ do_trim(ent)
 		/*
 		 * are we keeping any aged files at all?
 		 */
-		if (o_numlogs != 0) {
-			if (noaction)
-				printf("rm %s\n", ent->log);
-			else
-				if (unlink(ent->log) < 0)
-					fprintf(stderr, "%s: can't unlink file: %s: %s.\n", argv0, ent->log, strerror(errno));
-		} else {
+		if (o_numlogs) {
 			if (noaction)
 				printf("mv %s %s\n", ent->log, file1);
 			else {
 				if (rename(ent->log, file1) < 0)
 					fprintf(stderr, "%s: can't rename file: %s to %s: %s.\n", argv0, ent->log, file1, strerror(errno));
+			}
+		} else {
+			/*
+			 * if not just remove the current file...
+			 */
+			if (noaction)
+				printf("rm %s\n", ent->log);
+			else {
+				if (unlink(ent->log) < 0)
+					fprintf(stderr, "%s: can't unlink file: %s: %s.\n", argv0, ent->log, strerror(errno));
 			}
 		}
 	}
