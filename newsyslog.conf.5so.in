@@ -2,7 +2,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.3 1999/08/24 23:07:00 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.4 2000/04/04 02:55:02 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -21,12 +21,12 @@
 .Dd January 17, 1999
 .Dt NEWSYSLOG.CONF 5
 .Os
-.Sh NAME
+.Sh "NAME"
 .Nm newsyslog.conf
 .Nd
 .Nm newsyslog
 configuration file
-.Sh DESCRIPTION
+.Sh "DESCRIPTION"
 The
 .Dq Pa @path_config@
 file is the configuration file for the
@@ -42,14 +42,15 @@ are ignored.  The fields of the configuration file are as follows:
 .Bl -tag -width indent
 .It Ar logfile_name
 Name of the system log file to be archived.
-.It Ar owner.group
+.It Ar owner:group
 This optional field specifies the owner and group for the archive file.
-The subfields may be numeric, or a name which is present in
+The colon-separated subfields may be numeric, or a name which is present
+in
 .Pa /etc/passwd
 or
-.Pa /etc/group .
-Either of the file's user-id or group-id may be left unchanged by
-specifying it as
+.Pa /etc/group
+respectively.  Either of the file's user-id or group-id may be left
+unchanged from the ownership of the current file by specifying it as
 .Dq Li -1.
 .It Ar mode 
 Specifies the file permissions of the log file and its archival copies
@@ -153,14 +154,18 @@ a SIGHUP is sent the process id contained in this file.  This field must
 start with a slash (i.e.\ 
 .Dq Pa / )
 in order to be recognized properly.
+.It Ar sigtype
+This optional field specifies the type of signal to be sent to the
+daemon process.  This may be a numeric or symbolic value.  By default a
+SIGHUP (hang-up) will be sent if this field is left blank.
 .El
-.Sh EXAMPLE
+.Sh "EXAMPLE"
 .Pp
 A configuration file might appear as follows:
 .Bd -literal
 .so newsyslog.conf
 .Ed
-.Sh FILES
+.Sh "FILES"
 .Bl -tag -width /usr/local/etc/newsyslog.conf -compact
 .It Pa @path_config@
 The
@@ -181,9 +186,25 @@ The default location of the PID for
 .Xr syslogd 8 ,
 .Xr zgrep 1 ,
 .Xr zmore 1
-.Sh STANDARDS
+.Sh "STANDARDS"
 None.
-.Sh HISTORY
+.Sh "COMPATABILITY"
+The original versions of
+.Nm
+used a period
+.Pq Dq "\&."
+character to separate the user and group names.  This has been changed
+to a colon
+.Pq Dq "\:"
+character so that user and group names may contain a period.  This
+change is in conjunction with a similar change in the
+.Nm chown
+command (as required by
+.St -p1003.2
+compliance).  A period is no longer accepted as a separator as there are
+already enough changes to make this version's configuration file format
+incompatible with previous versions.
+.Sh "HISTORY"
 Originated at MIT Project Athena.
 .Pp
 A
@@ -194,12 +215,12 @@ command appeared in
 The
 .Ar path_to_pid_file
 optional field was added by FreeBSD.
-.Sh AUTHOR
+.Sh "AUTHOR"
 .An Theodore Ts'o ,
 MIT Project Athena
 .Pp
 Copyright 1987, Massachusetts Institute of Technology
-.Sh BUGS
+.Sh "BUGS"
 .Pp
 Fields such as
 .Ar interval
