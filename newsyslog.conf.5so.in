@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.12 2002/11/15 03:56:52 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.13 2003/07/08 17:24:15 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -22,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd November 8, 2002
+.Dd July 3, 2002
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -182,7 +182,7 @@ If an interval
 a time specification are both given, then both conditions must be met.
 I.e. the file must be as old or older than the specified interval, and
 the current time must match the time specification.  This means that it
-is most useful to specify just an hour of the day (eg.
+is most useful to specify just an hour of the day (e.g.
 .Ar D6 ,
 for 6:00 hr) and an interval which is an even multiple of 24 hours.
 .Pp
@@ -249,7 +249,7 @@ flag is given.  (This flag may also be specified as
 for compatability with
 .Nx . )
 This flag is necessary when managing log files written
-directly to by long-running processes (eg.\ 
+directly to by long-running processes (e.g.\ 
 .Nm smail ,
 .Nm httpd ,
 etc.).  This flag also makes it more convenient to browse through the
@@ -407,7 +407,10 @@ and multiple signals can be avoided for other daemons by ensuring their
 PID files are only listed once and that the
 .Ar 0
 flag is used to ensure the most recent log file is not immediately
-compressed.
+compressed.  Note that daemons which have multiple log files open may
+require signalling every time any one of their logs are rolled over
+anyway, especially if their different logs have different roll-over
+policies.
 .Pp
 The age of the log file may be impossible to determine, especially for
 binary format files, if the most recent archive copy
