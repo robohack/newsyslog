@@ -31,8 +31,14 @@ Once you're ready to try one, update the "VERSION" specification in
 configure.in (see the notes below on release numbers), and check this
 in.  Run 'make && make' again to ensure everything is kosher with your
 final check-in.  Note that depending on which version of make you are
-using you may instead have to run 'aclocal && autoheader && automake
---gnu && autoconf && ./configure && make && make'  [:-(].
+using you may instead have to run: 
+
+	aclocal
+	autoheader && echo timestamp > stamp-h.in
+	automake --gnu
+	autoconf
+	./configure && echo timestamp > stamp-h
+	make && make
 
 If and only when everything seems OK run:
 
@@ -70,6 +76,10 @@ If it does you can try running:
 
 You will have to manually tar and compress or whatever....  (Try running
 'make -n dist' to see what all the steps should be.)
+
+If you screw up something that can only be noticed during 'make dist',
+then you can start over if you first delete the release tag you've just
+created, and delete any remnants in your releasedir.
 
 
 Release Numbers:
@@ -124,4 +134,4 @@ it is finally officially released.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.5 1998/03/16 01:48:07 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.6 1998/03/16 02:27:04 woods Exp $"
