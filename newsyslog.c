@@ -35,11 +35,11 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.23 1999/08/25 00:59:02 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.24 2000/07/07 17:29:02 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+# include "config.h"
 #endif
 
 #ifdef STDC_HEADERS
@@ -115,9 +115,11 @@ extern int errno;
 # define dbtob(db)	((unsigned)(db) << UBSHIFT) /* Calculates (db * DEV_BSIZE) */
 #endif
 
-#define CE_COMPACT	01	/* Compact the achived log files */
-#define CE_BINARY	02	/* Logfile is in binary, don't add status messages */
-#define CE_PLAIN0	04	/* Keep .0 file plain (needed for smail, httpd, etc.) */
+#define CE_COMPACT	001	/* Compact the achived log files */
+#define CE_BINARY	002	/* Logfile is in binary, don't add status messages */
+#define CE_PLAIN0	004	/* Keep .0 file plain (needed for smail, httpd, etc.) */
+#define CE_NOSIGNAL	010	/* Don't send a signal to any daemon when file is trimmed */
+
 #define NONE		-1
 
 struct conf_entry {
@@ -130,6 +132,7 @@ struct conf_entry {
 	int             hours;		/* Hours between log trimming */
 	int             permissions;	/* File permissions on the log */
 	int             flags;		/* Flags (CE_*)  */
+	int             signum;		/* Signal to send to daemon (SIG*) */
 	struct conf_entry *next;	/* Linked list pointer */
 };
 
@@ -177,7 +180,7 @@ int                     main __P((int, char **)); /* XXX HACK for WARNS=1 */
 static struct conf_entry *parse_file __P((void));
 static char            *strsob __P((char *));
 static char            *strson __P((char *));
-static char            *missing_field __P((char *, char *));
+static char            *missing_field __P((char *, int, char *));
 static void             do_entry __P((struct conf_entry *));
 static void             parse_options __P((int, char **));
 static void             usage __P((void));
@@ -188,6 +191,8 @@ static int              check_file_size __P((char *));
 static int              check_old_log_age __P((struct conf_entry *));
 static time_t           read_first_timestamp __P((char *));
 static pid_t            get_pid __P((char *));
+static int              isnumber __P((char *));
+static int              getsig __P((char *));
 
 extern int              optind;
 extern char            *optarg;
@@ -229,9 +234,10 @@ do_entry(ent)
 	int             modtime;
 
 	if (verbose) {
-		printf("%s <#%d,%s%s%s>: ", ent->log, ent->numlogs,
+		printf("%s <#%d,%s%s%s%s>: ", ent->log, ent->numlogs,
 		       (ent->flags & CE_COMPACT) ? "Z" : "",
 		       (ent->flags & CE_BINARY) ? "b" : "",
+		       (ent->flags & CE_NOSIGNAL) ? "n" : "",
 		       (ent->flags & CE_PLAIN0) ? "0" : "");
 	}
 	size = check_file_size(ent->log);
@@ -355,6 +361,8 @@ parse_file()
 	struct passwd  *pass;
 	struct group   *grp;
 	int             eol;
+	int             lnum = 0;
+	int             prev;
 
 	if (strcmp(config_file, "-") == 0) {
 		fp = stdin;
@@ -368,9 +376,12 @@ parse_file()
 	while (fgets(line, BUFSIZ, fp)) {
 		struct conf_entry *tmpentry;
 
+		lnum++;
 		if ((line[0] == '\n') || (line[0] == '#'))
 			continue;
 		errline = strdup(line);
+		if (*(q = &errline[strlen(errline) - 1]) == '\n')
+			*q = '\0';
 		if (!(tmpentry = (struct conf_entry *) malloc(sizeof(struct conf_entry)))) {
 			perror(argv0);
 			exit(1);
@@ -383,29 +394,28 @@ parse_file()
 			working = working->next;
 		}
 
-		q = parse = missing_field(strsob(line), errline);
+		q = parse = missing_field(strsob(line), lnum, errline);
 		parse = strson(line);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n%6d:\t'%s'\n", argv0, lnum, errline);
 			exit(1);
 		}
 		*parse = '\0';
 		working->log = strdup(q);
 
-		q = parse = missing_field(strsob(++parse), errline);
+		q = parse = missing_field(strsob(++parse), lnum, errline);
 		parse = strson(parse);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n%6d:\t'%s'\n", argv0, lnum, errline);
 			exit(1);
 		}
 		*parse = '\0';
-		if ((group = strchr(q, '.')) != NULL) {
+		if ((group = strchr(q, ':')) != NULL) {
 			*group++ = '\0';
 			if (*q) {
 				if (!(isdigit(*q))) {
 					if ((pass = getpwnam(q)) == NULL) {
-						fprintf(stderr, "%s: error in config file; unknown user:\n'%s'\n",
-							argv0, errline);
+						fprintf(stderr, "%s: error in config file; unknown user: '%s' in line:\n%6d:\t'%s'\n", argv0, q, lnum, errline);
 						exit(1);
 					}
 					working->uid = pass->pw_uid;
@@ -418,8 +428,7 @@ parse_file()
 			if (*q) {
 				if (!(isdigit(*q))) {
 					if ((grp = getgrnam(q)) == NULL) {
-						fprintf(stderr, "%s: error in config file; unknown group:\n'%s'\n",
-							argv0, errline);
+						fprintf(stderr, "%s: error in config file; unknown group: '%s' in line:\n%6d:\t'%s'\n", argv0, q, lnum, errline);
 						exit(1);
 					}
 					working->gid = grp->gr_gid;
@@ -428,10 +437,10 @@ parse_file()
 			} else
 				working->gid = NONE;
 
-			q = parse = missing_field(strsob(++parse), errline);
+			q = parse = missing_field(strsob(++parse), lnum, errline);
 			parse = strson(parse);
 			if (!*parse) {
-				fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
+				fprintf(stderr, "%s: malformed line (missing fields):\n%6d:\t'%s'\n", argv0, lnum, errline);
 				exit(1);
 			}
 			*parse = '\0';
@@ -439,27 +448,26 @@ parse_file()
 			working->uid = working->gid = NONE;
 
 		if (!sscanf(q, "%o", &working->permissions)) {
-			fprintf(stderr, "%s: error in config file; bad permissions:\n'%s'\n",
-				argv0, errline);
+			fprintf(stderr, "%s: error in config file; bad permissions: '%s' in line:\n%6d:\t'%s'\n", argv0, q, lnum, errline);
 			exit(1);
 		}
 
-		q = parse = missing_field(strsob(++parse), errline);
+		q = parse = missing_field(strsob(++parse), lnum, errline);
 		parse = strson(parse);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n%6d:\t'%s'\n", argv0, lnum, errline);
 			exit(1);
 		}
 		*parse = '\0';
 		if (!sscanf(q, "%d", &working->numlogs)) {
-			fprintf(stderr, "%s: error in config file; bad number:\n'%s'\n", argv0, errline);
+			fprintf(stderr, "%s: error in config file; bad number: '%s' in line\n%6d:\t'%s'\n", argv0, q, lnum, errline);
 			exit(1);
 		}
 
-		q = parse = missing_field(strsob(++parse), errline);
+		q = parse = missing_field(strsob(++parse), lnum, errline);
 		parse = strson(parse);
 		if (!*parse) {
-			fprintf(stderr, "%s: malformed line (missing fields):\n'%s'\n", argv0, errline);
+			fprintf(stderr, "%s: malformed line (missing fields):\n%6d:\t'%s'\n", argv0, lnum, errline);
 			exit(1);
 		}
 		*parse = '\0';
@@ -468,7 +476,7 @@ parse_file()
 		else
 			working->size = -1;
 
-		q = parse = missing_field(strsob(++parse), errline);
+		q = parse = missing_field(strsob(++parse), lnum, errline);
 		parse = strson(parse);
 		eol = !*parse;
 		*parse = '\0';
@@ -486,17 +494,18 @@ parse_file()
 				eol = 1;
 			*parse = '\0';
 		}
-
 		working->flags = 0;
 		while (q && *q && !isspace(*q)) {
 			if ((*q == 'Z') || (*q == 'z'))
 				working->flags |= CE_COMPACT;
 			else if ((*q == 'B') || (*q == 'b'))
 				working->flags |= CE_BINARY;
+			else if ((*q == 'N') || (*q == 'n'))
+				working->flags |= CE_NOSIGNAL;
 			else if (*q == '0')
 				working->flags |= CE_PLAIN0;
 			else if (*q != '-') {
-				fprintf(stderr, "%s: illegal flag in config file -- %c.\n", argv0, *q);
+				fprintf(stderr, "%s: illegal flag in config file -- %c on line:\n%6d:\t'%s'\n", argv0, *q, lnum, errline);
 				exit(1);
 			}
 			q++;
@@ -506,18 +515,36 @@ parse_file()
 			q = NULL;
 		else {
 			q = parse = strsob(++parse);	/* Optional field */
-			*(parse = strson(parse)) = '\0';
+			parse = strson(parse);
+			if (!*parse)
+				eol = 1;
+			prev = *parse;
+			*parse = '\0';
 		}
-
 		working->pid_file = NULL;
 		if (q && *q) {
 			if (*q == '/')
 				working->pid_file = strdup(q);
 			else {
-				fprintf(stderr, "%s: illegal pid file in config file: %s.\n", argv0, q);
+				*parse = prev;		/* un-terminate the token */
+				parse = q - 1;		/* skip back before it */
+			}
+		}
+
+		if (eol)
+			q = NULL;
+		else {
+			q = parse = strsob(++parse);	/* Optional field */
+			*(parse = strson(parse)) = '\0';
+		}
+		working->signum = SIGHUP;
+		if (q && *q) {
+			if ((working->signum = getsig(q)) < 0) {
+				fprintf(stderr, "%s: illegal signal name/number in config file: %s, on line:\n%6d:\t'%s'\n", argv0, q, lnum, errline);
 				exit(1);
 			}
 		}
+
 		free(errline);
 	}
 	if (working)
@@ -532,12 +559,13 @@ parse_file()
  * text and exit if the supplied token is null or empty.
  */
 static char    *
-missing_field(p, errline)
+missing_field(p, lnum, errline)
 	char           *p;		/* parser token */
-	char           *errline;	/* error message */
+	int             lnum;		/* input line number */
+	char           *errline;	/* input line with error (newline stripped) */
 {
 	if (!p || !*p) {
-		fprintf(stderr, "%s: missing field in config file:\n'%s'\n", argv0, errline);
+		fprintf(stderr, "%s: missing field in config file on line:\n%6d:\t'%s'\n", argv0, lnum, errline);
 		exit(1);
 	}
 	return (p);
@@ -605,7 +633,7 @@ do_trim(ent)
 		if (noaction) {
 			printf("mv %s %s\n", zfile1, zfile2);
 			printf("chmod %o %s\n", ent->permissions, zfile2);
-			printf("chown %d.%d %s\n",
+			printf("chown %d:%d %s\n",
 			       ent->uid, ent->gid, zfile2);
 		} else {
 			(void) rename(zfile1, zfile2); /* XXX error check (non-fatal?) */
@@ -644,7 +672,7 @@ do_trim(ent)
 	}
 	if (noaction) {
 		printf("touch %s\n", ent->log);
-		printf("chown %d.%d %s\n", ent->uid, ent->gid, ent->log);
+		printf("chown %d:%d %s\n", ent->uid, ent->gid, ent->log);
 	} else {
 		fd = creat(ent->log, ent->permissions);
 		if (fd < 0)
@@ -677,22 +705,23 @@ do_trim(ent)
 	pid = 0;
 	need_notification = 0;
 	notified = 0;
-	if (ent->pid_file) {
+	if (ent->pid_file && !(ent->flags & CE_NOSIGNAL)) {
 		if (strcmp(_PATH_DEVNULL, ent->pid_file) != 0) {
 			need_notification = 1;
 			pid = get_pid(ent->pid_file);
 		}
-	} else if (!(ent->flags & CE_BINARY)) {
+	} else if (!(ent->flags & CE_BINARY) && !(ent->flags & CE_NOSIGNAL)) {
 		/*
 		 * XXX is it wrong to assume that binaries without an
 		 * explicitly specified pid file are not written to by syslogd?
+		 *
 		 * The worst thing likely to happen is someone will set the
 		 * CE_BINARY flag on a syslogd log file and syslog might not
 		 * get notified right away about this file being trimmed.  Only
 		 * if all syslogd files are marked binary will they never be
 		 * properly re-opened by syslogd after being trimmed.  Anyone
 		 * who purposely marks all syslogd files as binary really needs
-		 * to get clue-x-4'ed!
+		 * to get clue-x-4'ed anyway!
 		 */
 		need_notification = 1;
 		pid = syslogd_pid;
@@ -700,10 +729,10 @@ do_trim(ent)
 	if (pid) {
 		if (noaction) {
 			notified = 1;
-			printf("kill -HUP %d\n", (int) pid);
+			printf("kill -%d %d\n", ent->signum, (int) pid);
 			if (!(ent->flags & CE_PLAIN0))
 				puts("sleep 5");
-		} else if (kill(pid, SIGHUP))
+		} else if (kill(pid, ent->signum))
 			fprintf(stderr, "%s: can't notify daemon, pid %d: %s\n.", argv0, (int) pid, strerror(errno));
 		else {
 			notified = 1;
@@ -868,11 +897,11 @@ read_first_timestamp(file)
 			;
 		else if (strptime(line, "%Y/%m/%d-%T", &tms)) /* ISO */
 			;
-		else if (strptime(line, "[%Y/%m/%d:%T]", &tms)) /* ISO (httpd common log) */
+		else if (strptime(line, "[%d/%b/%Y:%T ", &tms)) /* httpd [DD/Mon/YYYY:HH:MM:SS +/-ZONE] */
 			;
 		else if (strptime(line, "%c", &tms)) /* ctime */
 			;
-		else if (strptime(line, "[%c]", &tms)) /* httpd */
+		else if (strptime(line, "[%c]", &tms)) /* old httpd */
 			;
 		else {
 			fprintf(stderr, "%s: can't parse initial timestamp from %s:\n --> %s",
@@ -967,4 +996,44 @@ strson(p)
 	while (p && *p && !isspace(*p))
 		p++;
 	return (p);
+}
+
+/*
+ * Check if string is actually a number, i.e. *all* digits
+ */
+static int
+isnumber(p)
+	char *p;
+{
+	while (*p != '\0') {
+		if (*p < '0' || *p > '9')
+			return(0);
+		p++;
+	}
+	return (1);
+}
+
+/*
+ * Translate a signal number or name into an integer
+ */
+static int
+getsig(sig)
+	char *sig;
+{
+	int n;
+        
+	if (isnumber(sig)) {
+		n = strtol(sig, &sig, 0);
+		if ((unsigned)n >= NSIG)
+			return (-1);
+		return (n);
+	}
+
+	if (!strncasecmp(sig, "sig", 3))
+		sig += 3;
+	for (n = 1; n < NSIG; n++) {
+		if (!strcasecmp(sys_signame[n], sig))
+			return (n);
+	}
+	return (-1);
 }
