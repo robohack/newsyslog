@@ -7,7 +7,7 @@
 #
 # NOTE: needs a fully POSIX /bin/sh to run properly....
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.8 2002/05/10 17:39:42 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.9 2002/11/08 23:10:11 woods Exp $"
 
 # The following variables can be adjusted as necessary
 #
@@ -50,7 +50,7 @@ rm -rf ${IMPORTDIR}
 mkdir ${IMPORTDIR}
 
 if [ ! -f Makefile.BSD ] ; then
-	./configure --prefix=${PREFIX} --bindir=${BINDIR} --sysconfdir=${SYSCONFDIR} --localstatedir=${LOCALSTATEDIR} --with-newsyslog-conf=${NEWSYSLOG_CONF} --with-syslogd_pid=${SYSLOGD_PID} --with-gzip
+	AWK=awk ./configure --prefix=${PREFIX} --bindir=${BINDIR} --sysconfdir=${SYSCONFDIR} --localstatedir=${LOCALSTATEDIR} --with-newsyslog-conf=${NEWSYSLOG_CONF} --with-syslogd_pid=${SYSLOGD_PID} --with-gzip
 fi
 
 # note the couple of renames....
