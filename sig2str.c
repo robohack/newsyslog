@@ -41,7 +41,7 @@ sig2str(signum, signame)
 {
 	if (signum < 0 || signum >= NSIG)
 		return (-1);
-	strncpy(signame, sys_signame[signum], SIG2STR_MAX);
+	strncpy(signame, sys_signame[signum], (size_t) SIG2STR_MAX);
 	signame[SIG2STR_MAX - 1] = '\0';
 
 	return 0;
