@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.14 1998/03/16 03:11:23 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.15 1998/03/18 05:07:23 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -130,6 +130,7 @@ struct conf_entry {
 };
 
 char           *argv0 = PACKAGE;
+char            package[] = PACKAGE;	/* the original dist name */
 char            version[] = VERSION;
 
 int             verbose = 0;	/* Print out what's going on */
@@ -219,10 +220,10 @@ do_entry(ent)
 	int             modtime;
 
 	if (verbose) {
-		if (ent->flags & CE_COMPACT)
-			printf("%s <%dZ>: ", ent->log, ent->numlogs);
-		else
-			printf("%s <%d>: ", ent->log, ent->numlogs);
+		printf("%s <#%d,%s%s%s>: ", ent->log, ent->numlogs,
+		       (ent->flags & CE_COMPACT) ? "Z" : "",
+		       (ent->flags & CE_BINARY) ? "b" : "",
+		       (ent->flags & CE_PLAIN0) ? "0" : "");
 	}
 	size = sizefile(ent->log);
 	if (size < 0) {
@@ -294,7 +295,7 @@ PRS(argc, argv)
 			domidnight = 0;
 			break;
 		case 'V':
-			printf("%s: version %s.\n", argv0, version);
+			printf("%s: version %s-%s.\n", argv0, package, version);
 			exit(0);
 			/* NOTREACHED */
 		case 'm':
