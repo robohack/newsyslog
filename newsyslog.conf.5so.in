@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.9 2002/02/09 21:41:16 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.10 2002/03/01 23:00:07 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -22,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd January 13, 2002
+.Dd February 9, 2002
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -95,19 +95,27 @@ and
 .Fl M
 options in the
 .Xr newsyslog 8
-manual page).
+manual page).  Note also that when the
+.Fl m
+and
+.Fl M
+options are not used, and when the
+.Ar interval
+is not evenly divisible by 24, log files will not be rolled over at the
+same time of day.  In fact the roll-over time will probably creep around
+the clock, unless it is followed by a time specification.
 .Pp
-A time specification for logfile rotation at a fixed time once per day,
-per week, or per month may also be given.  If it follows an interval
-then it must be separated by a hyphen (i.e. a minus sign,
+A time specification to fix the log file's rotation at a specified time,
+once per day, per week, or per month may also be given.  If it follows
+an interval then it must be separated by a hyphen (i.e. a minus sign,
 .Sq \- ) .
 .Pp
 .Em WARNING :
-This feature requires that
+When a time specification is given for any log file
 .Nm newsyslog
-be invoked with the
+must be invoked with the
 .Fl i
-flag to tell it at what interval it is being run so that it can
+option to tell it at what interval it is being run so that it can
 approximate the time of day calculations.  Note that one full minute is
 subtracted from the interval to give the time range after which the
 specification remains valid.  For example if an interval of 15 minutes
