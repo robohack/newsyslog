@@ -7,7 +7,7 @@
 #
 # NOTE: needs a fully POSIX /bin/sh to run properly....
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.9 2002/11/08 23:10:11 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.10 2003/07/08 18:49:31 woods Exp $"
 
 # The following variables can be adjusted as necessary
 #
@@ -49,9 +49,10 @@ cpsed ()
 rm -rf ${IMPORTDIR}
 mkdir ${IMPORTDIR}
 
-if [ ! -f Makefile.BSD ] ; then
-	AWK=awk ./configure --prefix=${PREFIX} --bindir=${BINDIR} --sysconfdir=${SYSCONFDIR} --localstatedir=${LOCALSTATEDIR} --with-newsyslog-conf=${NEWSYSLOG_CONF} --with-syslogd_pid=${SYSLOGD_PID} --with-gzip
+if [ -f Makefile ] ; then
+	make distclean
 fi
+AWK=awk ./configure --prefix=${PREFIX} --bindir=${BINDIR} --sysconfdir=${SYSCONFDIR} --localstatedir=${LOCALSTATEDIR} --with-newsyslog-conf=${NEWSYSLOG_CONF} --with-syslogd_pid=${SYSLOGD_PID} --with-gzip
 
 # note the couple of renames....
 cpsed AUTHORS ${IMPORTDIR}/AUTHORS
@@ -64,6 +65,7 @@ cpsed VERSION ${IMPORTDIR}/VERSION
 cpsed newsyslog.8so ${IMPORTDIR}/newsyslog.8
 cpsed newsyslog.conf.5so ${IMPORTDIR}/newsyslog.conf.5so
 cpsed newsyslog.c ${IMPORTDIR}/newsyslog.c
+cpsed newsyslog.h ${IMPORTDIR}/newsyslog.h
 cpsed sig2str.c ${IMPORTDIR}/sig2str.c
 cpsed str2sig.c ${IMPORTDIR}/str2sig.c
 cpsed newsyslog.conf ${IMPORTDIR}/newsyslog.conf
