@@ -4,7 +4,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.5 2000/11/27 00:40:58 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.6 2000/11/27 00:58:55 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -229,12 +229,22 @@ Originated at MIT Project Athena.
 .Pp
 A
 .Nm
-command appeared in
+file appeared in
 .Bx 4.4 .
 .Pp
 The
 .Ar path_to_pid_file
-optional field was added by FreeBSD.
+optional field was added by
+.Fx .
+.Pp
+The
+.Ar sigtype
+optoinal field was added by
+.Nx .
+.Pp
+This particular version's feature set is due to
+.An Greg A. Woods ,
+Planix, Inc.
 .Sh "AUTHOR"
 .An Theodore Ts'o ,
 MIT Project Athena

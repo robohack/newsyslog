@@ -1,3 +1,5 @@
+.\"-*- nroff -*-
+.\"
 .\" This file contains changes from the Open Software Foundation.
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
@@ -5,7 +7,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.4 1999/08/24 23:06:59 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.5 2000/11/27 00:58:55 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -21,7 +23,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd January 17, 1999
+.Dd November 26, 2000
 .Dt NEWSYSLOG 8
 .Os
 .Sh NAME
@@ -71,7 +73,7 @@ When starting up,
 .Nm
 reads in a configuration file to determine which logs should be looked
 at.  By default, this configuration file is
-.Pa  .
+.Pa @path_config@ .
 .Sh OPTIONS
 The following options can be used with newsyslog:
 .Bl -tag -width 12345678
@@ -156,7 +158,7 @@ in verbose mode.  In this mode it will print out each log and its
 reasons for either trimming that log or skipping it.
 .El
 .Sh FILES
-.Bl -tag -width /usr/local/etc/newsyslog.conf -compact
+.Bl -tag -width @syslogd_pidfile@ -compact
 .It Pa @path_config@
 .Nm
 configuration file.
@@ -189,6 +191,10 @@ in SunOS-4.1.
 MIT Project Athena
 .Pp
 Copyright 1987, Massachusetts Institute of Technology
+.Pp
+This version by
+.An Greg A. Woods ,
+Planix, Inc.
 .Sh BUGS
 The 
 .Fl m
