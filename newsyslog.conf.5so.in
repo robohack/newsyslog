@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.11 2002/05/10 18:43:53 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.12 2002/11/15 03:56:52 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -22,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd May 10, 2002
+.Dd November 8, 2002
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -342,7 +342,7 @@ such a specification was given by placing it after an
 .So Li \&@ Sc Ns No -sign
 following the [optional] interval.  This version only allows the
 sufficiently useful daily, weekly, and/or monthly time specification
-(also innovated by
+with optional hour of day (also innovated by
 .Fx ) ,
 but it uses the hyphen (\-) as a separator from the optional interval
 instead of the more confusing
