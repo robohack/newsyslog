@@ -4,12 +4,14 @@
 # This file Copyright (C) by Planix, Inc.
 # - see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.12 2002/05/10 17:47:38 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.13 2002/11/08 23:13:08 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
 #
 #	./configure --prefix=/usr --mandir=/usr/share/man --bindir=/usr/bin --sysconfdir=/etc --localstatedir=/var --with-newsyslog-conf=/etc/newsyslog.conf --with-syslogd_pid=/var/run/syslogd.pid --with-gzip
+
+# (Remember pre-1.4 systems used /var/run/syslog.pid!)
 #
 
 CPPFLAGS+= -DPATH_COMPRESS="\"@PATH_COMPRESS@\""
@@ -83,6 +85,11 @@ SOELIM = soelim
 
 .SUFFIXES: .5so .5
 
+# NOTE: on older systems '-I' is not supported by soelim...
+# add the following bad hack before the SOELIM line instead:
+#
+# 	cp ${.CURDIR}/newsyslog.conf .
+# 
 .5so.5:
 	@rm -f ${.TARGET}
 	${SOELIM} -I ${.CURDIR} ${.IMPSRC} > ${.TARGET} || (rm -f ${.TARGET}; exit 1)
