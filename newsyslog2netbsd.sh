@@ -7,7 +7,7 @@
 #
 # NOTE: needs a fully POSIX /bin/sh to run properly....
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.2 1999/08/25 01:22:45 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.3 2000/04/04 02:51:00 woods Exp $"
 
 # The following variables can be adjusted as necessary
 #
@@ -16,7 +16,7 @@ BINDIR=${PREFIX}/bin
 SYSCONFDIR="/etc"
 LOCALSTATEDIR="/var"
 NEWSYSLOG_CONF=${SYSCONFDIR}/newsyslog.conf
-SYSLOGD_PID=${LOCALSTATEDIR}/run/syslog.pid
+SYSLOGD_PID=${LOCALSTATEDIR}/run/syslogd.pid
 
 IMPORTDIR="import.d"
 
