@@ -39,7 +39,6 @@ Makefile
 Makefile.BSD
 Makefile.BSD-dist
 Makefile.in
-README.developers
 aclocal.m4
 config.cache
 config.h
