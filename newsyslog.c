@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.39 2002/01/05 19:29:26 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.40 2002/02/09 21:42:48 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -227,7 +227,7 @@ int             verbose = 0;	/* Print out what's going on */
 int             needroot = 1;	/* Root privs are necessary for default conf */
 int             noaction = 0;	/* Don't do anything, just show it */
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
-int             run_interval = -1;/* interval at which we are run by cron */
+int             run_interval = -1;/* interval in minutes at which we are run by cron */
 int             force = 0;	/* force all files to be trimmed */
 const char     *config_file = PATH_CONFIG;/* Configuration file to use */
 const char     *syslogd_pidfile = PATH_SYSLOGD_PIDFILE;/* syslogd's pid file */
@@ -501,7 +501,7 @@ parse_options(argc, argv)
 					argv0,
 					l);
 				exit(2);
-			} else if (l < 2) {
+			} else if (l < 1) {
 				fprintf(stderr,
 					"%s: run interval of %ld is too small\n",
 					argv0,
