@@ -53,6 +53,7 @@ install-sh
 missing
 mkinstalldirs
 newsyslog
+newsyslog-[0-9]*-Preview.*
 newsyslog.8.html
 newsyslog.8.html-dist
 newsyslog.8.ps-dist
