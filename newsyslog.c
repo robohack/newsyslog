@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.17 1999/01/17 18:01:48 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.18 1999/01/17 18:35:15 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -613,10 +613,6 @@ do_trim(ent)
 			(void) chown(zfile2, ent->uid, ent->gid); /* XXX error check (non-fatal?) */
 		}
 	}
-	if (!(ent->flags & CE_BINARY)) {
-		if (note_trim(ent->log))
-			fprintf(stderr, "%s: can't add final status message to log: %s: %s.\n", argv0, ent->log, strerror(errno));
-	}
 	if (lstat(ent->log, &st) < 0)
 		fprintf(stderr, "%s: can't stat file: %s: %s.\n", argv0, ent->log, strerror(errno));
 	else if (st.st_size > 0) {
@@ -694,34 +690,36 @@ do_trim(ent)
 		if (noaction) {
 			notified = 1;
 			printf("kill -HUP %d\n", (int) pid);
+			puts("sleep 5");
 		} else if (kill(pid, SIGHUP))
 			fprintf(stderr, "%s: can't notify daemon, pid %d: %s\n.", argv0, (int) pid, strerror(errno));
 		else {
 			notified = 1;
 			if (verbose)
 				printf("daemon with pid %d notified\n", (int) pid);
+			if (verbose)
+				printf("small pause now to allow daemon to close log... ");
+			sleep(5);
+			if (verbose)
+				puts("done.");
 		}
 	}
-	if ((ent->flags & CE_COMPACT)) {
-		sprintf(zfile1, "%s.%s", ent->log, (ent->flags & CE_PLAIN0) ? "1" : "0");	/* sprintf() OK here */
-		if (!(ent->flags & CE_PLAIN0) && need_notification && !notified) {
-			fprintf(stderr, "%s: %s not compressed because daemon not notified.\n", argv0, ent->log);
-		} else if (noaction) {
-			if (notified) {
-				if (verbose)
-					printf("small pause to allow daemon to close log\n");
-				puts("sleep 5");
-			}
+	sprintf(zfile1, "%s.%s", ent->log, (ent->flags & CE_PLAIN0) ? "1" : "0"); /* sprintf() OK here */
+	if ((lstat(zfile1, &st) >= 0) && (st.st_size > 0)) {
+		if (!(ent->flags & CE_BINARY)) {
+			if (note_trim(ent->log))
+				fprintf(stderr, "%s: can't add final status message to log: %s: %s.\n", argv0, ent->log, strerror(errno));
+		}
+		if ((ent->flags & CE_COMPACT)) {
+			if (!(ent->flags & CE_PLAIN0) && need_notification && !notified)
+				fprintf(stderr, "%s: %s not compressed because daemon not notified.\n", argv0, ent->log);
+		} else if (noaction)
 			printf("%s %s\n", PATH_COMPRESS, zfile1);
-		} else {
-			if (notified) {
-				if (verbose)
-					printf("small pause to allow daemon to close log\n");
-				sleep(5);
-			}
+		else
 			compress_log(zfile1);
-		}
 	}
+
+	return;
 }
 
 /*
