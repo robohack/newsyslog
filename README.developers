@@ -1,0 +1,146 @@
+
+	README.developers - Instructions for developers with CVS access.
+
+
+Initial Builds:
+
+In order to pre-build the necessary config files from a freshly checked
+out repository you must run the following commands in the given order
+(ignoring the complaints of missing files from autoreconf's invocation
+of automake):
+
+	autoreconf --force --gnu
+	automake --gnu --add-missing
+
+Now you can proceed with the normal build process (./configure && gmake).
+
+Note that running "gmake maintainer-clean" should remove all files that
+are not stored in CVS -- i.e. all those that will be re-created by the
+above sequence of commands.
+
+(You'll note we use 'gmake' -- GNU Automake makefiles are designed to
+work best with GNU Make.)
+
+
+Making a New Release:
+
+In order to build releases you *MUST* be using a version of GNU Automake
+that includes support for proper CVS-based release management using the
+'make dist' approach.
+
+New releases should be adequately tested, of course, and you should
+check that all changes have been commited to CVS.  The "NEWS" file
+should be checked to ensure it has been updated with notes about all
+user-visible changes.  If you're making a full release you can coalesce
+any entries from previous alpha and beta releases.  If there's a GNATS PR
+category for the project you should check that there are no absolute
+"show-stopper" bugs in the pending release.
+
+Once you're ready to test your release, and you've commited any and all
+changes you've made, run:
+
+	gmake distcheck
+
+This will create a trial distribution archive, extract it, configure it,
+build it (using a reach-over VPATH build), run any tests (gmake check),
+and install it in a private tree.  You should copy this distribution to
+other types of machines and platforms and build and check it there too.
+You might want to update the "VERSION" identifier in the VERSION file
+each time you go through this cycle so as to keep each copy clearly
+identifiable.  Just increment a trailing number after the "-Preview" tag.
+
+Once you think you're ready to try an actual release, update the
+"VERSION" identifier in the VERSION file (see the notes below on release
+numbers), and check this in.
+
+To tag, export, and create the finally distribution archive you need to
+run the following commands:
+
+	gmake distclean
+	sh newsyslog2netbsd.sh
+	. ./VERSION
+	tag=$(echo $VERSION | tr . _)
+	cvs tag $PACKAGE-$tag .
+	cd /place-to-build-releases
+	cvs export -kv -r $tag -d $PACKAGE-$VERSION-export $PACKAGE
+	cd $PACKAGE-$VERSION
+	make dist
+	mv $PACKAGE-$VERSION.tar.gz ..
+	cd ..
+	pax -rzf $PACKAGE-$VERSION.tar.gz
+	diff -r --brief $PACKAGE-$VERSION-export $PACKAGE-$VERSION
+
+The last step ensures that everything in the CVS module is distributed.
+
+If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access.
+
+If the 'diff' command reveals any files are missing then you need to go
+back, untag the whole module, fix Makefile.am, and re-test.
+
+
+After Making a New Release:
+
+IMPORTANT:  After you've made a new release don't forget to update the
+"VERSION" identifier in the VERSION file for the pre-release of the next
+most likely release (eg. set 1.0.0.80-Preview after making 1.0).  See
+below for release number ideas.
+
+If you plan on doing release maintenance using branches then you should
+instead create a release branch for every N.N release and set the
+"VERSION" to N.N.0.80-Preview on the branch and N.N+1.80-Preview on the
+trunk.
+
+
+Release Numbers:
+
+We essentially follow the essence of the Berkeley CSRG version numbering
+scheme for identifying releases.  That is to say we increment the third
+number (3.7, 3.7.1, 3.7.2, etc.) whenever we generate a release of bug
+fixes (what might traditionally be also known as a "patch" release), and
+we increment the second number, or the minor release number, (3.7, 3.8)
+whenever we add any new features or make other important user-visible
+changes, and lastly we increment the first number, or the major release
+number, (3.*, 4.1) whenever we make major or architectural changes.
+
+We also throw in a smattering of GNU-isms too -- the alpha-test and
+beta-test releases of upcoming proper releases should have a ".80" or
+".90" (respectively) appended to the current release number (3.7.5.80
+would be the first alpha for 3.7.6, continuing with 3.7.5.81, 3.7.5.82,
+etc., 3.7.5.90 would be the first beta, continuing with 3.7.5.91,
+3.7.5.92, etc. until finally 3.7.6 is released; for another example the
+first alpha for 4.1.1 would be 4.1.0.80, continuing with 4.1.0.81,
+4.1.0.82, etc., 4.1.0.90 would be the first beta, continuing with
+4.1.0.91, 4.1.0.92, etc., until finally 4.1.1 is released).
+
+One special case rule not yet described covers the releases preceding
+the initial release, which would might start with semi-private releases
+numbered "0.x", eg. 0.1.80, 0.1.90, 0.1.91, 0.2, 0.2.80, 0.2.90, 0.3,
+etc., then full public releases numbered "1.0.x", eg. 1.0.80, 1.0.90,
+etc. until 1.1, the first fully official release is made.
+
+Note that there are no '.0' releases!  I.e. ".0" is only used as a
+separator between initial major releases and the first minor release,
+and between initial minor releases and the first patch release.
+
+Ideally patch releases will be developed on a release branch to permit
+parallel development of new features on the trunk for the next minor (or
+major) release (with folding of fixes and features as necessary back to
+the trunk).  In theory minor releases could also be developed on release
+branches, but only in situations where extreme levels of maintenance for
+existing releases must be undertaken.
+
+You'll note this effectively caps the maximum patch level, and the
+maximum minor release number, to a ceiling of ".79", and limits the
+number of alpha releases to just 10.  Unfortunately it does not limit
+the number of beta releases since things like .100 are allowed!  ;-)
+
+If you see "-Preview" appended to the release number then you're seeing
+an intermediate development copy -- i.e. an as-yet un-released copy
+which will likely have the release number given with the suffix stripped
+when it is finally officially released.
+
+
+NOTE:  This file *is* included in distributions so that users and
+contributors can see how all the release magic works!
+
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.8 2002/01/13 19:58:44 woods Exp $"
