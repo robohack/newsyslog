@@ -58,10 +58,6 @@ suggestions and comments are also encouraged.
 
 - add support for specifying size and interval units other than KB & hrs.
 
-- think about adding an optional way to specify a process to be run
-  after a given logfile has been rotated.  This could be used to run
-  logfile analysis tools, etc.
-
 - historical log file suffixes (suggested by Andy Doran <ad@netbsd.org>)
   (i.e. ".YYYYMMDDHHMMSS" or ".YYYY-MM-DD.HH:MM:SS" or whatever)
 
@@ -85,4 +81,4 @@ suggestions and comments are also encouraged.
   be created at compile-time...)
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.9 2002/01/05 05:03:18 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.10 2002/03/01 22:46:15 woods Exp $"
