@@ -3,11 +3,11 @@
 #
 # Copyright (C) 1997 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.2 1998/03/16 01:31:03 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.3 1999/01/17 06:49:02 woods Exp $"
 
 # adjust these as desired:
 CPPFLAGS+= -DPATH_CONFIG=\"/etc/newsyslog.conf\"
-CPPFLAGS+= -DPATH_SYSLOG_PIDFILE=\"/var/run/syslog.pid\"
+CPPFLAGS+= -DPATH_SYSLOGD_PIDFILE=\"/var/run/syslog.pid\"
 CPPFLAGS+= -DPATH_COMPRESS=\"/usr/bin/gzip\"
 CPPFLAGS+= -DCOMPRESS_POSTFIX=\".gz\"
 
@@ -35,6 +35,16 @@ CPPFLAGS+= -DVERSION=\"@VERSION@\"
 PROG= newsyslog
 MAN= newsyslog.conf.5 newsyslog.8
 
+CLEANFILES+= newsyslog.conf.5
+
 WARNS?= 1
+
+SOELIM = soelim
+
+.SUFFIXES: .5so .5
+
+.5so.5:
+	@rm -f $@
+	$(SOELIM) $< > $@ || (rm -f $@; exit 1)
 
 .include <bsd.prog.mk>
