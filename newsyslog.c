@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.33 2001/02/23 00:49:01 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.34 2001/02/23 01:51:41 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -460,7 +460,7 @@ parse_options(argc, argv)
 			usage();
 			/* NOTREACHED */
 		default:
-			warnx("illegal option -- %c", c);
+			fprintf(stderr, "%s: illegal option -- %c", argv0, c);
 			usage();
 			/* NOTREACHED */
 		}
