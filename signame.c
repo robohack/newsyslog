@@ -5,7 +5,7 @@
 #include <sys/cdefs.h>
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.3 2002/01/15 22:24:32 woods Exp $";*/
+static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.4 2002/02/09 21:38:55 woods Exp $";*/
 #endif /* LIBC_SCCS and not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -17,6 +17,10 @@ static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.3 2002/01/15 
 #endif
 #include <signal.h>
 
+/*
+ * We need a custom version of sys_signame if we're going to build either one
+ * of our custom sig2str() or str2sig() routines.
+ */
 #if !defined(SYS_SIGNAME_DECLARED) && ((HAVE_SIG2STR != 1) || (HAVE_STR2SIG != 1))
 
 /*
@@ -64,6 +68,10 @@ const char *const sys_signame[] = {
 # endif	/* BSD */
 
 # ifdef __linux__
+	/*
+	 * This is almost certainly wrong for most modern GNU/linux releases.
+	 * It has only been tested on an old RedHat system from about 1998.
+	 */
 	"HUP",		/*  1 : SIGHUP       Hangup (POSIX).  */
 	"INT",		/*  2 : SIGINT       Interrupt (ANSI).  */
 	"QUIT",		/*  3 : SIGQUIT      Quit (POSIX).  */
@@ -80,7 +88,7 @@ const char *const sys_signame[] = {
 	"PIPE",		/* 13 : SIGPIPE      Broken pipe (POSIX).  */
 	"ALRM",		/* 14 : SIGALRM      Alarm clock (POSIX).  */
 	"TERM",		/* 15 : SIGTERM      Termination (ANSI).  */
-	"STKFLT",	/* 16 : SIGSTKFLT    ??? */
+	"STKFLT",	/* 16 : SIGSTKFLT    Stack fault.  */
 	"CHLD",		/* 17 : SIGCHLD & SIGCLD   Child status has changed (POSIX).  */
 	"CONT",		/* 18 : SIGCONT      Continue (POSIX).  */
 	"STOP",		/* 19 : SIGSTOP      Stop, unblockable (POSIX).  */
@@ -95,7 +103,7 @@ const char *const sys_signame[] = {
 	"WINCH",	/* 28 : SIGWINCH     Window size change (4.3 BSD, Sun).  */
 	"IO",		/* 29 : SIGIO & SIGPOLL   I/O now possible (4.2 BSD).  */
 	"PWR",		/* 30 : SIGPWR       Power failure restart (System V).  */
-	"UNUSED",	/* 31 : unused       */
+	"UNUSED",	/* 31 : SIGUNUSED    unused */
 	0		/* 32 : STUPID LINUX defines NSIG as "Biggest signal number + 1." */
 # endif	/* __linux__ */
 
@@ -150,7 +158,7 @@ const char *const sys_signame[] = {
 # endif
 
 # ifdef __linux__
-#  if (NSIG > 32)
+#  if (NSIG > 32) && !(__SIGRTMIN == 32 && _NSIG == 64)
 #   include "ERROR: size of sys_signame does not match NSIG!"
 #  endif
 # endif
@@ -162,7 +170,7 @@ const char *const sys_signame[] = {
 # endif
 
 # if !(defined(BSD) || defined(__linux__) || defined(__SVR4))
-#  include "ERROR: your system is not supported without a native sys_signame"
+#  include "ERROR: your system has no native sys_signame is not yet supported with a custom one"
 # endif
 
 #endif /* ! SYS_SIGNAME_DECLARED && ! HAVE_STR2SIG && ! HAVE_SIG2STR */
