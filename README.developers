@@ -1,0 +1,12 @@
+
+	README.developers - Instructions for developers
+
+In order to pre-build the necessary config files from a freshly checked
+out repository you must run the following commands:
+
+	autoheader
+	aclocal
+	automake --add-missing
+	autoconf
+
+Now you can proceed with the normal build process (./configure && make).
