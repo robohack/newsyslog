@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.34 2001/02/23 01:51:41 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.35 2001/03/06 02:07:33 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -73,6 +73,11 @@ extern void exit();
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <limits.h>
+#ifdef HAVE_NETDB_H
+# include <netdb.h>
+#endif
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
@@ -103,7 +108,10 @@ extern char *strchr(), *strrchr(), *strtok();
 extern int errno;
 # endif /* !errno */
 #endif /* HAVE_ERRNO_H */
-#include <assert.h>
+
+#ifndef MAXHOSTNAMELEN
+# define MAXHOSTNAMELEN	255
+#endif
 
 #ifndef PATH_MAX
 # ifdef MAXPATHLEN
@@ -1420,6 +1428,43 @@ isnumber(p)
 	}
 	return (1);
 }
+
+#ifndef SYS_SIGNAME_DECLARED
+const char *const sys_signame[] = {
+	"Signal 0",
+	"HUP",		/* SIGHUP */
+	"INT",		/* SIGINT */
+	"QUIT",		/* SIGQUIT */
+	"ILL",		/* SIGILL */
+	"TRAP",		/* SIGTRAP */
+	"ABRT",		/* SIGABRT */
+	"EMT",		/* SIGEMT */
+	"FPE",		/* SIGFPE */
+	"KILL",		/* SIGKILL */
+	"BUS",		/* SIGBUS */
+	"SEGV",		/* SIGSEGV */
+	"SYS",		/* SIGSYS */
+	"PIPE",		/* SIGPIPE */
+	"ALRM",		/* SIGALRM */
+	"TERM",		/* SIGTERM */
+	"URG",		/* SIGURG */
+	"STOP",		/* SIGSTOP */
+	"TSTP",		/* SIGTSTP */
+	"CONT",		/* SIGCONT */
+	"CHLD",		/* SIGCHLD */
+	"TTIN",		/* SIGTTIN */
+	"TTOU",		/* SIGTTOU */
+	"IO",		/* SIGIO */
+	"XCPU",		/* SIGXCPU */
+	"XFSZ",		/* SIGXFSZ */
+	"VTALRM",	/* SIGVTALRM */
+	"PROF",		/* SIGPROF */
+	"WINCH",	/* SIGWINCH */
+	"INFO",		/* SIGINFO */
+	"USR1",		/* SIGUSR1 */
+	"USR2"		/* SIGUSR2 */
+};
+#endif
 
 /*
  * Translate a signal number or name into an integer
