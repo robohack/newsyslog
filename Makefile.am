@@ -3,9 +3,9 @@
 #
 # Copyright (C) 1997 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.14 2001/02/23 00:50:02 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.15 2001/02/23 01:38:38 woods Exp $"
 
-AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
+AUTOMAKE_OPTIONS = no-dependencies cvs cvs-testbuild dist-tarZ
 MAINT_CHARSET = latin1
 
 bin_PROGRAMS = newsyslog
