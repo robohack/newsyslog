@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2002 Planix, Inc.  See COPYING for details.
+ * Copyright (C) by Planix, Inc.
+ * - See COPYING for details.
  */
 
 #include <sys/cdefs.h>
 
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.4 2002/02/09 21:38:55 woods Exp $";*/
+static char sccsid[] = "@(#)newsyslog:$Name:  $:$Id: signame.c,v 1.5 2002/05/10 17:39:35 woods Exp $";*/
 #endif /* LIBC_SCCS and not lint */
 
 #ifdef HAVE_CONFIG_H
