@@ -3,7 +3,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	$FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp $
 .\"
-.\"ident	"@()newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.1 1998/03/16 02:45:31 woods Exp $"
+.\"ident	"@()newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.2 1998/06/24 15:32:43 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -198,4 +198,10 @@ creep around the clock.
 Sends SIGHUP to the associated daemon process for every log file
 trimmed.  This is done to ensure that it's safe to compress the file
 after it has hopefully been closed but in theory should be optimized to
-only notify daemon(s) once.
+only notify daemon(s) once.  This is normally harmless for
+.Nm syslogd
+and multiple signals can be avoided for other daemons by ensuring their
+PID files are only listed once and that the
+.Ar 0
+flag is used to ensure the most recent log file is not immediately
+compressed.
