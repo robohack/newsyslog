@@ -7,10 +7,10 @@ dnl Copyright (C) 1997 Planix, Inc. - All rights reserved.
 AC_INIT(newsyslog.c)
 AC_PREREQ(2.12)dnl Required Autoconf version.
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.7 1998/03/05 05:32:11 woods Exp $"])dnl
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.8 1998/03/05 06:49:40 woods Exp $"])dnl
 
 PACKAGE=newsyslog
-VERSION=1.0.90
+VERSION=1.0.91-Pre
 
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
@@ -66,7 +66,7 @@ AC_REPLACE_FUNCS(strdup strerror strtok)
 AC_CHECK_FUNCS(strchr)
 
 AC_MSG_CHECKING(for name of archive compression program)
-AC_ARG_WITH(compress,
+AC_ARG_WITH(gzip,
 	[  --with-gzip             use GNU Zip instead of compress],
 	[COMPRESS_PROG=gzip
 	AC_DEFINE(COMPRESS_POSTFIX, ".gz")],
@@ -79,17 +79,49 @@ AC_PATH_PROG(PATH_COMPRESS, $COMPRESS_PROG)
 AC_DEFINE_UNQUOTED(PATH_COMPRESS, "$PATH_COMPRESS")
 
 AC_MSG_CHECKING(for name of syslogd's pid file)
-AC_ARG_WITH(syslog_pidfile,
-	[  --with-syslog-pid       specify syslogd's PID file],
+case "$localstatedir" in
+/*)
+	expandedlocalstatedir=$localstatedir
+	;;
+*)
+	oldprefix=$prefix
+	if test "x$prefix" = xNONE ; then
+		prefix=$ac_default_prefix
+	fi
+	expandedlocalstatedir=`eval echo $localstatedir`
+	prefix=$oldprefix
+	;;
+esac
+AC_ARG_WITH(syslog_pid,
+	[  --with-syslog_pid=path syslogd's PID file ($expandedlocalstatedir/run/syslog.pid)],
 	[syslog_pidfile=$withval],
-	[syslog_pidfile=$localstatedir/run/syslog.pid]
+	[syslog_pidfile=$expandedlocalstatedir/run/syslog.pid]
 )dnl
-AC_SUBST(syslog_pidfile, $syslog_pidfile)
+AC_SUBST(syslog_pidfile)
 AC_DEFINE_UNQUOTED(PATH_SYSLOG_PIDFILE, "$syslog_pidfile")
 AC_MSG_RESULT($syslog_pidfile)
 
-path_config=`eval echo $sysconfdir/newsyslog.conf`
-AC_DEFINE_UNQUOTED(PATH_CONFIG, "$path_config")
+AC_MSG_CHECKING(for name of config file)
+case "$sysconfdir" in
+/*)
+	expandedsysconfdir=$sysconfdir
+	;;
+*)
+	oldprefix=$prefix
+	if test "x$prefix" = xNONE ; then
+		prefix=$ac_default_prefix
+	fi
+	expandedsysconfdir=`eval echo $sysconfdir`
+	prefix=$oldprefix
+	;;
+esac
+AC_ARG_WITH(newsyslog_conf,
+	[  --with-newsyslog_conf=path configuration file ($expandedsysconfdir/newsyslog.conf)],
+	[path_config=$withval],
+	[path_config=$expandedsysconfdir/newsyslog.conf]
+)dnl
 AC_SUBST(path_config)
+AC_DEFINE_UNQUOTED(PATH_CONFIG, "$path_config")
+AC_MSG_RESULT($path_config)
 
 AC_OUTPUT([Makefile newsyslog.conf.5 newsyslog.8])
