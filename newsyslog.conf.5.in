@@ -1,4 +1,4 @@
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5.in,v 1.3 1998/03/05 03:59:31 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5.in,v 1.4 1998/03/15 21:05:47 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -68,11 +68,30 @@ replaced by a
 .Ar * ,
 then the number of hours since the last time the log was
 trimmed will not be taken into consideration.  Note that if this value
-is an even multiple of 24 hours it may have special meaning (see
+is an even multiple of 24 hours it may have special meaning (see the
+description of
 .Fl m
 and
 .Fl M
-below).
+in the
+.Xr newsyslog 8
+manual page).
+.Pp
+Normally the age of the log file will be determined by looking at the
+last modification time of the most recent archive copy, if one exists.
+If there is no archive copy, and the file is not marked as binary (see
+the
+.Ar B
+flag below), then
+.Nm newsyslog
+will make a somewhat feeble attempt to read the time-stamp from the first
+entry in the current log file (see the source for possible formats).
+.Pp
+The log file age has 30 minutes added to it in order to ensure that at a
+regular interval (especially 24hr multiple) the file is likely to to
+appear old enough to roll over.  This is mostly necessary for when the
+archive copy may not exist and the initial entry may not have been made
+right after log file roll-over.
 .It Ar flags
 This optional field specifies if the archive should have any
 special processing done to the archived log files.
@@ -116,7 +135,7 @@ etc.
 .Pp
 The
 .Ar -
-flag means nothing, but can be used as a placeholder when the
+flag means nothing, but can be used as a place-holder when the
 field
 .Ar path_to_pid_file
 is specified for entries without any flags.
@@ -132,28 +151,7 @@ in order to be recognized properly.
 .Pp
 A configuration file might appear as follows:
 .Bd -literal
-#
-# sample configuration file for newsyslog
-#
-# log_filename  [owner.group] mode count kbytes hours [ZB] [/pid_file]
-/var/log/messages             664  10    *      168   Z
-/var/log/wtmp                 664  10    1000   *     B
-/var/log/auth   root.wheel    640  10    1000   *     Z
-/var/log/cron   root.wheel    640  3     *      24    Z
-/var/log/daemon               664  4     500    *     Z
-/var/log/debug  root.wheel    640  4     1000   *     Z
-/var/log/kern                 664  10    500    *     Z
-/var/log/local                664  10    *      168   Z
-/var/log/lpr                  664  5     250    *     Z
-/var/log/mail   root.staff    660  52    *      168   Z
-#/var/log/news  news.news     664  2     *      24    Z
-/var/log/syslog root.wheel    640  3     500    *     Z
-/var/log/user                 664  10    500    *     Z
-/var/log/uucp   uucp.operator 664  5     *      168   Z
-/var/log/smail/logfile        664  5     *      168   Z0   /dev/null
-/var/log/smail/paniclog       664  5     *      168   Z0   /dev/null
-/var/log/httpd/access_log     664  5     *      168   Z0   /var/run/httpd.pid
-/var/log/httpd/error_log      664  5     *      168   Z0   /var/run/httpd.pid
+.so newsyslog.conf
 .Ed
 .Sh FILES
 .Bl -tag -width @path_config@ -compact
@@ -169,7 +167,7 @@ The default location of the PID for
 .Xr compress 1 ,
 .Xr cron 8 ,
 .Xr gzip 1 ,
-.Xr newsylog 8 ,
+.Xr newsyslog 8 ,
 .Xr syslog 3 ,
 .Xr syslogd 8
 .Sh STANDARDS
@@ -199,11 +197,19 @@ and
 should allow the units of measurement to be specified.
 .Pp
 Are there any logfile generating daemons in use out there which do not
-recognize SIGHUP as the signal to reopen their logfiles?  If so then
+recognize SIGHUP as the signal to reopen their log files?  If so then
 perhaps the
 .Ar path_to_pid_file
 field could be followed by yet another optional field to specify the
 appropriate signal number.
+.Pp
+The age of the log file may be impossible to determine, especially for
+binary format files, if the most recent archive copy (file.0*) does not
+exist.
+.Pp
+Anyone messing with the modification time of the most recent archive
+copy will possibly break the file age determination algorithm and thus
+mess up regular archive intervals for such files.
 .\"
 .\"	The End.
 .\"
