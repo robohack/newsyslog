@@ -4,7 +4,7 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.26 2002/05/10 17:46:13 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.27 2002/05/10 18:50:06 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.6
 MAINT_CHARSET = latin1
@@ -110,6 +110,10 @@ SUFFIXES = .5 .8 .5so .8so .cat5 .cat5-dist .cat8 .cat8-dist .5.html .8.html \
 	($(TBL) $< | $(NROFF) -mdoc2html > $@) || (rm -f $@; exit 1)
 
 .cat5.cat5-dist:
+	@rm -f $@
+	cp $? $@
+
+.cat8.cat8-dist:
 	@rm -f $@
 	cp $? $@
 
