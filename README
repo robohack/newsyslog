@@ -7,15 +7,59 @@ This is an updated version of a package put together by Theodore Ts'o ,
 of MIT Project Athena (which is included in NetBSD, FreeBSD, OpenBSD,
 and probably other OS' too).
 
-What does this newsyslog have to offer?
+What does this version of newsyslog have to offer over others?
 
-	- it has support for fixed time-of-day daily archiving.
+	- It is more portable (using GNU Autoconf) and it can be
+	  compiled and installed on most any modern Unix or Unix-like
+	  system.
 
-	- it supports optional PID files so that non-standard daemons
+	- It has support for fixed time-of-day daily archiving with a
+	  command-line option to identify the daily roll-over invocation
+	  (which may be at midnight, or at any other regular daily time).
+
+	- It supports the FreeBSD feature that allows specification of
+	  the log roll-over time as a daily, weekly, or monthly interval
+	  (with optional time-of-day specification for the last two).
+	  [The other overly flexible, ISO 8601 interpretation of the
+	  interval "@" option is not supported -- it is too generic and
+	  not meaningful enough in the context of log file management.]
+
+	- It supports optional PID files so that non-standard daemons
 	  can be told to re-open their logfiles after archiving has
-	  taken place.
+	  taken place.  (Including /dev/null which disables signalling
+	  of any daemon when the specified log file is rolled over.)
 
-	- it can leave the most recently archived log file uncompressed
+	- It can send a signal other than SIGHUP to the daemon
+	  associated with a given log file.
+
+	- It can leave the most recently archived log file uncompressed,
+	  which is necessary for daemons like httpd and smail because
+	  they continue to write to the current log file until their
+	  current jobs have completed.  (This also makes it much easier
+	  to review recent log data with normal Unix tools.)  [NetBSD
+	  now has this feature.]
+
+	- It supports the FreeBSD feature of being able to restrict
+	  processing to just those log files specified on the command
+	  line.
+
+	- Unlike the NetBSD version it first parses the config file
+	  before taking any action, meaning that if any errors are
+	  encountered it will report them and quit without doing
+	  anything.
+
+	- Unlike the FreeBSD version, it will roll a log file if
+	  *either* the interval or size limits have been reached
+	  (FreeBSD's version makes it too easy to have a rapidly growing
+	  log file overflow the filesystem).
+
+	- Unlike the NetBSD version it always creates any missing log
+	  file (though this can be disabled on a per-file basis).
+
+	- It uses an advisory lock on the current configuration file to
+	  prevent multiple invocations from tripping over each other.
+
+	- The documentation is far better!
 
 (For more specific details and recent changes see the NEWS file.)
 
@@ -94,4 +138,4 @@ software is available at:
 						<woods@planix.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.5 1999/08/25 01:23:12 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.6 2000/12/01 19:58:45 woods Exp $"
