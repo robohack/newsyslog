@@ -52,5 +52,6 @@ install-sh
 missing
 mkinstalldirs
 newsyslog
+newsyslog.core
 stamp-h
 stamp-h.in
