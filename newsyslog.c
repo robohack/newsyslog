@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.35 2001/03/06 02:07:33 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.36 2002/01/04 03:22:58 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -59,24 +59,27 @@ extern void exit();
 #endif
 
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#include <sys/proc.h>			/* PID_MAX ? */
 #if HAVE_SYS_WAIT_H
 # include <sys/wait.h>
 #endif
 #include <ctype.h>
 #include <fcntl.h>
+#if defined(HAVE_FLOCK) && defined(HAVE_SYS_FILE_H) && !defined(LOCK_EX)
+# include <sys/file.h>			/* LOCK_* usually in <fcntl.h> */
+#endif
 #include <grp.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
 #ifdef HAVE_NETDB_H
-# include <netdb.h>
+# include <netdb.h>			/* for MAXHOSTNAMELEN */
+#endif
+#if !defined(PID_MAX) && defined(HAVE_SYS_PROC_H)
+# include <sys/proc.h>
 #endif
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -88,15 +91,14 @@ extern void exit();
 #  include <time.h>
 # endif
 #endif
-#if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
-# include <string.h>
-#else
-# ifndef HAVE_STRCHR
-#  define strchr index
-#  define strrchr rindex
+#if HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
 # endif
+# include <string.h>
+#endif
+#if HAVE_STRINGS_H
 # include <strings.h>
-extern char *strchr(), *strrchr(), *strtok();
 #endif
 #if HAVE_UNISTD_H
 # include <unistd.h>
@@ -113,6 +115,10 @@ extern int errno;
 # define MAXHOSTNAMELEN	255
 #endif
 
+#ifndef SIG2STR_MAX
+# define SIG2STR_MAX	32		/* also defined in str2sig.c */
+#endif
+
 #ifndef PATH_MAX
 # ifdef MAXPATHLEN
 #  define PATH_MAX	MAXPATHLEN
@@ -121,29 +127,66 @@ extern int errno;
 # endif
 #endif /* PATH_MAX */
 
-#ifndef TRUE					/* XXX should be #undef ??? */
+#ifndef TRUE				/* XXX should be #undef ??? */
 # define TRUE		1
 #endif
-#ifndef FALSE					/* XXX should be #undef ??? */
+#ifndef FALSE				/* XXX should be #undef ??? */
 # define FALSE		0
 #endif
 
-#define MAX_PERCENTD	10	 /* XXX should this be based on sizeof(int)?
-				  * the maximum number of ASCII digits in an
-				  * integer, used in calculating pathname
-				  * buffer sizes
-				  */
+/*
+ * MIN_PID & MAX_PID are used to sanity-check the pid_file contents.
+ */
+#ifndef MIN_PID
+# define MIN_PID	5
+#endif
+#ifndef MAX_PID
+# ifdef MAXPID
+#  define MAX_PID	MAXPID
+# else
+#  ifdef PID_MAX
+#   define MAX_PID	PID_MAX
+#  else
+#   define MAX_PID	30000			/* good enough for real Unix... */
+#  endif
+# endif
+#endif
+
+#define MAX_PERCENTD	10		/* XXX should this be based on
+					 * sizeof(int)?  the maximum number of
+					 * ASCII digits in an integer, used in
+					 * calculating pathname buffer sizes
+					 */
 
 #ifndef _PATH_DEVNULL
 # define _PATH_DEVNULL	"/dev/null"
 #endif
 
+/*
+ * you can define bzero() in terms of memset(), but not the other way around...
+ */
 #ifndef HAVE_BZERO
+# ifndef HAVE_MEMSET
+#  include "ERROR: memset() not avaliable: this is nearly impossible!"
+# endif
 # define bzero(p, l)	memset((p), '0', (l));
 #endif
+
+#ifndef HAVE_STRCHR
+# define strchr		index
+# define strrchr	rindex
+#endif
+
 #define kbytes(size)	(((size) + 1023) >> 10)
+
 #ifdef _IBMR2
-# define dbtob(db)	((unsigned)(db) << UBSHIFT) /* Calculates (db * DEV_BSIZE) */
+# define dbtob(db)	((unsigned) (db) << UBSHIFT) /* Calculates (db * DEV_BSIZE) */
+#endif
+#ifndef dbtob
+# ifndef DEV_BSHIFT
+#  define DEV_BSHIFT	9		/* log2(DEV_BSIZE) */
+# endif
+# define dbtob(x)	(((unsigned long) (x)) << DEV_BSHIFT)
 #endif
 
 #define CE_COMPACT	001	/* Compact the achived log files */
@@ -167,18 +210,18 @@ struct conf_entry {
 	uid_t           uid;		/* Owner of log */
 	uid_t           gid;		/* Group of log */
 	int             numlogs;	/* Number of logs to keep */
-	int             size;		/* maximum log size in KB */
+	long            size;		/* maximum log size in KB */
 	int             hours;		/* maximum hours between log trimming */
 	time_t          trim_at;	/* time to trim log at */
-	int             permissions;	/* File permissions on the log */
+	unsigned int    permissions;	/* File permissions on the log */
 	unsigned int    flags;		/* Flags (CE_*)  */
 	int             signum;		/* Signal to send to daemon (SIG*) */
 	struct conf_entry *next;	/* Linked list pointer */
 };
 
-char           *argv0 = PACKAGE;
-char            package[] = PACKAGE;	/* the original dist name */
-char            version[] = VERSION;
+const char     *argv0 = PACKAGE;
+const char      package[] = PACKAGE;	/* the original dist name */
+const char      version[] = VERSION;
 
 int             verbose = 0;	/* Print out what's going on */
 int             needroot = 1;	/* Root privs are necessary for default conf */
@@ -186,35 +229,13 @@ int             noaction = 0;	/* Don't do anything, just show it */
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
 int             run_interval = -1;/* interval at which we are run by cron */
 int             force = 0;	/* force all files to be trimmed */
-char           *config_file = PATH_CONFIG;/* Configuration file to use */
-char           *syslogd_pidfile = PATH_SYSLOGD_PIDFILE;/* syslogd's pid file */
+const char     *config_file = PATH_CONFIG;/* Configuration file to use */
+const char     *syslogd_pidfile = PATH_SYSLOGD_PIDFILE;/* syslogd's pid file */
 time_t          timenow;
 pid_t           syslogd_pid;	/* read in from /etc/syslog.pid */
 char            hostname[MAXHOSTNAMELEN + 1];	/* hostname */
-char           *localdomain = NULL;
+char           *localdomain = NULL;		/* not currently used.... */
 char           *daytime;		/* timenow in human readable form */
-
-/*
- * MIN_PID & MAX_PID are used to sanity-check the pid_file contents.
- */
-#ifndef MIN_PID
-# define MIN_PID	5
-#endif
-#ifndef MAX_PID
-# ifdef MAXPID
-#  define MAX_PID	MAXPID
-# else
-#  ifdef PID_MAX
-#   define MAX_PID	PID_MAX
-#  else
-#   define MAX_PID	30000
-#  endif
-# endif
-#endif
-
-#if (!defined(OSF) && !defined(BSD)) || ((BSD + 0) < 199103)	/* XXX HACK!!! */
-extern char            *strdup __P((const char *));
-#endif
 
 int                     main __P((int, char **)); /* XXX HACK for WARNS=1 */
 
@@ -229,17 +250,38 @@ static void             help __P((void));
 static void             do_trim __P((struct conf_entry *));
 static int              note_trim __P((char *));
 static void             compress_log __P((char *));
-static int              check_file_size __P((char *));
+static long             check_file_size __P((char *));
 static int              check_old_log_age __P((struct conf_entry *));
 static time_t           read_first_timestamp __P((char *));
-static pid_t            get_pid_file __P((char *));
-static int              isnumber __P((char *));
+static pid_t            get_pid_file __P((const char *));
 static int              getsig __P((char *));
 static int              parse_dwm __P((char *, time_t *));
 
 extern int              opterr;
 extern int              optind;
 extern char            *optarg;
+
+#if !HAVE_DECL_SIG2STR
+extern int              sig2str __P((int, char *));
+#endif
+#if !HAVE_DECL_STR2SIG
+extern int              str2sig __P((const char *, int *));
+#endif
+#if !HAVE_DECL_STRCHR
+extern char            *strchr __P((const char *, int));
+#endif
+#if !HAVE_DECL_STRDUP
+extern char            *strdup __P((const char *));
+#endif
+#if !HAVE_DECL_STRPTIME			/* STUPID GNU/Linux/glibc */
+extern char            *strptime __P((const char *, const char *, struct tm *));
+#endif
+#if !HAVE_DECL_STRRCHR
+extern char            *strrchr __P((const char *, int));
+#endif
+#if !HAVE_DECL_STRTOK
+extern char            *strtok __P((char *, const char *));
+#endif
 
 int
 main(argc, argv)
@@ -259,7 +301,7 @@ main(argc, argv)
 		*s++ = '\0';
 		localdomain = s;
 	} else
-		localdomain = "";
+		localdomain = strdup("");
 
 	parse_options(argc, argv);
 
@@ -279,7 +321,7 @@ main(argc, argv)
 	while (p) {
 		do_entry(p);
 		p = p->next;
-		free((char *) q);
+		free((void *) q);
 		q = p;
 	}
 	return (0);
@@ -291,7 +333,7 @@ do_entry(ent)
 
 {
 	int             we_trim_it = 0;
-	int             size;			/* in kbytes */
+	long            size;			/* in kbytes */
 	int             modtime = 0;		/* in hours */
 
 	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
@@ -312,7 +354,7 @@ do_entry(ent)
 		printf("is empty ");
 	if (size > 0) {				/* ignore empty/missing ones */
 		if (verbose && (ent->size > 0))
-			printf("size (Kb): %d [allow %d] ", size, ent->size);
+			printf("size (Kb): %ld [allow %ld] ", size, ent->size);
 		if ((ent->size > 0) && (size >= ent->size))
 			we_trim_it = 1;
 		if (ent->hours > 0) {
@@ -372,6 +414,8 @@ do_entry(ent)
 		free(ent->log);
 	if (ent->pid_file)
 		free(ent->pid_file);
+
+	return;
 }
 
 static void
@@ -411,7 +455,7 @@ parse_options(argc, argv)
 			 */
 			if ((timenow = mktime(&tms)) == (time_t) -1) {
 				fprintf(stderr,
-					"%s: time of '%s' is cannot be converted\n",
+					"%s: time of '%s' cannot be converted\n",
 					argv0,
 					optarg);
 				exit(2);
@@ -445,6 +489,12 @@ parse_options(argc, argv)
 					argv0,
 					l);
 				exit(2);
+			} else if (l < 2) {
+				fprintf(stderr,
+					"%s: run interval of %ld is too small\n",
+					argv0,
+					l);
+				exit(2);
 			}
 			run_interval = (int) l;
 			break;
@@ -473,6 +523,7 @@ parse_options(argc, argv)
 			/* NOTREACHED */
 		}
 	}
+	return;
 }
 
 #define USAGE_FMT	"Usage: %s [-V] [-T hh:mm] [-M|-m|-i interval] [-Fnrv] [-f config-file] [-p syslogd-pidfile] [file ...]\n"
@@ -652,7 +703,7 @@ parse_file(files )
 					}
 					working->uid = pass->pw_uid;
 				} else
-					working->uid = atoi(q);
+					working->uid = atoi(q);	/* XXX use strtol()? */
 			} else
 				working->uid = NO_ID;
 
@@ -761,7 +812,7 @@ parse_file(files )
 						errline);
 					exit(1);
 				}
-				working->hours = ul;
+				working->hours = (int) ul;
 			}
 			/*
 			 * interval may be followed by a specification of when
@@ -1134,9 +1185,14 @@ do_trim(ent)
 			if (!(ent->flags & CE_PLAIN0))
 				puts("sleep 5");
 		} else if (kill(pid, ent->signum)) {
+			char signame[SIG2STR_MAX];
+
+			if (sig2str(ent->signum, signame) == -1)
+				strcpy(signame, "(not a signal)");
 			fprintf(stderr,
-				"%s: can't notify daemon, pid %d: %s\n.",
+				"%s: can't notify daemon with SIG%s, pid %d: %s\n.",
 				argv0,
+				signame,
 				(int) pid,
 				strerror(errno));
 		} else {
@@ -1178,7 +1234,6 @@ do_trim(ent)
 			}
 		}
 	}
-
 	return;
 }
 
@@ -1243,7 +1298,7 @@ compress_log(log)
 /*
  * Return size, in kilobytes, of the specified file
  */
-static int
+static long
 check_file_size(file)
 	char           *file;
 {
@@ -1251,7 +1306,7 @@ check_file_size(file)
 
 	if (stat(file, &sb) < 0)
 		return (-1);
-	return (kbytes(dbtob(sb.st_blocks)));
+	return ((long) kbytes(dbtob(sb.st_blocks)));
 }
 
 /*
@@ -1280,7 +1335,7 @@ check_old_log_age(ent)
 				return (-1);
 		}
 	}
-	return ((timenow - sb.st_mtime + 1800) / 3600);	/* 1/2 hr older than reality */
+	return ((int) (timenow - sb.st_mtime + 1800) / 3600); /* 1/2 hr older than reality */
 }
 
 /*
@@ -1362,7 +1417,7 @@ read_first_timestamp(file)
  */
 static pid_t
 get_pid_file(pid_file)
-	char           *pid_file;
+	const char     *pid_file;
 {
 	FILE           *fp;
 	char            line[BUFSIZ];
@@ -1374,12 +1429,15 @@ get_pid_file(pid_file)
 		return 0;
 	}
 	if (fgets(line, BUFSIZ, fp)) {
-		pid = atol(line);
-		if (pid < MIN_PID || pid > MAX_PID) {
+		long    p;
+
+		p = strtol(line, (char **) NULL, 10);
+		if (p < MIN_PID || p > MAX_PID) {
 			fprintf(stderr, "%s: preposterous process number: %s.\n",
 				argv0, line);
 			pid = 0;
 		}
+		pid = (int) p;
 	} else {
 		fprintf(stderr, "%s: can't read pid file: %s: %s.\n", argv0, pid_file,
 			feof(fp) ? "file is empty" : ferror(fp) ? strerror(errno) : "unknown fgets() failure");
@@ -1397,7 +1455,9 @@ static char    *
 strsob(p)
 	register char  *p;
 {
-	while (p && *p && isspace(*p))
+	if (!p)
+		return (0);
+	while (*p && isspace(*p))
 		p++;
 	return (p);
 }
@@ -1409,62 +1469,12 @@ static char    *
 strson(p)
 	register char  *p;
 {
-	while (p && *p && !isspace(*p))
+	if (!p)
+		return (0);
+	while (*p && !isspace(*p))
 		p++;
 	return (p);
 }
-
-/*
- * Check if string is actually a number, i.e. *all* digits
- */
-static int
-isnumber(p)
-	char *p;
-{
-	while (*p != '\0') {
-		if (*p < '0' || *p > '9')
-			return(0);
-		p++;
-	}
-	return (1);
-}
-
-#ifndef SYS_SIGNAME_DECLARED
-const char *const sys_signame[] = {
-	"Signal 0",
-	"HUP",		/* SIGHUP */
-	"INT",		/* SIGINT */
-	"QUIT",		/* SIGQUIT */
-	"ILL",		/* SIGILL */
-	"TRAP",		/* SIGTRAP */
-	"ABRT",		/* SIGABRT */
-	"EMT",		/* SIGEMT */
-	"FPE",		/* SIGFPE */
-	"KILL",		/* SIGKILL */
-	"BUS",		/* SIGBUS */
-	"SEGV",		/* SIGSEGV */
-	"SYS",		/* SIGSYS */
-	"PIPE",		/* SIGPIPE */
-	"ALRM",		/* SIGALRM */
-	"TERM",		/* SIGTERM */
-	"URG",		/* SIGURG */
-	"STOP",		/* SIGSTOP */
-	"TSTP",		/* SIGTSTP */
-	"CONT",		/* SIGCONT */
-	"CHLD",		/* SIGCHLD */
-	"TTIN",		/* SIGTTIN */
-	"TTOU",		/* SIGTTOU */
-	"IO",		/* SIGIO */
-	"XCPU",		/* SIGXCPU */
-	"XFSZ",		/* SIGXFSZ */
-	"VTALRM",	/* SIGVTALRM */
-	"PROF",		/* SIGPROF */
-	"WINCH",	/* SIGWINCH */
-	"INFO",		/* SIGINFO */
-	"USR1",		/* SIGUSR1 */
-	"USR2"		/* SIGUSR2 */
-};
-#endif
 
 /*
  * Translate a signal number or name into an integer
@@ -1475,19 +1485,11 @@ getsig(sig)
 {
 	int n;
 
-	if (isnumber(sig)) {
-		n = strtol(sig, &sig, 0);
-		if ((unsigned)n >= NSIG)
-			return (-1);
-		return (n);
-	}
-
 	if (!strncasecmp(sig, "sig", 3))
 		sig += 3;
-	for (n = 1; n < NSIG; n++) {
-		if (!strcasecmp(sys_signame[n], sig))
-			return (n);
-	}
+	if (str2sig(sig, &n) != -1)
+		return n;
+
 	return (-1);
 }
 
@@ -1555,12 +1557,12 @@ parse_dwm(s, trim_at)
 			Dseen++;
 			s++;
 			ul = strtoul(s, &t, 10);
-			if (ul < 0 || ul > 23) {
+			if (ul > 23) {
 				if (verbose)
 					fprintf(stderr, "%s: nonsensical hour-of-the-day (D) value: %lu!\n", argv0, ul);
 				return (-1);
 			}
-			tms.tm_hour = ul;
+			tms.tm_hour = (int) ul;
 			break;
 
 		case 'w':
@@ -1573,7 +1575,7 @@ parse_dwm(s, trim_at)
 			WMseen++;
 			s++;
 			ul = strtoul(s, &t, 10);
-			if (ul < 0 || ul > 6) {
+			if (ul > 6) {
 				if (verbose)
 					fprintf(stderr, "%s: nonsensical day-of-the-week (W) value: %lu!\n", argv0, ul);
 				return (-1);
@@ -1583,13 +1585,11 @@ parse_dwm(s, trim_at)
 
 				if (ul < tms.tm_wday) {
 					save = 6 - tms.tm_wday;
-					save += (ul + 1);
+					save += ((int) ul + 1);
 				} else {
-					save = ul - tms.tm_wday;
+					save = (int) ul - tms.tm_wday;
 				}
-
 				tms.tm_mday += save;
-
 				if (tms.tm_mday > nd) {
 					tms.tm_mon++;
 					tms.tm_mday = tms.tm_mday - nd;
@@ -1622,7 +1622,7 @@ parse_dwm(s, trim_at)
 						fprintf(stderr, "%s: day-of-the-week (M) value out of range for month %d: %lu!\n", argv0, tms.tm_mon, ul);
 					return (-1);
 				}
-				tms.tm_mday = ul;
+				tms.tm_mday = (int) ul;
 			}
 			break;
 
@@ -1630,7 +1630,6 @@ parse_dwm(s, trim_at)
 			if (verbose)
 				fprintf(stderr, "%s: invalid trimtime specification: '%c'!\n", argv0, *s);
 			return (-1);
-			break;
 		}
 
 		if (*t == '\0' || isspace(*t))
