@@ -2,15 +2,15 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
 
-dnl This file:  Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc.
-dnl             see COPYING for details
+dnl This file:  Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
+dnl             - see COPYING for details
 
 AC_INIT(newsyslog.c)
 
 dnl Required Autoconf version.
 AC_PREREQ(2.52)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.36 2002/01/13 19:48:52 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.37 2002/02/09 21:45:03 woods Exp $"])
 
 dnl note we have to actually set these here first to appease automake
 dnl so we make them look wrong so that anything going wrong with the
