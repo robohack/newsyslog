@@ -6,7 +6,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: str2sig.c,v 1.1 2002/01/04 00:49:13 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: str2sig.c,v 1.2 2002/01/04 00:55:10 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -16,27 +16,25 @@ static const char rcsid[] =
 #ifdef STDC_HEADERS
 # include <stdlib.h>
 #endif
-
+#include <ctype.h>
 #include <limits.h>	/* for strtol(), but not really needed in here... */
-
 #if HAVE_STRING_H
 # include <string.h>
 #endif
 #if HAVE_STRINGS_H
 # include <strings.h>
 #endif
-
 #include <signal.h>
 
 #if !defined(SYS_SIGNAME_DECLARED)
 const char *const sys_signame[];		/* defined in signame.c */
 #endif
 
-extern int              isnumber __P((const char *));	/* defined in newsyslog.c */
-
 #if !HAVE_DECL_STR2SIG
 int                     str2sig __P((const char *, int *));
 #endif
+
+static int              isnumber __P((const char *));	/* may be used in sig2str.c */
 
 int
 str2sig(signame, signum)
@@ -59,4 +57,18 @@ str2sig(signame, signum)
 		}
 	}
 	return (-1);
+}
+
+/*
+ * Check if string is actually a number, i.e. *all* digits
+ */
+static int
+isnumber(p)
+	register const char *p;
+{
+	if (!p)
+		return (0);
+	while (*p && isdigit(*p))
+		p++;
+	return (*p ? 0 : 1);
 }
