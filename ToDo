@@ -1,0 +1,45 @@
+NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
+
+- Add one more optional field:  the format of the turnover message, with
+  the default to be the "syslog" style:
+
+	Mar 15 00:00:01 most newsyslog[17295]: logfile turned over
+
+  Nothing fancy though.  Just strftime() formats, plus one magic
+  specifier to represent where the hostname goes (%@), and another magic
+  specifier for the "newsyslog[17295]: logfile turned over" part (%#).
+  (i.e. run the format specifier through a simple replacement editor for
+  the two magic strings, and then pass it to strftime()).  The default
+  would thus be something like this:
+
+	"%b %d %T %@ %#"
+
+- Reverse the order of operations when checking the age of the log file
+  such that the timestamp is always read from the first record of
+  non-binary log files using the turnover format as a guide.  Only
+  binary files will revert to checking the age of the .0 file.  This
+  will make newsyslog less sensitive to the affects of anyone messing
+  with the archive copies, and more accurate for the first go-around on
+  non-syslog format log files.
+
+  One possible limitation here is that the timestamp may have to appear
+  at the beginning of the line (with only constant characters before and
+  within it).  The only way around this might be to iterate strptime()
+  starting at each successive character in the string to try and find a
+  parsable date format that matches the turnover format as it would be
+  with the two magic strings stripped off.
+
+  For example the standard syslog format "%b %d %T %@ %#" would strip
+  down to "%b %d %T ", which would hopefully match at offset 0 into the
+  first log entry.
+
+  An HTTP Common Log Format turnover message output format might be:
+
+	"%@ - - [%Y/%m/%d:%T] \"%#\""
+
+  This would have to be stripped down to the following for strptime():
+
+	"%Y/%m/%d:%T] \""
+
+
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.1 1998/03/15 20:45:39 woods Exp $"
