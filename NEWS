@@ -1,6 +1,7 @@
 NEWSYSLOG NEWS -- history of user-visible changes.
 
-This file:  Copyright (C) 1997 Planix, Inc.
+This file:  Copyright (C) 1997,1998,1999 Planix, Inc.
+	    see COPYING for details
 
 Please send bug reports to bugs@robohack.planix.com
 
@@ -63,4 +64,4 @@ from being rolled over unnecessarily).
 - separated out newsyslog.conf.5 manual page
 - improved documentation
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.8 1999/02/24 20:07:16 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.9 1999/08/24 23:14:38 woods Exp $"
