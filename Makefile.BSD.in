@@ -1,10 +1,10 @@
 #
 #	Makefile.BSD - input for pmake
 #
-# This file Copyright (C) 1998,1999,2000,2001,2002 Planix, Inc.
+# This file Copyright (C) by Planix, Inc.
 # - see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.11 2002/02/09 21:45:03 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.12 2002/05/10 17:47:38 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
@@ -29,6 +29,8 @@ CPPFLAGS+= -DHAVE_DECL_STRTOK
 CPPFLAGS+= -DHAVE_ERRNO_H
 CPPFLAGS+= -DHAVE_FLOCK
 CPPFLAGS+= -DHAVE_MEMSET
+CPPFLAGS+= -DHAVE_MKSTEMP
+CPPFLAGS+= -DHAVE_RENAME
 CPPFLAGS+= -DHAVE_STRCHR
 CPPFLAGS+= -DHAVE_STRDUP
 CPPFLAGS+= -DHAVE_STRERROR
@@ -41,6 +43,12 @@ CPPFLAGS+= -DHAVE_UNISTD_H
 
 CPPFLAGS+= -DPACKAGE="\"@PACKAGE@\""
 CPPFLAGS+= -DVERSION="\"@VERSION@\""
+
+CPPFLAGS+= -DPACKAGE_NAME="\"@PACKAGE_NAME@\""
+CPPFLAGS+= -DPACKAGE_TARNAME="\"@PACKAGE_TARNAME@\""
+CPPFLAGS+= -DPACKAGE_VERSION="\"@PACKAGE_VERSION@\""
+CPPFLAGS+= -DPACKAGE_STRING="\"@PACKAGE_STRING@\""
+CPPFLAGS+= -DPACKAGE_BUGREPORT="\"@PACKAGE_BUGREPORT@\""
 
 BINDIR?= @bindir@
 BINOWN= root
