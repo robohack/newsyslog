@@ -40,12 +40,14 @@ Makefile.BSD
 Makefile.BSD-dist
 Makefile.in
 aclocal.m4
+autom4te.cache
 config.cache
 config.h
 config.h.in
 config.log
 config.status
 configure
+configure.lineno
 import.d
 install-sh
 missing
@@ -56,3 +58,4 @@ newsyslog.conf.5.html
 newsyslog.core
 stamp-h
 stamp-h.in
+stamp-h1

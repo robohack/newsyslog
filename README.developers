@@ -2,15 +2,21 @@
 	README.developers - Instructions for developers with CVS access.
 
 
+Pre-Requisites:
+
+This package is configured and built with GNU Autoconf 2.53 or newer
+and GNU Automake 1.6 or newer.  They require Perl-5.005 or newer.
+
+
 Initial Builds:
 
 In order to pre-build the necessary config files from a freshly checked
-out repository you must run the following commands in the given order
-(ignoring the complaints of missing files from autoreconf's invocation
-of automake):
+out repository you must run the following commands in the given order:
 
-	autoreconf --force --gnu
+	aclocal
+	autoheader
 	automake --gnu --add-missing
+	autoreconf --force
 
 Now you can proceed with the normal build process (./configure && gmake).
 
@@ -18,8 +24,10 @@ Note that running "gmake maintainer-clean" should remove all files that
 are not stored in CVS -- i.e. all those that will be re-created by the
 above sequence of commands.
 
-(You'll note we use 'gmake' -- GNU Automake makefiles are designed to
-work best with GNU Make.)
+(You'll note the above instructions use 'gmake' -- GNU Automake
+makefiles are designed to work best with GNU Make, especially for
+various configuration maintenance tasks, though the *BSD 'pmake'
+version usually works fine too.)
 
 
 Making a New Release:
@@ -54,8 +62,9 @@ Once you think you're ready to try an actual release, update the
 "VERSION" identifier in the VERSION file (see the notes below on release
 numbers), and check this in.
 
-To tag, export, and create the finally distribution archive you need to
-run the following commands:
+To tag, export, and create the finally distribution archive you need
+to run the following commands (assuming you've already run the initial
+GNU Auto* commands detailed above):
 
 	gmake distclean
 	. ./VERSION
@@ -64,8 +73,7 @@ run the following commands:
 	cd /place-to-build-releases
 	cvs export -kv -r $tag -d $PACKAGE-$VERSION-export $PACKAGE
 	cd $PACKAGE-$VERSION
-	autoreconf --force --gnu
-	automake --gnu --add-missing
+	autoreconf --force
 	sh newsyslog2netbsd.sh
 	gmake dist			# or distcheck
 	mv $PACKAGE-$VERSION.tar.gz ..
@@ -82,15 +90,14 @@ If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access.
 If the 'diff' command reveals any files are missing then you need to go
 back, untag the whole module, fix Makefile.am, and re-test.
 
-Update the project page, and then copy new project page sub-files into
-place with these commands:
+Copy new project page sub-files into place with these commands:
 
 	cd /place-to-build-releases/$PACKAGE-VERSION
-	sh newsyslog2netbsd.sh
-	gmake htmlman
-	cp newsyslog.conf.5.html ~/public_html/projects/newsyslog.conf.5.html
-	cp newsyslog.8.html ~/public_html/projects/newsyslog.8.html
+	cp newsyslog.conf.5.html-dist ~/public_html/projects/newsyslog.conf.5.html
+	cp newsyslog.8.html-dist ~/public_html/projects/newsyslog.8.html
 	cp NEWS ~/public_html/projects/newsyslog.NEWS.txt
+
+Update the project page in ~/public_html/projects/newsyslog.html
 
 Finally post an update on http://freshmeat.net/
 
@@ -160,4 +167,4 @@ stripped when it is finally officially released.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.10 2002/02/09 21:50:52 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.11 2002/05/04 19:36:19 woods Exp $"

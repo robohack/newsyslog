@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.40 2002/02/09 21:42:48 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.41 2002/05/04 19:36:19 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -219,9 +219,11 @@ struct conf_entry {
 	struct conf_entry *next;	/* Linked list pointer */
 };
 
-const char     *argv0 = PACKAGE;
-const char      package[] = PACKAGE;	/* the original dist name */
-const char      version[] = VERSION;
+const char     *argv0 = PACKAGE_NAME;
+const char      package[] = PACKAGE_NAME;	/* the package name */
+const char      tarname[] = PACKAGE;		/* the original dist name (not PACKAGE_TARNAME, not yet) */
+const char      version[] = VERSION;		/* the package version (not PACKAGE_VERSION, not yet) */
+const char      bugreport[] = PACKAGE_BUGREPORT;
 
 int             verbose = 0;	/* Print out what's going on */
 int             needroot = 1;	/* Root privs are necessary for default conf */
@@ -554,6 +556,8 @@ help()
 {
 	printf(USAGE_FMT, argv0);
 	printf("\n");
+	printf("%s, distributed as %s-%s.  Usage details:\n", package, tarname, version);
+	printf("\n");
 	printf("	-F		force immediate trimming\n");
 	printf("	-M		select normal periodic processing [opposite of -m]\n");
 	printf("	-T hh:mm	adjust current time\n");
@@ -568,6 +572,11 @@ help()
 	printf("	-v		show verbose (debugging) messages\n");
 	printf("\n");
 	printf("	file		only trim specified file(s)\n");
+	printf("\n");
+	printf("Original Copyright (c) 1987, Massachusetts Institute of Technology\n");
+	printf("Package Copyright (c) Planix, Inc.\n");
+	printf("See 'COPYING' file in the source distribution for details.\n");
+	printf("Please send bug reports to <%s>\n", bugreport);
 	exit(0);
 	/* NOTREACHED */
 }

@@ -5,52 +5,24 @@ dnl
 dnl This file:  Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
 dnl             - see COPYING for details
 
-AC_INIT(newsyslog.c)
+AC_INIT([NewSyslog], [0.0.0.0-Autoconf-broken], [woods-newsyslog@robohack.planix.com], [newsyslog])
+
+dnl NOTICE:  We must use the obsolete forms of the next two macros
+dnl with Autoconf-2.53 because that's the only way to keep PACKAGE
+dnl (i.e. the tarname) and VERSION dynamic at "./configure" runtime.
+
+AC_SOURCE_VERSION(./VERSION)
+AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 
 dnl Required Autoconf version.
-AC_PREREQ(2.52)
+AC_PREREQ(2.53)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.37 2002/02/09 21:45:03 woods Exp $"])
-
-dnl note we have to actually set these here first to appease automake
-dnl so we make them look wrong so that anything going wrong with the
-dnl sourcing of $srcdir/VERSION will jump out quite clearly.
-PACKAGE="newsyslog-Broken"
-VERSION="0.0.0-Broken \# something is wrong in $srcdir/VERSION!"
-. $srcdir/VERSION
-
-changequote(,)
-VERSION_MAJOR=`expr "$VERSION" : '^\([0-9]*\)'`
-VERSION_MINOR=`expr "$VERSION" : '^[0-9]*\.\([0-9]*\)'`
-VERSION_PATCH=`expr "$VERSION" : '^[0-9]*\.[0-9]*\.\([0-9]*\)'`
-VERSION_SUFFIX=`expr "$VERSION" : '^[0-9]*\.[0-9]*\.[0-9]*-\([a-zA-Z0-9._,+]*\)'`
-VERSION_COMMENT=`expr "$VERSION" : '^.*#\(.*\)'`
-changequote([,])
-
-AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
-AC_SUBST(PACKAGE)
-
-AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
-AC_SUBST(VERSION)
-AC_DEFINE_UNQUOTED(VERSION_MAJOR, $VERSION_MAJOR)
-AC_SUBST(VERSION_MAJOR)
-AC_DEFINE_UNQUOTED(VERSION_MINOR, $VERSION_MINOR)
-AC_SUBST(VERSION_MINOR)
-AC_DEFINE_UNQUOTED(VERSION_PATCH, $VERSION_PATCH)
-AC_SUBST(VERSION_PATCH)
-AC_DEFINE_UNQUOTED(VERSION_SUFFIX, "$VERSION_SUFFIX")
-AC_SUBST(VERSION_SUFFIX)
-AC_DEFINE_UNQUOTED(VERSION_COMMENT, "$VERSION_COMMENT")
-AC_SUBST(VERSION_COMMENT)
-
-AM_SANITY_CHECK
-
-AC_ARG_PROGRAM
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.38 2002/05/04 19:36:19 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
-AC_LANG_C
+AC_LANG([C])
 
 AC_PROG_MAKE_SET
 
@@ -119,11 +91,14 @@ dnl working flock()!
 
 AC_CHECK_FUNCS(bzero flock isnan isinf memset strchr strrchr)
 
+AM_WITH_DMALLOC
+
 dnl handle "--with-gzip"
 AC_MSG_CHECKING(for name of archive compression program)
 
 AC_ARG_WITH(gzip,
-	[  --with-gzip             use GNU Zip instead of compress],
+	AC_HELP_STRING([--with-gzip],
+		[use GNU Zip instead of compress]),
 	[COMPRESS_PROG=gzip
 	COMPRESS_SUFFIX=".gz"],
 	[COMPRESS_PROG=compress
@@ -132,11 +107,13 @@ AC_ARG_WITH(gzip,
 
 AC_MSG_RESULT($COMPRESS_PROG with $COMPRESS_SUFFIX)
 AC_SUBST(COMPRESS_SUFFIX)
-AC_DEFINE_UNQUOTED(COMPRESS_SUFFIX, "$COMPRESS_SUFFIX")
+AC_DEFINE_UNQUOTED(COMPRESS_SUFFIX, "$COMPRESS_SUFFIX",
+				    [Compressed file suffix string])
 
 AC_PATH_PROG(PATH_COMPRESS, $COMPRESS_PROG)
 AC_SUBST(PATH_COMPRESS)
-AC_DEFINE_UNQUOTED(PATH_COMPRESS, "$PATH_COMPRESS")
+AC_DEFINE_UNQUOTED(PATH_COMPRESS, "$PATH_COMPRESS",
+				  [File compression program pathname])
 
 dnl handle "--with-syslogd_pid=path"
 AC_MSG_CHECKING(for name of syslogd's pid file)
@@ -156,13 +133,15 @@ case "$localstatedir" in
 esac
 
 AC_ARG_WITH(syslogd_pid,
-	[  --with-syslogd_pid=path syslogd's PID file (localstatedir/run/syslog.pid)],
+	AC_HELP_STRING([--with-syslogd_pid=path],
+		 [syslogd's PID file (localstatedir/run/syslog.pid)]),
 	[syslogd_pidfile=$withval],
 	[syslogd_pidfile=$expandedlocalstatedir/run/syslog.pid]
 )
 
 AC_SUBST(syslogd_pidfile)
-AC_DEFINE_UNQUOTED(PATH_SYSLOGD_PIDFILE, "$syslogd_pidfile")
+AC_DEFINE_UNQUOTED(PATH_SYSLOGD_PIDFILE, "$syslogd_pidfile",
+					 [Pathname of syslogd's default PID file])
 AC_MSG_RESULT($syslogd_pidfile)
 
 dnl handle "--with-newsyslog_conf=path"
@@ -183,14 +162,17 @@ case "$sysconfdir" in
 esac
 
 AC_ARG_WITH(newsyslog_conf,
-	[  --with-newsyslog_conf=path configuration file (sysconfdir/newsyslog.conf)],
+	AC_HELP_STRING([--with-newsyslog_conf=path],
+		[configuration file (sysconfdir/newsyslog.conf)]),
 	[path_config=$withval],
 	[path_config=$expandedsysconfdir/newsyslog.conf]
 )
 
 AC_SUBST(path_config)
-AC_DEFINE_UNQUOTED(PATH_CONFIG, "$path_config")
+AC_DEFINE_UNQUOTED(PATH_CONFIG, "$path_config",
+				[Default path to the configuration file])
 AC_MSG_RESULT($path_config)
 
 dnl Files to create from their *.in templates:
-AC_OUTPUT([Makefile Makefile.BSD newsyslog.conf.5so newsyslog.8so])
+AC_CONFIG_FILES([Makefile Makefile.BSD newsyslog.conf.5so newsyslog.8so])
+AC_OUTPUT
