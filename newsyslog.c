@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.12 1998/03/15 22:52:57 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.13 1998/03/16 00:43:08 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -136,6 +136,7 @@ int             verbose = 0;	/* Print out what's going on */
 int             needroot = 1;	/* Root privs are necessary */
 int             noaction = 0;	/* Don't do anything, just show it */
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
+int             force = 0;	/* force all files to be trimmed */
 char           *conf = PATH_CONFIG;/* Configuration file to use */
 time_t          timenow;
 pid_t           syslog_pid;	/* read in from /etc/syslog.pid */
@@ -230,16 +231,17 @@ do_entry(ent)
 	} else if (size == 0) {
 		if (verbose)
 			printf("is empty ");
-	} else if (size > 0) {
+	}
+	if (force || size > 0) {
 		if (verbose && (ent->size > 0))
 			printf("size (Kb): %d [allow %d] ", size, ent->size);
 		if ((ent->size > 0) && (size >= ent->size))
 			we_trim_it = 1;
-		assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 		modtime = age_old_log(ent);
 		if (verbose && (ent->hours > 0))
 			printf(" age (hr): %d [allow %d] ", modtime, ent->hours);
-		if ((ent->hours > 0) && ((modtime >= ent->hours) || (modtime < 0))) {
+		assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
+		if (force || (ent->hours > 0) && ((modtime >= ent->hours) || (modtime < 0))) {
 			if (domidnight == -1 || (domidnight == 1 && (ent->hours % 24) == 0))
 				we_trim_it = 1;
 			else {
@@ -283,8 +285,11 @@ PRS(argc, argv)
 		*p = '\0';
 	}
 	optind = 1;		/* Start options parsing */
-	while ((c = getopt(argc, argv, "MVmnrvf:t:")) != -1)
+	while ((c = getopt(argc, argv, "FMVmnrvf:t:")) != -1)
 		switch (c) {
+		case 'F':
+			force = 1;
+			break;
 		case 'M':
 			domidnight = 0;
 			break;
@@ -315,7 +320,7 @@ PRS(argc, argv)
 static void 
 usage()
 {
-	fprintf(stderr, "Usage: %s [-M|-m] [-Vnrv] [-f config-file]\n", argv0);
+	fprintf(stderr, "Usage: %s [-V] [-M|-m] [-Fnrv] [-f config-file]\n", argv0);
 	exit(1);
 }
 
