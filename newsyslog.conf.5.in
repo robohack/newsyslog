@@ -1,4 +1,4 @@
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5.in,v 1.2 1997/11/14 06:52:05 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5.in,v 1.3 1998/03/05 03:59:31 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -33,8 +33,8 @@ file should be handled by
 .Xr newsyslog 8 .
 Each line has five mandatory fields and three optional fields, with a
 whitespace separating each field.  Blank lines or lines beginning with
-``#'' are ignored.  The fields of the configuration file are as
-follows: 
+.Dq #
+are ignored.  The fields of the configuration file are as follows:
 .Pp
 .Bl -tag -width indent
 .It Ar logfile_name
@@ -96,6 +96,25 @@ inserts to indicate the fact that the logs have been
 turned over should not be included.
 .Pp
 The
+.Ar 0
+flag means that the most recent archive of the log file (i.e. the one that
+ends in
+.Dq Pa .0 )
+should not be compressed even when the
+.Ar Z
+flag is given.  This flag is necessary when managing log files written
+directly to by long-running processes (eg.
+.Xr smail 8 ,
+.Xr httpd 8 ,
+etc.).  This flag also makes it more convenient to browse through the
+most recently archived log file without having to first uncompress it or
+use tools like
+.Xr zmore 1 ,
+or
+.Xr zgrep 1 ,
+etc.
+.Pp
+The
 .Ar -
 flag means nothing, but can be used as a placeholder when the
 field
@@ -105,7 +124,9 @@ is specified for entries without any flags.
 This optional field specifies the file name from which to read the
 associated daemon's process-id.  If this field is present, a SIGHUP is
 sent the process id contained in this file.  This field must start with
-a slash (``/'') in order to be recognized properly.
+a slash (i.e.\ 
+.Dq Pa / )
+in order to be recognized properly.
 .El
 .Sh EXAMPLE
 .Pp
@@ -114,22 +135,25 @@ A configuration file might appear as follows:
 #
 # sample configuration file for newsyslog
 #
-# log_filename	[owner.group]	mode	count	kbytes	hours	[ZB]	[/pid_file]
-/var/log/messages		664	10	*	168	Z
-/var/log/wtmp			664	10	1000	*	B
-/var/log/auth	root.wheel	640	10	1000	*	Z
-/var/log/cron	root.wheel	640	3	*	24	Z	
-/var/log/daemon			664	4	500	*	Z
-/var/log/debug	root.wheel	640	4	1000	*	Z
-/var/log/kern			664	10	500	*	Z
-/var/log/local			664	10	*	168	Z
-/var/log/lpr			664	5	250	*	Z
-/var/log/mail	root.staff	660	52	*	168	Z
-#/var/log/news	news.news	664	2	*	24	Z
-/var/log/syslog	root.wheel	640	3	500	*	Z
-/var/log/user			664	10	500	*	Z
-/var/log/uucp	uucp.operator	664	5	*	168	Z
-/var/log/smail/logfile		664	5	*	168	Z	/var/run/smail.pid
+# log_filename  [owner.group] mode count kbytes hours [ZB] [/pid_file]
+/var/log/messages             664  10    *      168   Z
+/var/log/wtmp                 664  10    1000   *     B
+/var/log/auth   root.wheel    640  10    1000   *     Z
+/var/log/cron   root.wheel    640  3     *      24    Z
+/var/log/daemon               664  4     500    *     Z
+/var/log/debug  root.wheel    640  4     1000   *     Z
+/var/log/kern                 664  10    500    *     Z
+/var/log/local                664  10    *      168   Z
+/var/log/lpr                  664  5     250    *     Z
+/var/log/mail   root.staff    660  52    *      168   Z
+#/var/log/news  news.news     664  2     *      24    Z
+/var/log/syslog root.wheel    640  3     500    *     Z
+/var/log/user                 664  10    500    *     Z
+/var/log/uucp   uucp.operator 664  5     *      168   Z
+/var/log/smail/logfile        664  5     *      168   Z0   /dev/null
+/var/log/smail/paniclog       664  5     *      168   Z0   /dev/null
+/var/log/httpd/access_log     664  5     *      168   Z0   /var/run/httpd.pid
+/var/log/httpd/error_log      664  5     *      168   Z0   /var/run/httpd.pid
 .Ed
 .Sh FILES
 .Bl -tag -width @path_config@ -compact
@@ -178,4 +202,8 @@ Are there any logfile generating daemons in use out there which do not
 recognize SIGHUP as the signal to reopen their logfiles?  If so then
 perhaps the
 .Ar path_to_pid_file
-field could be followed by yet another optional signal number field.
+field could be followed by yet another optional field to specify the
+appropriate signal number.
+.\"
+.\"	The End.
+.\"
