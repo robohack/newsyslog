@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.19 1999/02/24 18:15:32 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.20 1999/02/24 18:56:57 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -626,6 +626,10 @@ do_trim(ent)
 				if (rename(ent->log, file1) < 0)
 					fprintf(stderr, "%s: can't rename file: %s to %s: %s.\n", argv0, ent->log, file1, strerror(errno));
 			}
+			if (!(ent->flags & CE_BINARY)) {
+				if (note_trim(file1))
+					fprintf(stderr, "%s: can't add final status message to log: %s: %s.\n", argv0, file1, strerror(errno));
+			}
 		} else {
 			/*
 			 * if not just remove the current file...
@@ -679,13 +683,16 @@ do_trim(ent)
 			pid = get_pid(ent->pid_file);
 		}
 	} else if (!(ent->flags & CE_BINARY)) {
-		/* XXX is it wrong to assume that binaries without an
+		/*
+		 * XXX is it wrong to assume that binaries without an
 		 * explicitly specified pid file are not written to by syslogd?
 		 * The worst thing likely to happen is someone will set the
 		 * CE_BINARY flag on a syslogd log file and syslog might not
 		 * get notified right away about this file being trimmed.  Only
 		 * if all syslogd files are marked binary will they never be
-		 * properly re-opened by syslogd after being trimmed.
+		 * properly re-opened by syslogd after being trimmed.  Anyone
+		 * who purposely marks all syslogd files as binary really needs
+		 * to get clue-x-4'ed!
 		 */
 		need_notification = 1;
 		pid = syslogd_pid;
@@ -699,28 +706,28 @@ do_trim(ent)
 			fprintf(stderr, "%s: can't notify daemon, pid %d: %s\n.", argv0, (int) pid, strerror(errno));
 		else {
 			notified = 1;
-			if (verbose)
+			if (verbose) {
 				printf("daemon with pid %d notified\n", (int) pid);
-			if (verbose)
 				printf("small pause now to allow daemon to close log... ");
+			}
 			sleep(5);
 			if (verbose)
 				puts("done.");
 		}
 	}
-	sprintf(zfile1, "%s.%s", ent->log, (ent->flags & CE_PLAIN0) ? "1" : "0"); /* sprintf() OK here */
-	if ((lstat(zfile1, &st) >= 0) && (st.st_size > 0)) {
-		if (!(ent->flags & CE_BINARY)) {
-			if (note_trim(ent->log))
-				fprintf(stderr, "%s: can't add final status message to log: %s: %s.\n", argv0, ent->log, strerror(errno));
-		}
-		if ((ent->flags & CE_COMPACT)) {
+	if ((ent->flags & CE_COMPACT)) {
+		int             rt;
+
+		sprintf(zfile1, "%s.%s", ent->log, (ent->flags & CE_PLAIN0) ? "1" : "0"); /* sprintf() OK here */
+		if ((rt = lstat(zfile1, &st)) >= 0 && (st.st_size > 0)) {
 			if (!(ent->flags & CE_PLAIN0) && need_notification && !notified)
 				fprintf(stderr, "%s: %s not compressed because daemon not notified.\n", argv0, ent->log);
-		} else if (noaction)
-			printf("%s %s\n", PATH_COMPRESS, zfile1);
-		else
-			compress_log(zfile1);
+			else if (noaction)
+				printf("%s %s\n", PATH_COMPRESS, zfile1);
+			else
+				compress_log(zfile1);
+		} else if (verbose)
+			printf("%s: %s not compressed: %s.\n", argv0, zfile1, (rt < 0) ? "no such file" : "is empty");
 	}
 
 	return;
@@ -776,7 +783,12 @@ compress_log(log)
 		(void) execl(c_path, c_prog, "-f", log, 0);
 		perror(c_path);
 		return;
-	}
+	} else if (verbose)
+		printf("%s: started '%s %s &'\n", argv0, c_prog, log);
+	/*
+	 * NOTE: we'll just leave our zombie children to wait until we exit
+	 */
+	return;
 }
 
 /*
