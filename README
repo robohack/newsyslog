@@ -21,8 +21,20 @@ What does this newsyslog have to offer?
 
 TO BUILD NEWSYSLOG
 
+If you are building newsyslog on a BSD-based system you can simply use
+"Makfile.BSD".  This is in fact necessary if your system requires
+installation of pre-formatted manual pages (otherwise you'll have to
+install them by hand).  Check the default options in "Makefile.BSD" then
+simply run:
+
+	make -f Makefile.BSD
+
+Newsyslog can also be built using the GNU Autoconf based build system
+and a ``normal'' "make".
+
 Please see the file "INSTALL" for overall instructions on how to
-configure and build this package.
+configure and build this package using the GNU Autoconf generated
+"configure" script.
 
 In general you need only run "./configure && make && make install"
 
@@ -72,4 +84,4 @@ software is available at:
 						<woods@planix.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.2 1998/03/05 07:12:05 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.3 1998/03/16 01:30:15 woods Exp $"
