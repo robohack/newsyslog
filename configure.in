@@ -10,7 +10,7 @@ AC_INIT(newsyslog.c)
 dnl Required Autoconf version.
 AC_PREREQ(2.12)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.33 2001/03/06 02:03:52 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.34 2002/01/04 00:41:38 woods Exp $"])
 
 dnl for Automake
 PACKAGE="newsyslog"
@@ -20,7 +20,7 @@ AC_SUBST(PACKAGE)
 
 dnl for Automake too
 dnl (note we have to actually set it here first to appease automake)
-VERSION="0.0.0-Broken # something is wrong in $srcdir/VERSION!"
+VERSION="0.0.0-Broken \# something is wrong in $srcdir/VERSION!"
 . $srcdir/VERSION
 
 changequote(,)
@@ -74,7 +74,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
-AC_CHECK_HEADERS(errno.h string.h netdb.h sys/types.h unistd.h)
+AC_CHECK_HEADERS(errno.h string.h netdb.h sys/file.h sys/proc.h unistd.h)
 
 AC_MSG_CHECKING(for sys/cdefs.h)
 AC_TRY_CPP([
@@ -95,7 +95,19 @@ AC_TYPE_SIGNAL
 AC_DECL_SYS_SIGNAME
 
 dnl Checks for library functions.
-AC_REPLACE_FUNCS(snprintf strdup strerror strtok strptime)
+AC_REPLACE_FUNCS(sig2str snprintf str2sig strdup strerror strtok strptime)
+
+AC_CHECK_DECLS(sig2str str2sig, [], [], [#include <signal.h>])
+AC_CHECK_DECLS(strchr strdup strrchr strtok, [], [], [#if HAVE_STRING_H
+# include <string.h>
+#endif
+#if HAVE_STRINGS_H
+# include <strings.h>
+#endif])dnl
+
+dnl STUPID GNU/Linux and/or glibc only declares strptime()
+dnl if _XOPEN_SOURCE is defined!
+AC_CHECK_DECLS(strptime, [], [], [#include <time.h>])
 
 dnl Note that although bzero() is deprectated and non-standard we only
 dnl need its capabilities, not those of the fancier and more standard
@@ -106,7 +118,7 @@ dnl code and account for its absense with a macro.
 dnl Also note that checking for flock() here doesn't guarantee a
 dnl working flock()!
 
-AC_CHECK_FUNCS(bzero strchr flock)
+AC_CHECK_FUNCS(bzero flock isnan isinf memset strchr strrchr)
 
 dnl handle "--with-gzip"
 AC_MSG_CHECKING(for name of archive compression program)
