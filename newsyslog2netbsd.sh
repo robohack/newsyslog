@@ -3,11 +3,11 @@
 #
 #	newsyslog2netbsd - upgrade from latest newsyslog release
 #
-# This file Copyright (C) 1999 Planix, Inc. -- see COPYING for details.
+# This file Copyright (C) 1999,2000,2001 Planix, Inc. -- see COPYING for details.
 #
 # NOTE: needs a fully POSIX /bin/sh to run properly....
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.4 2000/12/01 19:49:32 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.5 2001/03/06 02:00:30 woods Exp $"
 
 # The following variables can be adjusted as necessary
 #

@@ -1,9 +1,9 @@
 #
 #	Makefile.BSD - input for pmake
 #
-# This file Copyright (C) 1998,1999 Planix, Inc. -- see COPYING for details.
+# This file Copyright (C) 1998,1999,2000,2001 Planix, Inc. -- see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.8 2001/02/23 00:34:52 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.9 2001/03/06 02:00:30 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
