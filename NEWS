@@ -1,0 +1,20 @@
+NEWSYSLOG NEWS -- history of user-visible changes.
+
+This file:  Copyright (C) 1997 Planix, Inc.
+
+Please send bug reports to bugs@robohack.planix.com
+
+
+* User-visible changes new in newsyslog-$Name:  $.
+
+- don't add status message to new log file in order to ensure that
+stagnant log files stay unchanged (i.e. the "empty" check prevents them
+from being rolled over unnecessarily).
+
+* User-visible changes new in newsyslog-1.80.
+
+- added -M|-m option
+- separated out newsyslog.conf.5 manual page
+- improved documentation
+
+#ident	"@(#)newsyslgo:$Name:  $:$Id: NEWS,v 1.2 1997/11/15 07:09:17 woods Exp $"
