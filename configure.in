@@ -10,7 +10,7 @@ AC_INIT(newsyslog.c)
 dnl Required Autoconf version.
 AC_PREREQ(2.12)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.27 2000/12/01 19:56:58 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.28 2000/12/01 20:24:25 woods Exp $"])
 
 dnl for Automake
 PACKAGE="newsyslog"
@@ -79,7 +79,7 @@ dnl code and account for its absense with a macro.
 dnl Also note that checking for flock() here doesn't guarantee a
 dnl working flock()!
 
-AC_CHECK_FUNCS(bzero strchr, flock)
+AC_CHECK_FUNCS(bzero strchr flock)
 
 dnl handle "--with-gzip"
 AC_MSG_CHECKING(for name of archive compression program)
