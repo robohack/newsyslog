@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.36 2002/01/04 03:22:58 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.37 2002/01/04 03:40:59 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -305,7 +305,7 @@ main(argc, argv)
 
 	parse_options(argc, argv);
 
-	/* timenow may be changed in parse_options() by -T */
+	/* timenow may have been changed in parse_options() by -T */
 	daytime = ctime(&timenow) + 4;		/* trim the day name off */
 	daytime[15] = '\0';			/* trim the year off too */
 
@@ -427,6 +427,8 @@ parse_options(argc, argv)
 	long            l;
 	char           *p;
 	struct tm       tms;
+	int		tms_hour;
+	int		tms_min;
 
 	argv0 = (argv0 = strrchr(argv[0], '/')) ? argv0 + 1 : argv[0];
 
@@ -441,8 +443,12 @@ parse_options(argc, argv)
 			domidnight = 0;
 			break;
 		case 'T':		/* reset current time, mostly for testing */
-			tms = *localtime(&timenow);
 			p = strptime(optarg, "%H:%M", &tms);
+			tms_hour = tms.tm_hour;
+			tms_min = tms.tm_min;
+			tms = *localtime(&timenow);
+			tms.tm_hour = tms_hour;
+			tms.tm_min = tms_min;
 			if (!p || (p && *p)) {	/* should point to '\0' */
 				fprintf(stderr,
 					"%s: time of '%s' is not parsable (use HH:MM)\n",
