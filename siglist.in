@@ -1,0 +1,114 @@
+#ident "@(#)newsyslog:$Name:  $:$Id: siglist.in,v 1.1 2003/07/08 16:52:42 woods Exp $"
+#
+# List of all possible known signals from all types of systems.
+#
+# This list is used to initialize sys_signame signal table with the
+# actual list of signal names used on the target host system.  It
+# could also be used to build sys_siglist if necessary.
+#
+# Format of each entry is a signal name without the "SIG" prefix, and
+# normally in all upper case to match the manifest constants defining
+# signal names, followed by whitespace and then a text string
+# describing the signal.
+#
+# Comments are any line starting with optional whitespace and a '#'.
+#
+# Blank lines and comment lines are ignored.
+#
+# Note that if a system has multiple defines for the same signal
+# (eg, SIGABRT vs SIGIOT, SIGCHLD vs SIGCLD), only the first one
+# will be seen, so the order in this list is important.
+#
+# This list is borrowed from siglist.in included in the PD-KSH
+# sources, apparently first written by Michael Rendell
+# <michael@panda.cs.mun.ca>
+
+HUP    Control TTY hangup
+INT    Control TTY interrupt
+QUIT   Control TTY quit
+ILL    Illegal instruction
+TRAP   Trace trap
+# ABRT must come before IOT
+# (SIGABRT is POSIX and SIGABRT sometimes has the same value as SIGIOT)
+ABRT   Abort(3) called
+IOT    I/O Transfer trap
+EMT    Emulator trap
+FPE    Floating point exception
+KILL   Kill process
+# UNUSED must come before BUS
+# (linux doesn't really have a SIGBUS, but defines it to UNUSED)
+UNUSED Unused
+BUS    Bus error
+SEGV   Segment access violation
+SYS    Bad system call
+PIPE   Broken pipe
+ALRM   Alarm timer expired
+TERM   Terminate process
+STKFLT Stack fault
+# POLL must come before IO
+# (SunOS-5 (svr4?) has SIGIO defined to SIGPOLL)
+POLL   Pollable event occurred
+IO     I/O is possible
+XCPU   CPU time limit exceeded
+XFSZ   File size limit exceeded
+VTALRM Virtual timer expired
+PROF   Profiling timer expired
+WINCH  Window size change
+LOST   File/record lock lost
+USR1   User defined signal 1
+USR2   User defined signal 2
+PWR    Power-fail/Restart
+STOP   Stop process
+TSTP   Control TTY stop signal
+CONT   Continue stopped process
+# CHLD must come before CLD
+# (SIGCHLD is POSIX and SIGCHLD is sometimes the same as SIGCLD)
+CHLD   Child status has changed
+CLD    Child status has changed (old name)
+TTIN   Background process attempted TTY input
+TTOU   Background process attempted TTY output
+INFO   Information request from TTY
+URG    Urgent I/O condition
+
+# more SunOS-5 specific signals
+# (see /usr/include/sys/iso/signal_iso.h)
+WAITING No runnable LWPs
+LWP    Inter-LWP signal
+FREEZE Checkpoint freeze
+THAW   Checkpoint thaw
+CANCEL Thread cancellation
+XRES   resource control exceeded
+
+# realtime signals (are these really needed?)
+RT0    Real Time signal #0
+RT1    Real Time signal #1
+RT2    Real Time signal #2
+RT3    Real Time signal #3
+RT4    Real Time signal #4
+RT5    Real Time signal #5
+RT6    Real Time signal #6
+RT7    Real Time signal #7
+RT8    Real Time signal #8
+RT9    Real Time signal #9
+RT10   Real Time signal #10
+RT11   Real Time signal #11
+RT12   Real Time signal #12
+RT13   Real Time signal #13
+RT14   Real Time signal #14
+RT15   Real Time signal #15
+RT16   Real Time signal #16
+RT17   Real Time signal #17
+RT18   Real Time signal #18
+RT19   Real Time signal #19
+RT20   Real Time signal #20
+RT21   Real Time signal #21
+RT22   Real Time signal #22
+RT23   Real Time signal #23
+RT24   Real Time signal #24
+RT25   Real Time signal #25
+RT26   Real Time signal #26
+RT27   Real Time signal #27
+RT28   Real Time signal #28
+RT29   Real Time signal #29
+RT30   Real Time signal #30
+RT31   Real Time signal #31
