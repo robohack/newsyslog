@@ -57,15 +57,19 @@ To tag, export, and create the finally distribution archive you need to
 run the following commands:
 
 	gmake distclean
-	sh newsyslog2netbsd.sh
 	. ./VERSION
 	tag=$(echo $VERSION | tr . _)
 	cvs tag $PACKAGE-$tag .
 	cd /place-to-build-releases
 	cvs export -kv -r $tag -d $PACKAGE-$VERSION-export $PACKAGE
 	cd $PACKAGE-$VERSION
-	make dist
+	autoreconf --force --gnu
+	automake --gnu --add-missing
+	sh newsyslog2netbsd.sh
+	gmake dist
 	mv $PACKAGE-$VERSION.tar.gz ..
+	rm -rf import.d
+	gmake distclean
 	cd ..
 	pax -rzf $PACKAGE-$VERSION.tar.gz
 	diff -r --brief $PACKAGE-$VERSION-export $PACKAGE-$VERSION
@@ -143,4 +147,4 @@ when it is finally officially released.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.8 2002/01/13 19:58:44 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.9 2002/01/13 20:16:02 woods Exp $"
