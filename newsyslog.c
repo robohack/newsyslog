@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.13 1998/03/16 00:43:08 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.14 1998/03/16 03:11:23 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -241,7 +241,7 @@ do_entry(ent)
 		if (verbose && (ent->hours > 0))
 			printf(" age (hr): %d [allow %d] ", modtime, ent->hours);
 		assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
-		if (force || (ent->hours > 0) && ((modtime >= ent->hours) || (modtime < 0))) {
+		if (force || ((ent->hours > 0) && ((modtime >= ent->hours) || (modtime < 0)))) {
 			if (domidnight == -1 || (domidnight == 1 && (ent->hours % 24) == 0))
 				we_trim_it = 1;
 			else {
