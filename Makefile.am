@@ -3,7 +3,7 @@
 #
 # Copyright (C) 1997 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.6 1998/03/16 01:47:15 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.7 1998/03/16 02:30:45 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
 MAINT_CHARSET = latin1
@@ -19,7 +19,9 @@ soelim_MANS = newsyslog.conf.5so
 DIST_OTHER = README.developers ToDo
 
 # things that must be made during 'make dist'
-EXTRA_DIST = $(soelim_MANS) $(catman_MANS) Makefile.BSD
+DIST_MAKE = $(soelim_MANS) $(catman_MANS) Makefile.BSD-dist
+
+EXTRA_DIST = $(DIST_OTHER) $(DIST_MAKE)
 
 PATH_CONFIG = @path_config@
 
@@ -49,6 +51,9 @@ $(PROGRAMS): Makefile
 $(man_MANS): config.status
 
 newsyslog.conf.5: newsyslog.conf newsyslog.conf.5so
+
+Makefile.BSD-dist: Makefile.BSD
+	cp $? $@
 
 newsyslog.o: config.h
 version.o: config.h
