@@ -90,17 +90,23 @@ Please see the file "INSTALL" for overall instructions on how to
 configure and build this package using the GNU Autoconf generated
 "configure" script.
 
-In general you need only run the following command sequence
+In general you need only run the following command sequence:
 
 	./configure && make && make install
 
-On systems without the "mandoc" macros (or without "nroff"), you can
-still install and read the distributed 'cat'-table manual pages.
-For example if you get an error during the first "make" that says
-something like "nroff: Cannot find library -mandoc", or "nroff: not
-found", run the following command before you run "make install":
+(see "CUSTOM CONFIGURATION OPTIONS" below for other "configure" options)
 
-	make copy-dist-catman
+On systems without the "doc" macros (or without "nroff"), you can still
+install and read the distributed 'cat'-table manual pages.  For example
+if you get an error during the first "make" that says something like
+"nroff: Cannot find library -mandoc", or "nroff: not found", run the
+following command instead of running "make install":
+
+	make copy-dist-catman install
+
+This doesn't guarantee your "man" command will be able to find and
+present the result, but it gets you to the stage of having something to
+present instead of being stuck with just the "doc" source.
 
 
 CUSTOM CONFIGURATION OPTIONS
@@ -156,4 +162,4 @@ or:
 						<woods@weird.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.8 2001/03/06 02:45:34 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.9 2002/02/09 21:47:54 woods Exp $"
