@@ -4,13 +4,13 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.31 2003/07/08 18:09:47 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.32 2003/07/08 19:00:32 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.7
 MAINT_CHARSET = latin1
 
 bin_PROGRAMS = newsyslog
-newsyslog_SOURCES = newsyslog.c
+newsyslog_SOURCES = newsyslog.c newsyslog.h
 newsyslog_LDADD = $(LIBOBJS)
 
 man_MANS = newsyslog.conf.5 newsyslog.8
