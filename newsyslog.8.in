@@ -3,7 +3,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	$FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp $
 .\"
-.\"ident	"@()newsyslog:$Name:  $:$Id: newsyslog.8.in,v 1.4 1998/03/15 23:52:03 woods Exp $"
+.\"ident	"@()newsyslog:$Name:  $:$Id: newsyslog.8.in,v 1.5 1998/03/16 00:43:45 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -33,7 +33,7 @@
 .Sh DESCRIPTION
 .Nm Newsyslog
 is a program that should be scheduled to run periodically by
-.Xr cron 8 .
+.Nm cron .
 When it is executed it archives log files if necessary.  If a log file
 is determined to require archiving, 
 .Nm
@@ -57,7 +57,7 @@ grown bigger than a preset size in kilobytes, or a preset number of
 hours may have elapsed since the last log archive.  The granularity of
 .Nm
 is dependent on how often it is scheduled to run by
-.Xr cron 8 .
+.Nm cron .
 Since the program is quite fast, it may be scheduled to run at least
 every hour without any ill effects, which will achieve near the maximum
 granularity for elapsed time specification.  More frequent runs may be
@@ -111,9 +111,12 @@ flag on all other periodic invocations.
 .It Fl M
 Prevent
 .Nm
-from trimming log files which do not have an
+from trimming log files which have an
 .Ar interval
-specified as an even multiple of 24 hours.
+specified as an even multiple of 24 hours (i.e. the ones that would be
+archived when the
+.Fl m
+option is given).
 .It Fl n
 Cause
 .Nm
@@ -132,7 +135,7 @@ Remove the restriction that
 must be running as root.  Of course, 
 .Nm
 will not be able to send a HUP signal to
-.Xr syslogd 8
+.Nm syslogd
 or most other daemons so this option is probably only useful for
 debugging.
 .It Fl v
@@ -148,7 +151,7 @@ reasons for either trimming that log or skipping it.
 configuration file.
 .It Pa @syslog_pidfile@
 The default location of the PID for
-.Xr syslogd 8 .
+.Nm syslogd .
 .El
 .Sh "SEE ALSO"
 .Xr compress 1 ,
