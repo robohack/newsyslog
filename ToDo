@@ -50,5 +50,9 @@ suggestions and comments are also encouraged.
 
 	"%Y/%m/%d:%T] \""
 
+- add support for specifying size and interval units other than KB & hrs.
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.2 1998/03/15 21:16:55 woods Exp $"
+- think about need to add an optional signal number/name to use other
+  than SIGHUP for notifying the log-writing daemon.
+
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.3 1998/03/16 01:29:03 woods Exp $"
