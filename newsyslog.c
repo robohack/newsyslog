@@ -35,7 +35,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.20 1999/02/24 18:56:57 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.21 1999/02/24 19:08:53 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -719,15 +719,16 @@ do_trim(ent)
 		int             rt;
 
 		sprintf(zfile1, "%s.%s", ent->log, (ent->flags & CE_PLAIN0) ? "1" : "0"); /* sprintf() OK here */
-		if ((rt = lstat(zfile1, &st)) >= 0 && (st.st_size > 0)) {
-			if (!(ent->flags & CE_PLAIN0) && need_notification && !notified)
-				fprintf(stderr, "%s: %s not compressed because daemon not notified.\n", argv0, ent->log);
-			else if (noaction)
-				printf("%s %s\n", PATH_COMPRESS, zfile1);
-			else
+		if (!(ent->flags & CE_PLAIN0) && need_notification && !notified)
+			fprintf(stderr, "%s: %s not compressed because daemon not notified.\n", argv0, zfile1);
+		else {
+			if (noaction) {
+				printf("%s %s &\n", PATH_COMPRESS, zfile1);
+			} else if ((rt = lstat(zfile1, &st)) >= 0 && (st.st_size > 0)) {
 				compress_log(zfile1);
-		} else if (verbose)
-			printf("%s: %s not compressed: %s.\n", argv0, zfile1, (rt < 0) ? "no such file" : "is empty");
+			} else if (verbose)
+				printf("%s: %s not compressed: %s.\n", argv0, zfile1, (rt < 0) ? "no such file" : "is empty");
+		}
 	}
 
 	return;
