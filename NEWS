@@ -1,9 +1,16 @@
 NEWSYSLOG NEWS -- history of user-visible changes.
 
 This file:  Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
-	    see COPYING for details
+	    - see COPYING for details
 
 Please send bug reports to bugs@robohack.planix.com
+
+
+* User-visible changes new in newsyslog-1.0.102.
+
+- run intervals can be one minute (but not less) again.
+
+- minor portability fixes for Solaris and linux.
 
 
 * User-visible changes new in newsyslog-1.0.101.
@@ -22,9 +29,11 @@ Please send bug reports to bugs@robohack.planix.com
   Linux portability) (though esp. including use of str2sig() for
   portable signal name translation on SunOS-5).
 
+
 * User-visible changes new in newsyslog-1.0.100.
 
 - just portability fixes (tested on Solaris-2.6 now)
+
 
 * User-visible changes new in newsyslog-1.0.99.
 
@@ -34,6 +43,7 @@ Please send bug reports to bugs@robohack.planix.com
 
 - a new test parameter, '-T timenow' has been added to make testing of
   trim-time specifications easier to do in a timely fashion.
+
 
 * User-visible changes new in newsyslog-1.0.98.
 
@@ -61,6 +71,7 @@ Please send bug reports to bugs@robohack.planix.com
 - the configuration file is locked (with open(O_EXLOCK), aka flock(2))
   to prevent simultaneous executions from fouling each other up.
 
+
 * User-visible changes new in newsyslog-1.0.97.
 
 - improved error messages by including line numbers.
@@ -74,13 +85,16 @@ Please send bug reports to bugs@robohack.planix.com
 
 - various bug fixes.
 
+
 * User-visible changes new in newsyslog-1.0.96.
 
 - just bug fixes.
 
+
 * User-visible changes new in newsyslog-1.0.95.
 
 - just bug fixes.
+
 
 * User-visible changes new in newsyslog-1.0.94.
 
@@ -90,11 +104,13 @@ Please send bug reports to bugs@robohack.planix.com
 
 - bug fixes.
 
+
 * User-visible changes new in newsyslog-1.0.93.
 
 - added '-p syslogd_pidfile' option (as in FreeBSD)
 
 - lots of internal cleanups, logic fixes, portability fixes, etc.
+
 
 * User-visible changes new in newsyslog-1.0.92.
 
@@ -113,13 +129,16 @@ Please send bug reports to bugs@robohack.planix.com
   versions of NetBSD have a buggy strptime(3) library routine that will
   make this less accurate.  PR# lib/5161 contains a patch.)
 
+
 * User-visible changes new in newsyslog-1.0.91.
 
 - none
 
+
 * User-visible changes new in newsyslog-1.0.90.
 
 - added '0' flag to leave logfile.0 uncompressed.
+
 
 * User-visible changes new in newsyslog-0.1.91.
 
@@ -127,10 +146,12 @@ Please send bug reports to bugs@robohack.planix.com
 stagnant log files stay unchanged (i.e. the "empty" check prevents them
 from being rolled over unnecessarily).
 
+
 * User-visible changes new in newsyslog-0.1.80.
 
 - added -M|-m option
 - separated out newsyslog.conf.5 manual page
 - improved documentation
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.17 2002/01/05 19:29:58 woods Exp $"
+
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.18 2002/02/09 21:50:06 woods Exp $"
