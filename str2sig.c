@@ -6,7 +6,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: str2sig.c,v 1.2 2002/01/04 00:55:10 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: str2sig.c,v 1.3 2002/01/04 18:09:24 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -34,7 +34,7 @@ const char *const sys_signame[];		/* defined in signame.c */
 int                     str2sig __P((const char *, int *));
 #endif
 
-static int              isnumber __P((const char *));	/* may be used in sig2str.c */
+static int              isnumber __P((const char *));
 
 int
 str2sig(signame, signum)
