@@ -6,7 +6,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: str2sig.c,v 1.4 2003/07/08 16:51:25 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: str2sig.c,v 1.5 2003/07/08 18:02:13 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -25,6 +25,8 @@ static const char rcsid[] =
 # include <strings.h>
 #endif
 #include <signal.h>
+
+#include "newsyslog.h"		/* generic portability definitions */
 
 #if !defined(SYS_SIGNAME_DECLARED)
 const char *const sys_signame[];		/* defined in signame.c */

@@ -6,7 +6,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: strsignal.c,v 1.1 2003/07/08 17:23:29 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: strsignal.c,v 1.2 2003/07/08 18:02:13 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -28,58 +28,7 @@ static const char rcsid[] =
 #include <signal.h>
 #include <stdio.h>
 
-#ifndef UINT_MAX
-# include "ERROR:  your system is too brain damaged to support!"
-#endif
-
-/*
- * This is just the sunos-5 default value....
- */
-#ifndef SIG2STR_MAX
-# define SIG2STR_MAX	32		/* also defined in newsyslog.c */
-#endif
-
-/*
- * The number of digits in a base-10 representation of MAXINT
- */
-#ifndef MAXINT_B10_DIGITS
-# if (__STDC__ - 0) > 0
-#  if (UINT_MAX > 0xffffffffU)
-#   define MAXINT_B10_DIGITS	(20)	/* for a 64-bit system: 9,223,372,036,854,775,808 */
-#  else
-#   define MAXINT_B10_DIGITS	(10)	/* for a 32-bit system 2,147,483,648 */
-#  endif
-# else
-#  define MAXINT_B10_DIGITS	(10)	/* assume a 32-bit system */
-# endif
-#endif
-
-#ifndef MAXLONG_B10_DIGITS
-# if (__STDC__ - 0) > 0
-#  if (ULONG_MAX > 0xffffffffUL)
-#   define MAXLONG_B10_DIGITS	(20)	/* for a 64-bit system: 9,223,372,036,854,775,808 */
-#  else
-#   define MAXLONG_B10_DIGITS	(10)	/* for a 32-bit system 2,147,483,648 */
-#  endif
-# else
-#  define MAXLONG_B10_DIGITS	(10)	/* assume a 32-bit system */
-# endif
-#endif
-
-#if (MAXINT_B10_DIGITS == MAXLONG_B10_DIGITS && UINT_MAX != ULONG_MAX)
-# include "ERROR:  ARCH_TYPE assumptions about MAX*_B10_DIGITS are wrong!"
-#endif
-#if (__STDC__ - 0) > 0
-# if (MAXINT_B10_DIGITS <= 5 && UINT_MAX > 0xffffU)
-#  include "ERROR:  assumptions about MAXINT_B10_DIGITS are wrong! (16bit?)"
-# endif
-# if (MAXINT_B10_DIGITS <= 10 && UINT_MAX > 0xffffffffU)
-#  include "ERROR:  assumptions about MAXINT_B10_DIGITS are wrong! (32bit?)"
-# endif
-# if (MAXLONG_B10_DIGITS <= 10 && ULONG_MAX > 0xffffffffU)
-#  include "ERROR:  assumptions about MAXLONG_B10_DIGITS are wrong! (64bit?)"
-# endif
-#endif
+#include "newsyslog.h"		/* generic portability definitions */
 
 /* NetBSD gained sys_nsig sometime just prior to 1.4 */
 #if defined(__NetBSD_Version__) && (__NetBSD_Version__ >= 104000000)
