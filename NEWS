@@ -7,6 +7,10 @@ Please send bug reports to bugs@robohack.planix.com
 
 * User-visible changes new in newsyslog-1.0.92.
 
+- added '-F' (force) flag ala FreeBSD's latest version (rev.1.16)
+
+- native BSD builds are supported without requiring ./configure.
+
 - PID file can be /dev/null to avoid notifying any daemon.
 
 - the '0' flag actually works (instead of just showing that it would
@@ -14,7 +18,9 @@ Please send bug reports to bugs@robohack.planix.com
 
 - a better attempt is made to determine the age of the log file when no
   log.0* file exists (by attempting to parse the timestamp from the
-  first record of the current log file).
+  first record of the current log file).  (WARNING:  Some (all?)
+  versions of NetBSD have a buggy strptime(3) library routine that will
+  make this less accurate.  PR# lib/5161 contains a patch.)
 
 * User-visible changes new in newsyslog-1.0.91.
 
@@ -36,4 +42,4 @@ from being rolled over unnecessarily).
 - separated out newsyslog.conf.5 manual page
 - improved documentation
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.5 1998/03/15 22:12:31 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.6 1998/03/16 01:29:49 woods Exp $"
