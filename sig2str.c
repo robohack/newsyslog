@@ -6,7 +6,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: sig2str.c,v 1.3 2003/07/08 16:50:50 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: sig2str.c,v 1.4 2003/07/08 17:21:07 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -26,6 +26,7 @@ static const char rcsid[] =
 
 #include <limits.h>
 #include <signal.h>
+#include <stdio.h>
 
 /*
  * This is just the sunos-5 default value....
@@ -50,6 +51,18 @@ static const char rcsid[] =
 #  endif
 # else
 #  define MAXINT_B10_DIGITS	(10)	/* assume a 32-bit system */
+# endif
+#endif
+
+#ifndef MAXLONG_B10_DIGITS
+# if (__STDC__ - 0) > 0
+#  if (ULONG_MAX > 0xffffffffUL)
+#   define MAXLONG_B10_DIGITS	(20)	/* for a 64-bit system: 9,223,372,036,854,775,808 */
+#  else
+#   define MAXLONG_B10_DIGITS	(10)	/* for a 32-bit system 2,147,483,648 */
+#  endif
+# else
+#  define MAXLONG_B10_DIGITS	(10)	/* assume a 32-bit system */
 # endif
 #endif
 
