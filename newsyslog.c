@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.45 2002/11/08 23:09:45 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.46 2002/11/08 23:24:14 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -1243,7 +1243,7 @@ do_trim(ent)
 			       ent->log, ent->uid, ent->gid, ent->permissions);
 		}
 		if (show_script) {
-			printf("newlog=$(mktemp %s)", newlog);
+			printf("newlog=$(mktemp %s)\n", newlog);
 			printf("touch $newlog\n");
 			printf("chown %d:%d $newlog\n", ent->uid, ent->gid);
 			printf("chmod 0%o $newlog\n", ent->permissions);
