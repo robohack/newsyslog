@@ -1,30 +1,15 @@
-#	$Id: Makefile,v 1.1.1.1 1997/09/26 21:07:07 woods Exp $
-
-SHELL=	/bin/sh
+#	$NetBSD: Makefile,v 1.7 1996/09/27 01:56:55 thorpej Exp $
 
 PROG=	newsyslog
-SRCS=	newsyslog.c
-OBJS=	newsyslog.o
 
-DEFS=	-DOSF\
-	-DCONF=\"/etc/newsyslog.conf\" \
-	-DPIDFILE=\"/etc/syslog.pid\" \
-	-DCOMPRESS=\"/usr/bin/gzip\" \
-	-DCOMPRESS_POSTFIX=\".gz\" \
-
-CC=	gcc -pipe
-CFLAGS=	-O2 ${DEFS}
-
-LIBS=#	-lnsl
-
+CFLAGS+= -DOSF
+CFLAGS+= -DCONF=\"/etc/newsyslog.conf\"
+CFLAGS+= -DPIDFILE=\"/var/run/syslog.pid\"
+CFLAGS+= -DCOMPRESS=\"/usr/bin/gzip\"
+CFLAGS+= -DCOMPRESS_POSTFIX=\".gz\"
 
 BINOWN=	root
-MAN8=	newsyslog.0
 
+MAN=	newsyslog.8
 
-${PROG}:	${OBJS}
-	${CC} ${CFLAGS} ${OBJS} -o $@ ${LIBS}
-
-
-clean:
-	-rm -f ${PROG} ${OBJS} core
+.include <bsd.prog.mk>

@@ -1,3 +1,5 @@
+/*	$NetBSD: newsyslog.c,v 1.12 1996/09/27 01:56:56 thorpej Exp $	*/
+
 /*
  * This file contains changes from the Open Software Foundation.
  */
@@ -23,13 +25,10 @@ provided "as is" without express or implied warranty.
 /*
  *      newsyslog - roll over selected logs at the appropriate time,
  *              keeping the a specified number of backup files around.
- *
- *      $Source: /cvs/misc/newsyslog/newsyslog.c,v $
- *      $Author: woods $
  */
 
 #ifndef lint
-static char rcsid[] = "$Id: newsyslog.c,v 1.1.1.1 1997/09/26 21:07:06 woods Exp $";
+static char rcsid[] = "$NetBSD: newsyslog.c,v 1.12 1996/09/27 01:56:56 thorpej Exp $";
 #endif /* not lint */
 
 #ifndef CONF
@@ -46,6 +45,7 @@ static char rcsid[] = "$Id: newsyslog.c,v 1.1.1.1 1997/09/26 21:07:06 woods Exp 
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>
@@ -57,16 +57,11 @@ static char rcsid[] = "$Id: newsyslog.c,v 1.1.1.1 1997/09/26 21:07:06 woods Exp 
 #include <sys/param.h>
 #include <sys/wait.h>
 
-#ifndef UBSHIFT
-#define UBSHIFT 9
-#endif
-
 #define kbytes(size)  (((size) + 1023) >> 10)
 #ifdef _IBMR2
 /* Calculates (db * DEV_BSIZE) */
 #define dbtob(db)  ((unsigned)(db) << UBSHIFT) 
 #endif
-#define dbtob(db)  ((unsigned)(db) << UBSHIFT) 
 
 #define CE_COMPACT 1            /* Compact the achived log files */
 #define CE_BINARY 2             /* Logfile is in binary, don't add */
@@ -105,8 +100,7 @@ char    *daytime;               /* timenow in human readable form */
 
 
 struct conf_entry *parse_file();
-/* char *sob(), *son(), *strdup(), *missing_field(); */
-char *sob(), *son(), *missing_field();
+char *sob(), *son(), *strdup(), *missing_field();
 
 main(argc,argv)
         int argc;
@@ -180,11 +174,12 @@ PRS(argc,argv)
         int     c;
         FILE    *f;
         char    line[BUFSIZ];
+	char	*p;
 
         progname = argv[0];
         timenow = time((time_t *) 0);
-        daytime = ctime(&timenow);
-        daytime[strlen(daytime)-1] = '\0';
+        daytime = ctime(&timenow) + 4;
+        daytime[15] = '\0';
 
         /* Let's find the pid of syslogd */
         syslog_pid = 0;
@@ -195,10 +190,12 @@ PRS(argc,argv)
 		(void)fclose(f);
 
         /* Let's get our hostname */
-        if (gethostname(hostname, 64)) {
-                perror("gethostname");
-                (void) strcpy(hostname,"Mystery Host");
-        }
+        (void) gethostname(hostname, sizeof(hostname));
+
+	/* Truncate domain */
+	if (p = strchr(hostname, '.')) {
+		*p = '\0';
+	}
 
         optind = 1;             /* Start options parsing */
         while ((c=getopt(argc,argv,"nrvf:t:")) != EOF)
@@ -216,11 +213,11 @@ PRS(argc,argv)
                         conf = optarg;
                         break;
                 default:
-                        usage(argv[0]);
+                        usage();
                 }
         }
 
-usage(char *progname)
+usage()
 {
         fprintf(stderr,
                 "Usage: %s <-nrv> <-f config-file>\n", progname);
@@ -382,6 +379,7 @@ dotrim(log,numdays,flags,perm,owner_uid,group_gid)
         char    zfile1[128], zfile2[128];
         int     fd;
         struct  stat st;
+        int     ngen = numdays;
 
 #ifdef _IBMR2
 /* AIX 3.1 has a broken fchown- if the owner_uid is -1, it will actually */
@@ -429,11 +427,18 @@ dotrim(log,numdays,flags,perm,owner_uid,group_gid)
         if (!noaction && !(flags & CE_BINARY))
                 (void) log_trim(log);  /* Report the trimming to the old log */
 
-        if (noaction) 
-                printf("mv %s to %s\n",log,file1);
-        else
-                (void) rename(log,file1);
-        if (noaction) 
+	if (ngen == 0)
+		if (noaction)
+			printf("rm %s\n",log);
+		else
+			(void) unlink(log);
+	else
+		if (noaction)
+			printf("mv %s to %s\n",log,file1);
+		else
+			(void) rename(log,file1);
+
+        if (noaction)
                 printf("Start new log...");
         else {
                 fd = creat(log,perm);
@@ -519,7 +524,6 @@ int sizefile(file)
 
         if (stat(file,&sb) < 0)
                 return(-1);
-	printf("%s is %d kbytes\n", file, kbytes(dbtob(sb.st_blocks)));
         return(kbytes(dbtob(sb.st_blocks)));
 }
 
