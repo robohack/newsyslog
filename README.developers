@@ -27,7 +27,7 @@ above sequence of commands.
 (You'll note the above instructions use 'gmake' -- GNU Automake
 makefiles are designed to work best with GNU Make, especially for
 various configuration maintenance tasks, though the *BSD 'pmake'
-version usually works fine too.)
+version usually works fine too, except for some VPATH builds.)
 
 
 Making a New Release:
@@ -40,44 +40,73 @@ New releases should be adequately tested, of course, and you should
 check that all changes have been commited to CVS.  The "NEWS" file
 should be checked to ensure it has been updated with notes about all
 user-visible changes.  If you're making a full release you can coalesce
-any entries from previous alpha and beta releases.  If there's a GNATS PR
-category for the project you should check that there are no absolute
+any entries from previous alpha and beta releases.  If there's a GNATS
+PR category for the project you should check that there are no absolute
 "show-stopper" bugs in the pending release.
 
-Once you're ready to test your release, and you've commited any and all
-changes you've made, run:
+To test the build system and to test the entire package run:
 
 	gmake distcheck
 
-This will create a trial distribution archive, extract it, configure it,
-build it (using a reach-over VPATH build), run any tests (gmake check),
-and install it in a private tree.  You should copy this distribution to
-other types of machines and platforms and build and check it there too.
-You might want to update the "VERSION" identifier in the VERSION file
-each time you go through this cycle so as to keep each copy clearly
-identifiable.  Just increment a trailing number after the "-Preview"
-suffix.  You may want to "cvs tag" the preview releases as well.
+This will create a trial distribution archive, extract it in a
+sub-directory, configure it, build it (using a reach-over VPATH build),
+run any tests (gmake check), and install it in another private
+sub-directory.  WARNING:  You _must_ use 'gmake' for the this particular
+target -- BSD Pmake fails in the 'make dist-gzip' part of the VPATH
+build because for some unknown reason it tries to update the "source"
+version of "$(DIST_MAKE)" files instead of creating them in the build
+directory.
+
+Once you're ready to more widely test your release, and you've commited
+any and all changes you've made, check the "VERSION" identifier in the
+VERSION.  After each release it should have been updated file by setting
+it to the next expected release and then appending a "-Preview.0" suffix
+to it so as to keep any trial distribution copies clearly identifiable.
+Don't forget to check in any change to the VERSION file right away.  You
+may also want to "cvs tag" each trial distribution of your preview
+releases as well, but it's not really necessary unless multiple people
+will be co-operating with the testing.
+
+Once this is all done run "gmake distcheck" again to create the actual
+preview release distribution.  Immediately afterwards you should
+increment the trailing number after the "-Preview" suffix on the
+"VERSION" identifier in the VERSION file and check in this change.  The
+idea is to keep the checked-in "VERSION" identifier one ahead of the
+most recently created (trial) distribution.  This is especially
+important if you publish or distribute the trial distribution in any
+way, and of course this is extremely important if multiple people are
+working on the project -- you want their next update to show an
+unreleased version identifier so as not to confuse anything they build
+with your (trial) distribution.
+
+You should now copy this preview release distribution to other types of
+machines and platforms and build and check it there too.
 
 Once you think you're ready to try an actual release, update the
 "VERSION" identifier in the VERSION file (see the notes below on release
 numbers), and check this in.
 
-To tag, export, and create the finally distribution archive you need
-to run the following commands (assuming you've already run the initial
+To tag, export, and create the final distribution archive you need to
+run the following commands (assuming you've already run the initial
 GNU Auto* commands detailed above):
 
+	sh	# start a sub-shell to make resetting env easier
+	place_to_build_releases=/work/woods/release.d	# for example
 	gmake distclean
 	. ./VERSION
 	tag=$(echo $VERSION | tr . _)
-	cvs tag $PACKAGE-$tag .
-	cd /place-to-build-releases
+	cvs tag -c $PACKAGE-$tag .
+	cd $place_to_build_releases
 	cvs export -kv -r $tag -d $PACKAGE-$VERSION-export $PACKAGE
 	cd $PACKAGE-$VERSION
+	aclocal
+	autoheader
+	automake --gnu --add-missing
 	autoreconf --force
-	sh newsyslog2netbsd.sh
+	sh ${PACKAGE}2netbsd.sh		# configures best default paths...
+	rm -rf import.d			# clean up after ${PACKAGE}2netbsd.sh
 	gmake dist			# or distcheck
 	mv $PACKAGE-$VERSION.tar.gz ..
-	rm -rf import.d
 	gmake distclean
 	cd ..
 	pax -rzf $PACKAGE-$VERSION.tar.gz
@@ -85,34 +114,32 @@ GNU Auto* commands detailed above):
 
 The last step ensures that everything in the CVS module is distributed.
 
-If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access.
-
 If the 'diff' command reveals any files are missing then you need to go
 back, untag the whole module, fix Makefile.am, and re-test.
 
-Copy new project page sub-files into place with these commands:
+If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access and
+copy the new project page sub-files into place with this command:
 
-	cd /place-to-build-releases/$PACKAGE-VERSION
-	cp newsyslog.conf.5.html-dist ~/public_html/projects/newsyslog.conf.5.html
-	cp newsyslog.8.html-dist ~/public_html/projects/newsyslog.8.html
-	cp NEWS ~/public_html/projects/newsyslog.NEWS.txt
+	cd $place_to_build_releases/$PACKAGE-VERSION
+	gmake update-project-web-files
 
-Update the project page in ~/public_html/projects/newsyslog.html
+Update the actual project page in ~/public_html/projects/$PACKAGE.html
 
-Finally post an update on http://freshmeat.net/
+Lastly post an update on http://freshmeat.net/
 
 
 After Making a New Release:
 
-IMPORTANT:  After you've made a new release don't forget to update the
-"VERSION" identifier in the VERSION file for the pre-release of the next
-most likely release (eg. set 1.0.0.80-Preview.0 after making 1.0).  See
-below for release number ideas.
+IMPORTANT:  Immediately after you've published a successfull new release
+don't forget to update the "VERSION" identifier in the VERSION file to
+indicate the pre-release of the next most likely release (eg. set
+1.0.0.80-Preview.0 after making 1.0).  See below for release number
+ideas.
 
-If you plan on doing release maintenance using branches then you should
-instead create a release branch for every N.N release and set the
-"VERSION" to N.N.0.80-Preview.0 on the branch and N.N+1.80-Preview.0 on
-the trunk.
+If you plan on maintaining one or more maintenance releases using
+branches then you should instead create a release branch for every N.N
+release and set the "VERSION" to N.N.0.80-Preview.0 on the branch and
+N.N+1.80-Preview.0 on the trunk.
 
 
 Release Numbers:
@@ -167,4 +194,4 @@ stripped when it is finally officially released.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.11 2002/05/04 19:36:19 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.12 2002/05/10 21:52:23 woods Exp $"
