@@ -14,8 +14,8 @@ In order to pre-build the necessary config files from a freshly checked
 out repository you must run the following commands in the given order:
 
 	aclocal
-	autoheader
-	automake --gnu --add-missing
+	autoheader && touch config.h.in
+	automake --gnu --add-missing --copy
 	autoreconf --force
 
 Now you can proceed with the normal build process (./configure && gmake).
@@ -136,7 +136,7 @@ After Making a New Release:
 
 IMPORTANT:  Immediately after you've published a successfull new release
 don't forget to update the "VERSION" identifier in the VERSION file to
-indicate the pre-release of the next most likely release (eg. set
+indicate the pre-release of the next most likely release (e.g. set
 1.0.0.80-Preview.0 after making 1.0).  See below for release number
 ideas.
 
@@ -169,8 +169,8 @@ first alpha for 4.1.1 would be 4.1.0.80, continuing with 4.1.0.81,
 
 One special case rule not yet described covers the releases preceding
 the initial release, which would might start with semi-private releases
-numbered "0.x", eg. 0.1.80, 0.1.90, 0.1.91, 0.2, 0.2.80, 0.2.90, 0.3,
-etc., then full public releases numbered "1.0.x", eg. 1.0.80, 1.0.90,
+numbered "0.x", e.g. 0.1.80, 0.1.90, 0.1.91, 0.2, 0.2.80, 0.2.90, 0.3,
+etc., then full public releases numbered "1.0.x", e.g. 1.0.80, 1.0.90,
 etc. until 1.1, the first fully official release is made.
 
 Note that there are no '.0' releases!  I.e. ".0" is only used as a
@@ -189,13 +189,205 @@ maximum minor release number, to a ceiling of ".79", and limits the
 number of alpha releases to just 10.  Unfortunately it does not limit
 the number of beta releases since things like .100 are allowed!  ;-)
 
+For projects that require it for developers to keep track of ABI
+changes along the trunk, they can be dealt with by modifying the beta
+scheme so that ".80" starts the new development, and then appending an
+incrementing suffix number to the ".80" starter number.  The first
+true beta release would then be ".81".  ABI changes could be handled
+along any line of development, but for practical purposes they should
+be restricted to the trunk.
+
 If you see "-Preview.N" appended to the release number then you're
 seeing an intermediate development copy -- i.e. an as-yet un-released
 copy which will likely have the release number given with the suffix
 stripped when it is finally officially released.
 
+A complete example:
+
+	0.0		project concept published
+
+		0.0.80		begin initial development
+		0.0.80.1	after first ABI change
+		0.0.80.2	after second ABI change
+		...
+		0.0.90		pre-release RC #1
+		0.0.91		pre-release RC #2
+		...
+		0.1		first pre-release
+
+		0.1.80		begin second pre-release
+		0.1.80.1	after ABI change
+		...
+		0.1.90		2nd pre-release RC #1
+		0.1.91		2nd pre-release RC #2
+	
+		0.2		second pre-release
+
+	1.0.80		begin first official release
+	1.0.80.1	after ABI change
+	1.0.80.2	after ABI change
+	...
+	1.0.81		first beta
+	...
+	1.0.90		first official release candidate
+	1.0.91		second official release candidate
+	1.0.92		third official release candidate
+
+	1.1	first official release
+
+			1.1.0.80	begin branch development
+			1.1.0.81	1st beta
+			...
+			1.1.0.90	1st release candidate
+			1.1.0.91	2nd release candidate
+			....
+			1.1.1		first patch release
+
+			1.1.1.80
+			1.1.1.81
+			...
+			1.1.1.90
+			1.1.1.91
+			...
+			1.1.2		second patch release
+
+			1.1.2.80
+			1.1.2.81
+			...
+			1.1.2.90
+			1.1.2.91
+			...
+			1.1.3		third patch release
+
+		(in parallel with the 1.1.0.80 patch branch)
+		1.2.0.80	begin minor release
+		1.2.0.80.1	after ABI change
+		1.2.0.80.2	after ABI change
+		1.2.0.80.3	after ABI change
+		....
+		1.2.0.81
+		...
+		1.2.0.90	second official release beta #1
+		1.2.0.91	second official release beta #2
+		...
+		1.2	second official (minor) release
+
+			1.2.0.80	begin branch development
+			1.2.0.81	1st beta
+			...
+			1.2.0.90	1st release candidate
+			1.2.0.91	2nd release candidate
+			...
+			1.2.1		first patch release
+
+			1.2.1.80
+			1.2.1.81
+			...
+			1.2.1.90
+			1.2.1.91
+			...
+			1.2.2		second patch release
+
+			1.2.2.80
+			1.2.2.81
+			...
+			1.2.2.90
+			1.2.2.91
+			...
+			1.2.3		third patch release
+
+		1.3.0.80	begin next minor (in parallel with 1.2.0.80)
+		1.3.0.80.1
+
+	. . . and so on to where we are now with 1.6 . . .
+
+	2.0.80		begin new major release (bump trunk)
+	2.0.80.1	after ABI change
+	2.0.80.2	after ABI change
+	2.0.80.3	after ABI change
+	...
+	2.0.81		first beta
+	...
+	2.0.90		first RC
+	2.0.91		second RC
+	...
+	2.1		second major release
+
+			2.1.0.80	begin branch development
+			2.1.0.81	1st beta
+			...
+			2.1.0.90	1st release candidate
+			2.1.0.91	2nd release candidate
+			....
+			2.1.1		first patch release
+
+			2.1.1.80
+			2.1.1.81
+			...
+			2.1.1.90
+			2.1.1.91
+			...
+			2.1.2		second patch release
+
+			2.1.2.80
+			...
+			2.1.2.90
+			2.1.2.91
+			...
+			2.1.3		third patch release
+
+		2.2.0.80	begin next minor release
+		2.2.0.80.1	after ABI change
+		2.2.0.80.2	after ABI change
+		2.2.0.80.3	after ABI change
+		....
+		2.2.0.81	first official beta
+		...
+		2.2.0.90	second official release candidate
+		2.2.0.91	second official release candidate
+		...
+		2.2		next official (minor) release
+
+			2.2.0.80	begin branch development
+			2.2.0.81	1st beta
+			...
+			2.2.0.90	1st release candidate
+			2.2.0.91	2nd release candidate
+			...
+			2.2.1		first patch release
+
+			2.2.1.80
+			2.2.1.81
+			...
+			2.2.1.90
+			2.2.1.91
+			...
+			2.2.2		second patch release
+
+			2.2.2.80
+			2.2.2.81
+			...
+			2.2.2.90
+			2.2.2.91
+			...
+			1.2.3		third patch release
+
+		2.3.0.80	begin next minor release
+		2.3.0.80.1
+
+	3.0.80
+
+This might look like it adds another branch, but it doesn't have to.  It
+just depends on whether you want to bump the trunk to start the next
+major release, or whether you do want to go out on a branch for minor
+releases.  If you want to bump the trunk then at any point along the
+trunk when it's decided that the next release will be called a "major"
+release then 1.N.0.80.x can be promoted to become 2.0.80.x, just as in
+my example above.  In a volunteer project it's already asking a lot just
+to use branches for patch releases, let alone minor releases.
+
 
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.13 2002/05/21 21:02:35 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.14 2003/07/08 16:49:01 woods Exp $"
