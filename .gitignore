@@ -26,16 +26,17 @@ _$*
 *.ln
 core
 # CVS default ignores end
-*.8
-*.8so
-*.cat8
 *.5
 *.5so
+*.8
+*.8so
 *.cat5
+*.cat8
 INSTALL
 Makefile
 Makefile.BSD
 Makefile.in
+README.developers
 aclocal.m4
 config.cache
 config.h
@@ -43,6 +44,7 @@ config.h.in
 config.log
 config.status
 configure
+import.d
 install-sh
 missing
 mkinstalldirs
