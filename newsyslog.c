@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.31 2000/12/01 23:22:45 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.32 2000/12/08 20:45:32 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -223,7 +223,7 @@ static void             compress_log __P((char *));
 static int              check_file_size __P((char *));
 static int              check_old_log_age __P((struct conf_entry *));
 static time_t           read_first_timestamp __P((char *));
-static pid_t            get_pid __P((char *));
+static pid_t            get_pid_file __P((char *));
 static int              isnumber __P((char *));
 static int              getsig __P((char *));
 static int              parse_dwm __P((char *, time_t *));
@@ -249,7 +249,7 @@ main(argc, argv)
 
 	p = q = parse_file(argv + optind);
 
-	syslogd_pid = get_pid(syslogd_pidfile);
+	syslogd_pid = get_pid_file(syslogd_pidfile);
 
 	while (p) {
 		do_entry(p);
@@ -792,7 +792,7 @@ parse_file(files )
 		working->pid_file = NULL;
 		if (q && *q) {
 			if (*q == '/') {
-				if (strcmp(_PATH_DEVNULL, q) != 0)
+				if (strcmp(_PATH_DEVNULL, q) == 0)
 					working->flags |= CE_NOSIGNAL;
 				else
 					working->pid_file = strdup(q);
@@ -1052,7 +1052,7 @@ do_trim(ent)
 	notified = 0;
 	if (ent->pid_file && !(ent->flags & CE_NOSIGNAL)) {
 		need_notification = 1;
-		pid = get_pid(ent->pid_file);
+		pid = get_pid_file(ent->pid_file);
 	} else if (!(ent->flags & CE_NOSIGNAL)) {
 		need_notification = 1;
 		pid = syslogd_pid;
@@ -1291,7 +1291,7 @@ read_first_timestamp(file)
  * Read a process ID from the specified file.
  */
 static pid_t
-get_pid(pid_file)
+get_pid_file(pid_file)
 	char           *pid_file;
 {
 	FILE           *fp;
