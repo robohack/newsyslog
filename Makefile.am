@@ -4,7 +4,7 @@
 # Copyright (C) 1997,1998,1999,2000,2001,2002 Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.22 2002/01/13 20:16:23 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.23 2002/02/09 21:46:31 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.4.5
 MAINT_CHARSET = latin1
@@ -18,6 +18,10 @@ man_MANS = newsyslog.conf.5 newsyslog.8
 soelim_MANS = newsyslog.conf.5so newsyslog.8so
 catman_MANS = newsyslog.conf.cat5 newsyslog.cat8
 catman_MANS_dist = newsyslog.conf.cat5-dist newsyslog.cat8-dist
+psman_MANS = newsyslog.conf.5.ps newsyslog.8.ps
+htmlman_MANS = newsyslog.conf.5.html newsyslog.8.html
+
+DIST_MANS = $(catman_MANS_dist) $(psman_MANS) $(htmlman_MANS)
 
 catmandir = @mandir@
 
@@ -33,7 +37,7 @@ DIST_OTHER = README.developers ToDo VERSION newsyslog.conf \
 
 # things that must be made during 'make dist'
 #
-DIST_MAKE = $(catman_MANS_dist) Makefile.BSD-dist
+DIST_MAKE = $(DIST_MANS) Makefile.BSD-dist
 
 EXTRA_DIST = $(DIST_OTHER) $(DIST_MAKE)
 
@@ -46,42 +50,47 @@ PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 # (We don't mention Makefile.BSD-dist because it should be a virgin
 # copy, never locally edited)
 #
-MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL $(catman_MANS_dist)
+MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL \
+			$(catman_MANS_dist) $(psman_MANS) $(htmlman_MANS)
 
-CLEANFILES = $(catman_MANS) $(man_MANS)
+CLEANFILES = $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
 
 ##
 ##	local extensions to automake
 ##
 
 NROFF = nroff
-TROFF = troff
+TROFF = groff
 ROFFDEV = -Tps
 PIC = pic
 TBL = tbl
 SOELIM = soelim
 
-SUFFIXES = .5 .8 .5so .8so .cat8 .cat5 .ps .txt
-
-.8.cat8 .5.cat5:
-	@rm -f $@
-	($(NROFF) -mandoc $< > $@) || (rm -f $@; exit 1)
+SUFFIXES = .5 .8 .5so .8so .cat5 .cat8 .5.html .8.html .5.ps .8.ps
 
 .5so.5 .8so.8:
 	@rm -f $@
 	($(SOELIM) -I $(srcdir) $< > $@) || (rm -f $@; exit 1)
 
-.8.txt:
-	$(SOELIM) $(srcdir)/$? | $(TBL) | $(NROFF) -mdoc > $@
+.8.cat8 .5.cat5:
+	@rm -f $@
+	($(TBL) $< | $(NROFF) -mandoc > $@) || (rm -f $@; exit 1)
 
-.8.ps:
-	$(SOELIM) $(srcdir)/$? | $(TBL) | $(TROFF) -mdoc $(ROFFDEV) > $@
+.8.8.ps:
+	@rm -f $@
+	($(TBL) $< | $(TROFF) -mdoc $(ROFFDEV) > $@) || (rm -f $@; exit 1)
 
-.5.txt:
-	$(SOELIM) $(srcdir)/$? | $(TBL) | $(NROFF) -mdoc > $@
+.8.8.html:
+	@rm -f $@
+	($(TBL) $< | $(NROFF) -mdoc2html > $@) || (rm -f $@; exit 1)
 
-.5.ps:
-	$(SOELIM) $(srcdir)/$? | $(TBL) | $(TROFF) -mdoc $(ROFFDEV) > $@
+.5.5.ps:
+	@rm -f $@
+	($(TBL) $< | $(TROFF) -mdoc $(ROFFDEV) > $@) || (rm -f $@; exit 1)
+
+.5.5.html:
+	@rm -f $@
+	($(TBL) $< | $(NROFF) -mdoc2html > $@) || (rm -f $@; exit 1)
 
 #
 # hard-coded dependencies and extensions
@@ -93,7 +102,11 @@ $(man_MANS): config.status
 
 man catman: $(catman_MANS)
 
-all-local: catman
+all-local: catman psman htmlman
+
+psman: $(psman_MANS)
+
+htmlman: $(htmlman_MANS)
 
 # install the cat-able manual pages too...
 #
