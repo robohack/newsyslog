@@ -27,8 +27,10 @@ _$*
 core
 # CVS default ignores end
 *.5
+*.5.ps
 *.5so
 *.8
+*.8.ps
 *.8so
 *.cat5
 *.cat8
