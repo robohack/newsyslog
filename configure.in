@@ -7,10 +7,10 @@ dnl Copyright (C) 1997 Planix, Inc. - All rights reserved.
 AC_INIT(newsyslog.c)
 AC_PREREQ(2.12)dnl Required Autoconf version.
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.4 1997/11/15 07:09:18 woods Exp $"])dnl
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.5 1998/03/05 04:16:30 woods Exp $"])dnl
 
 PACKAGE=newsyslog
-VERSION=0.1.91
+VERSION=0.1.92-Pre
 
 AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
