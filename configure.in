@@ -8,18 +8,14 @@ dnl             see COPYING for details
 AC_INIT(newsyslog.c)
 
 dnl Required Autoconf version.
-AC_PREREQ(2.12)
+AC_PREREQ(2.52)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.35 2002/01/04 18:31:25 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.36 2002/01/13 19:48:52 woods Exp $"])
 
-dnl for Automake
-PACKAGE="newsyslog"
-
-AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
-AC_SUBST(PACKAGE)
-
-dnl for Automake too
-dnl (note we have to actually set it here first to appease automake)
+dnl note we have to actually set these here first to appease automake
+dnl so we make them look wrong so that anything going wrong with the
+dnl sourcing of $srcdir/VERSION will jump out quite clearly.
+PACKAGE="newsyslog-Broken"
 VERSION="0.0.0-Broken \# something is wrong in $srcdir/VERSION!"
 . $srcdir/VERSION
 
@@ -30,6 +26,9 @@ VERSION_PATCH=`expr "$VERSION" : '^[0-9]*\.[0-9]*\.\([0-9]*\)'`
 VERSION_SUFFIX=`expr "$VERSION" : '^[0-9]*\.[0-9]*\.[0-9]*-\([a-zA-Z0-9._,+]*\)'`
 VERSION_COMMENT=`expr "$VERSION" : '^.*#\(.*\)'`
 changequote([,])
+
+AC_DEFINE_UNQUOTED(PACKAGE, "$PACKAGE")
+AC_SUBST(PACKAGE)
 
 AC_DEFINE_UNQUOTED(VERSION, "$VERSION")
 AC_SUBST(VERSION)
@@ -97,8 +96,8 @@ AC_DECL_SYS_SIGNAME
 dnl Checks for library functions.
 AC_REPLACE_FUNCS(sig2str snprintf str2sig strdup strerror strtok strptime)
 
-AC_CHECK_DECLS(sig2str str2sig, [], [], [#include <signal.h>])
-AC_CHECK_DECLS(strchr strdup strrchr strtok, [], [], [#if HAVE_STRING_H
+AC_CHECK_DECLS([sig2str, str2sig], [], [], [#include <signal.h>])
+AC_CHECK_DECLS([strchr, strdup, strrchr, strtok], [], [], [#if HAVE_STRING_H
 # include <string.h>
 #endif
 #if HAVE_STRINGS_H
