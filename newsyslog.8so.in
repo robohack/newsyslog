@@ -9,7 +9,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.11 2002/11/15 03:56:04 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.12 2003/07/08 17:24:32 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -25,7 +25,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd November 8, 2002
+.Dd July 3, 2003
 .Dt NEWSYSLOG 8
 .Os BSD
 .\"
@@ -298,4 +298,7 @@ PID files are only listed once with the last associated log file and
 that the
 .Ar 0
 flag is used to ensure the most recent log file is not immediately
-compressed.
+compressed.  Note that daemons which have multiple log files open may
+requirer signalling every time any one of their logs are rolled over
+anyway, especially if their different logs have different roll-over
+policies.
