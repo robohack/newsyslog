@@ -3,9 +3,9 @@
 #
 # Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.20 2002/01/05 05:03:51 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.21 2002/01/13 19:57:07 woods Exp $"
 
-AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
+AUTOMAKE_OPTIONS = gnu no-dependencies 1.4.5
 MAINT_CHARSET = latin1
 
 bin_PROGRAMS = newsyslog
@@ -33,7 +33,7 @@ PATH_CONFIG = @path_config@
 PATH_SYSLOGD_PIDFILE = @syslog_pidfile@
 
 # Mention here files which are created using '--add-missing'
-MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL README.developers $(catman_MANS_dist)
+MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL $(catman_MANS_dist)
 
 CLEANFILES = $(catman_MANS) $(man_MANS)
 
@@ -52,11 +52,11 @@ SUFFIXES = .5 .8 .5so .8so .cat8 .cat5 .ps .txt
 
 .8.cat8 .5.cat5:
 	@rm -f $@
-	$(NROFF) -mandoc $(srcdir)/$< > $@ || (rm -f $@; exit 1)
+	($(NROFF) -mandoc $< > $@) || (rm -f $@; exit 1)
 
 .5so.5 .8so.8:
 	@rm -f $@
-	$(SOELIM) $(srcdir)/$< > $@ || (rm -f $@; exit 1)
+	($(SOELIM) -I $(srcdir) $< > $@) || (rm -f $@; exit 1)
 
 .8.txt:
 	$(SOELIM) $(srcdir)/$? | $(TBL) | $(NROFF) -mdoc > $@
