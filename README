@@ -66,6 +66,12 @@ What does this version of newsyslog have to offer over others?
 
 TO BUILD NEWSYSLOG
 
+Normally you should just follow the instructions in the INSTALL file
+unless special instructions below apply.
+
+
+TO BUILD NEWSYSLOG on *BSD SYSTEMS
+
 If you are building newsyslog on a BSD-based system you can also use
 "Makfile.BSD".  This is in fact necessary if your system requires
 installation of pre-formatted manual pages (otherwise you'll have to
@@ -96,6 +102,9 @@ In general you need only run the following command sequence:
 
 (see "CUSTOM CONFIGURATION OPTIONS" below for other "configure" options)
 
+
+BUILDING ON SYSTEMS WITHOUT TROFF "doc" MACROS (including Solaris)
+
 On systems without the "doc" macros (or without "nroff", or even with
 just an incompatible version of "soelim"), you can still install and
 read the distributed 'cat'-table manual pages.
@@ -108,8 +117,7 @@ command instead of running "make install":
 	make copy-dist-mans install
 
 This does not guarantee your "man" command will be able to find and
-present the result, but it gets you to the stage of having something to
-read instead of being stuck with just the raw "doc" source.
+present the resulting files, of course.
 
 
 CUSTOM CONFIGURATION OPTIONS
@@ -165,4 +173,4 @@ or:
 						<woods-newsyslog@weird.com>
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.12 2002/05/10 21:42:25 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: README,v 1.13 2002/11/08 23:19:10 woods Exp $"
