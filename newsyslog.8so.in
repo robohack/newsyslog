@@ -9,7 +9,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.7 2001/02/23 00:49:13 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.8 2002/02/09 21:43:22 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -25,9 +25,9 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd December 1, 2000
+.Dd February 9, 2002
 .Dt NEWSYSLOG 8
-.Os
+.Os BSD
 .Sh NAME
 .Nm newsyslog
 .Nd maintain system log files to manageable sizes

@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.8 2002/01/05 05:02:53 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.9 2002/02/09 21:41:16 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -22,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd November 27, 2000
+.Dd January 13, 2002
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -118,22 +118,22 @@ the specified time.
 .Pp
 The daily, weekly, and/or monthly specification is given as:
 .Sm off
-.Oo
-.Va D\&hh
-.Oc ,
-.Oo
-.Va W\&w
-.Oo
-.Va D\&hh
-.Oc
-.Oc 
+.Bo
+. Va D\&hh
+.Bc ,
+.Bo
+. Va W\&w
+. Bo
+.  Va D\&hh
+. Bc
+.Bc 
 and
-.Oo
-.Va M\&dd
-.Oo
-.Va D\&hh
-.Oc
-.Oc
+.Bo
+. Va M\&dd
+. Bo
+.  Va D\&hh
+. Bc
+.Bc
 .Sm on
 respectively (with letters in either uppercase or lowercase).  The
 time-of-day fields, which are optional, default to midnight.  The ranges
