@@ -45,7 +45,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.30 2000/12/01 20:39:50 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.31 2000/12/01 23:22:45 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -457,7 +457,7 @@ parse_file(files )
 	struct group   *grp;
 	int             eol;
 	int             lnum = 0;
-	int             prev;
+	char            prev = '\0';
 
 	if (strcmp(config_file, "-") == 0) {
 		fp = stdin;
