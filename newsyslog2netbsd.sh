@@ -7,7 +7,7 @@
 #
 # NOTE: needs a fully POSIX /bin/sh to run properly....
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.3 2000/04/04 02:51:00 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.4 2000/12/01 19:49:32 woods Exp $"
 
 # The following variables can be adjusted as necessary
 #
@@ -53,10 +53,13 @@ if [ ! -f Makefile.BSD ] ; then
 	./configure --prefix=${PREFIX} --bindir=${BINDIR} --sysconfdir=${SYSCONFDIR} --localstatedir=${LOCALSTATEDIR} --with-newsyslog-conf=${NEWSYSLOG_CONF} --with-syslogd_pid=${SYSLOGD_PID} --with-gzip
 fi
 
-# note the renames....
+# note the couple of renames....
 cpsed AUTHORS ${IMPORTDIR}/AUTHORS
 cpsed COPYING ${IMPORTDIR}/COPYING
 cpsed Makefile.BSD ${IMPORTDIR}/Makefile
+cpsed NEWS ${IMPORTDIR}/NEWS
+cpsed README ${IMPORTDIR}/README
+cpsed ToDo ${IMPORTDIR}/ToDo
 cpsed newsyslog.8so ${IMPORTDIR}/newsyslog.8
 cpsed newsyslog.conf.5so ${IMPORTDIR}/newsyslog.conf.5so
 cpsed newsyslog.c ${IMPORTDIR}/newsyslog.c
