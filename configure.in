@@ -17,7 +17,7 @@ AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 dnl Required Autoconf version.
 AC_PREREQ(2.53)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.39 2002/05/10 17:44:31 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.40 2002/05/10 18:34:22 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -45,7 +45,18 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
-AC_CHECK_HEADERS(errno.h string.h netdb.h sys/file.h sys/param.h sys/proc.h unistd.h)
+AC_CHECK_HEADERS(errno.h string.h netdb.h sys/types.h sys/file.h sys/param.h unistd.h)
+
+AC_CHECK_HEADERS(sys/user.h, , , [
+#include <sys/types.h>
+#include <sys/param.h>
+])
+
+AC_CHECK_HEADERS(sys/proc.h, , , [
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/user.h>
+])
 
 AC_MSG_CHECKING(for sys/cdefs.h)
 AC_TRY_CPP([
