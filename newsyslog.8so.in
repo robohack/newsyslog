@@ -9,7 +9,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.9 2002/03/01 23:00:54 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.10 2002/05/10 17:43:12 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -43,7 +43,7 @@
 .Fl i Ar interval
 .Oc
 .Op Fl T Ar HH:MM
-.Op Fl Fnrv
+.Op Fl Fdnrv
 .Op Fl f Ar config_file
 .Op Fl p Ar syslogd_pidfile
 .Op Ar log_file ...
@@ -111,6 +111,18 @@ correspond to entries in the configuration file will be ignored.
 .Sh OPTIONS
 The following options can be used with newsyslog:
 .Bl -tag -width 12345678
+.It Fl d
+Place
+.Nm
+into debug mode.  No actions will be performed.  If the
+.Fl v
+option is also given then messages about what would be done will be
+printed without doing anything.  Repeat
+.Fl d
+as desired to see more detailed debugging messages.  Use of this option
+implies
+.Fl r
+too.
 .It Fl f Ar config_file
 Instruct newsyslog to use 
 .Ar config_file
@@ -180,7 +192,9 @@ the actions of
 .Nm
 were it to be run without the
 .Fl n
-flag (and assuming of course the script were run by root).
+flag.  Use of this option implies
+.Fl r
+too.
 .It Fl p Ar syslogd_pidfile
 Instruct newsyslog to use 
 .Ar syslogd_pidfile
