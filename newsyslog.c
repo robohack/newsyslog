@@ -31,7 +31,7 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.6 1997/11/10 01:42:18 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.7 1997/11/12 22:03:32 woods Exp $";
 #endif /* not lint */
 
 #ifndef CONF
@@ -65,6 +65,7 @@ static const char rcsid[] =
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #define kbytes(size)	(((size) + 1023) >> 10)
 #ifdef _IBMR2
@@ -94,6 +95,7 @@ char           *argv0 = "NEWSYSLOG";
 int             verbose = 0;	/* Print out what's going on */
 int             needroot = 1;	/* Root privs are necessary */
 int             noaction = 0;	/* Don't do anything, just show it */
+int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
 char           *conf = CONF;	/* Configuration file to use */
 time_t          timenow;
 pid_t           syslog_pid;	/* read in from /etc/syslog.pid */
@@ -165,6 +167,7 @@ do_entry(ent)
 	struct conf_entry *ent;
 
 {
+	int             we_trim_it = 0;
 	int             size, modtime;
 
 	if (verbose) {
@@ -186,17 +189,22 @@ do_entry(ent)
 			printf("size (Kb): %d [%d] ", size, ent->size);
 		if (verbose && (ent->hours > 0))
 			printf(" age (hr): %d [%d] ", modtime, ent->hours);
-		if (((ent->size > 0) && (size >= ent->size)) ||
-		    ((ent->hours > 0) && ((modtime >= ent->hours)
-					  || (modtime < 0)))) {
-			if (verbose)
-				printf("--> trimming log...\n");
-			dotrim(ent->log, ent->pid_file, ent->numlogs,
-			       ent->flags, ent->permissions, ent->uid, ent->gid);
-		} else {
-			if (verbose)
-				printf("--> skipping\n");
+		if ((ent->size > 0) && (size >= ent->size))
+			we_trim_it = 1;
+		assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
+		if ((ent->hours > 0) && ((modtime >= ent->hours) || (modtime < 0))) {
+			if (domidnight == -1 || (domidnight == 1 && (ent->hours % 24) == 0))
+				we_trim_it = 1;
 		}
+	}
+	if (we_trim_it) {
+		if (verbose)
+			printf("--> trimming log...\n");
+		dotrim(ent->log, ent->pid_file, ent->numlogs,
+		       ent->flags, ent->permissions, ent->uid, ent->gid);
+	} else {
+		if (verbose)
+			printf("--> skipping.\n");
 	}
 }
 
@@ -220,8 +228,14 @@ PRS(argc, argv)
 		*p = '\0';
 	}
 	optind = 1;		/* Start options parsing */
-	while ((c = getopt(argc, argv, "nrvf:t:")) != -1)
+	while ((c = getopt(argc, argv, "Mmnrvf:t:")) != -1)
 		switch (c) {
+		case 'M':
+			domidnight = 0;
+			break;
+		case 'm':
+			domidnight = 1;
+			break;
 		case 'n':
 			noaction++;	/* This implies needroot as off */
 			/* fall through */
@@ -242,7 +256,7 @@ PRS(argc, argv)
 static void 
 usage()
 {
-	fprintf(stderr, "Usage: %s [-nrv] [-f config-file]\n", argv0);
+	fprintf(stderr, "Usage: %s [-M|-m] [-nrv] [-f config-file]\n", argv0);
 	exit(1);
 }
 
@@ -266,7 +280,7 @@ parse_file()
 	else
 		f = stdin;
 	if (!f) {
-		fprintf(stderr, "%s: %s", argv0, conf);
+		fprintf(stderr, "%s: could not open config file %s: %s.\n", argv0, conf, strerror(errno));
 		exit(1);
 	}
 	while (fgets(line, BUFSIZ, f)) {
