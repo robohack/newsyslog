@@ -3,7 +3,7 @@
 #
 # Copyright (C) 1997,1998,1999,2000,2001 Planix, Inc. - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.19 2002/01/04 00:43:54 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.20 2002/01/05 05:03:51 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies cvs cvs-testbuild dist-tarZ
 MAINT_CHARSET = latin1
@@ -21,7 +21,7 @@ catman_MANS_dist = newsyslog.conf.cat5-dist newsyslog.cat8-dist
 catmandir = @mandir@
 
 # things that exist in the repository
-DIST_OTHER = README.developers ToDo VERSION
+DIST_OTHER = README.developers ToDo VERSION newsyslog.conf
 
 # things that must be made during 'make dist'
 DIST_MAKE = $(catman_MANS_dist) Makefile.BSD-dist
