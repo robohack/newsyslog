@@ -1,8 +1,10 @@
+.\"-*- nroff -*-
+.\"
 .\" This file contains changes from the Open Software Foundation.
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.4 2000/04/04 02:55:02 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.5 2000/11/27 00:40:58 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -18,7 +20,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd January 17, 1999
+.Dd November 26, 2000
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -102,7 +104,18 @@ right after log file roll-over.
 .It Ar flags
 This optional field specifies if the archive should have any
 special processing done to the archived log files.
-.Pp
+.Bl -tag -width indent
+.It Sy D
+The
+.Ar D
+flag prevents the creation of the new empty log file.  This can be
+useful to avoid cluttering log directories with files that'll never be
+used (though this flag should probably be avoided with daemons like
+.Nm syslogd
+which require the log file to exist prior to when they start); or when
+the owner of the file writes any special start records to a new log file
+that it creates.
+.It Sy Z
 The
 .Ar Z
 flag will make the archive files compress to save space by
@@ -111,16 +124,16 @@ using
 or
 .Nm gzip ,
 depending on which was selected at compile time.
-.Pp
+.It Sy b
 The
-.Ar B
+.Ar b
 flag means that the file is a binary file, and so the
 .Tn ASCII
 message which
 .Nm
 inserts to indicate the fact that the logs have been
 turned over should not be included.
-.Pp
+.It Sy 0
 The
 .Ar 0
 flag means that the most recent archive of the log file (i.e. the one that
@@ -128,7 +141,11 @@ ends in
 .Dq Pa .0 )
 should not be compressed even when the
 .Ar Z
-flag is given.  This flag is necessary when managing log files written
+flag is given.  (This flag may also be specified as
+.Ar P
+for compatability with
+.Nx . )
+This flag is necessary when managing log files written
 directly to by long-running processes (eg.\ 
 .Nm smail ,
 .Nm httpd ,
@@ -139,13 +156,16 @@ use tools like
 or
 .Nm zgrep ,
 etc.
-.Pp
+.It Sy -
 The
 .Ar -
 flag means nothing, but can be used as a place-holder when the
 field
 .Ar path_to_pid_file
 is specified for entries without any flags.
+.El
+.Pp
+Flags can be specified in either uppercase or lowercase.
 .It Ar path_to_pid_file
 This optional field specifies the file name from which to read the
 associated daemon's process-id.  If this field is present, and not
@@ -227,13 +247,6 @@ Fields such as
 and
 .Ar size
 should allow the units of measurement to be specified.
-.Pp
-Are there any logfile generating daemons in use out there which do not
-recognize SIGHUP as the signal to reopen their log files?  If so then
-perhaps the
-.Ar path_to_pid_file
-field could be followed by yet another optional field to specify the
-appropriate signal number.
 .Pp
 Listing the same
 .Ar path_to_pid_file
