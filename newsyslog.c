@@ -31,7 +31,7 @@
 static const char orig_rcsid[] =
 	"$FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp $";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.5 1997/10/28 06:58:17 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.6 1997/11/10 01:42:18 woods Exp $";
 #endif /* not lint */
 
 #ifndef CONF
@@ -102,16 +102,18 @@ pid_t           syslog_pid;	/* read in from /etc/syslog.pid */
 # define MIN_PID	5
 #endif
 #ifndef MAX_PID
-# define MAX_PID	MAXPID
-#else
+# ifdef MAXPID
+#  define MAX_PID	MAXPID
+# else
 #  define MAX_PID	30000
+# endif
 #endif
 
 char            hostname[MAXHOSTNAMELEN + 1];	/* hostname */
 char           *daytime;		/* timenow in human readable form */
 
-#ifndef OSF
-extern char    *strdup __P((char *));
+#if (!defined(OSF) && !defined(BSD)) || ((BSD + 0) < 199103)	/* XXX HACK!!! */
+extern char            *strdup __P((const char *));
 #endif
 
 static struct conf_entry *parse_file __P((void));
@@ -666,12 +668,12 @@ get_pid(pid_file)
 	return pid;
 }
 
-#ifndef OSF
+#if (!defined(OSF) && !defined(BSD)) || ((BSD + 0) < 199103)	/* XXX HACK!!! */
 /* Duplicate a string using malloc */
 
 char           *
 strdup(strp)
-	register char  *strp;
+	register const char  *strp;
 {
 	register char  *cp;
 
