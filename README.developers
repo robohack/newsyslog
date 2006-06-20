@@ -157,15 +157,23 @@ whenever we add any new features or make other important user-visible
 changes, and lastly we increment the first number, or the major release
 number, (3.*, 4.1) whenever we make major or architectural changes.
 
-We also throw in a smattering of GNU-isms too -- the alpha-test and
-beta-test releases of upcoming proper releases should have a ".80" or
-".90" (respectively) appended to the current release number (3.7.5.80
-would be the first alpha for 3.7.6, continuing with 3.7.5.81, 3.7.5.82,
-etc., 3.7.5.90 would be the first beta, continuing with 3.7.5.91,
-3.7.5.92, etc. until finally 3.7.6 is released; for another example the
-first alpha for 4.1.1 would be 4.1.0.80, continuing with 4.1.0.81,
-4.1.0.82, etc., 4.1.0.90 would be the first beta, continuing with
-4.1.0.91, 4.1.0.92, etc., until finally 4.1.1 is released).
+We also throw in a smattering of GNU-isms too -- the beta-test and
+release candidates (RCs) of upcoming proper releases should have a
+".80" or ".90" (respectively) appended to the current release number
+(3.7.5.80 would be the first beta for 3.7.6, continuing with 3.7.5.81,
+3.7.5.82, etc., 3.7.5.90 would be the first release candidate,
+continuing with 3.7.5.91, 3.7.5.92, etc. until finally 3.7.6 is
+released.
+
+Beta releases are the "you asked for this feature, I think this is a
+good implementation of it, try it out, but there may be more to come
+before the next release" releases.
+
+Release Candidates (RCs) are created once you think you've reached a
+more stable and release-ready stage which means "all the features
+which will be in the next release are now in, and have undergone at
+least some testing and if nobody finds any (major show-stopping) bugs,
+this will be the next release."
 
 One special case rule not yet described covers the releases preceding
 the initial release, which would might start with semi-private releases
@@ -173,9 +181,11 @@ numbered "0.x", e.g. 0.1.80, 0.1.90, 0.1.91, 0.2, 0.2.80, 0.2.90, 0.3,
 etc., then full public releases numbered "1.0.x", e.g. 1.0.80, 1.0.90,
 etc. until 1.1, the first fully official release is made.
 
-Note that there are no '.0' releases!  I.e. ".0" is only used as a
+Note that there are no ".0" releases!  I.e. ".0" is only used as a
 separator between initial major releases and the first minor release,
 and between initial minor releases and the first patch release.
+
+I.e. you only insert a ".0" when you start a new branch!
 
 Ideally patch releases will be developed on a release branch to permit
 parallel development of new features on the trunk for the next minor (or
@@ -184,18 +194,30 @@ the trunk).  In theory minor releases could also be developed on release
 branches, but only in situations where extreme levels of maintenance for
 existing releases must be undertaken.
 
-You'll note this effectively caps the maximum patch level, and the
-maximum minor release number, to a ceiling of ".79", and limits the
-number of alpha releases to just 10.  Unfortunately it does not limit
-the number of beta releases since things like .100 are allowed!  ;-)
+You'll note this effectively caps the maximum number of releases along
+any patch branch to a ceiling of ".79", and limits the number of alpha
+releases at any level to just 10.  Unfortunately it does not limit the
+number of beta releases since things like .100 are allowed!  ;-)
 
-For projects that require it for developers to keep track of ABI
-changes along the trunk, they can be dealt with by modifying the beta
-scheme so that ".80" starts the new development, and then appending an
-incrementing suffix number to the ".80" starter number.  The first
-true beta release would then be ".81".  ABI changes could be handled
-along any line of development, but for practical purposes they should
-be restricted to the trunk.
+Some projects require developers to keep track of ABI or API changes
+along the trunk (e.g. so that others tracking trunk development can be
+made aware of when they are about to cross, or have already crossed,
+some line which might require special procedures to adapt their
+environment to the change).  Marking of these application interface
+changes can be dealt with by modifying the beta scheme so that ".80"
+always starts the new development of these changes and then for each
+cange one appends an incrementing suffix number to the ".80" starter
+number.  The first true beta release would then be ".81".  ABI changes
+could be marked this way along any line of development and even after
+first beta, but for practical purposes they should be restricted to
+the trunk (i.e. only done for major and minor releases) and only done
+prior to the initial beta release if at all possible (i.e. ".81.1"
+should not be allowed unless absolutely necessary, and ".9x.1" should
+be forbidden at all cost).  I.e. any time you want to make an ABI
+change then that's a very good time to begin at least a new minor
+release, if not a new major release.  If you can't fix something
+without making an interface change then it's time to abandon that
+branch.
 
 If you see "-Preview.N" appended to the release number then you're
 seeing an intermediate development copy -- i.e. an as-yet un-released
@@ -220,26 +242,30 @@ A complete example:
 		...
 		0.1.90		2nd pre-release RC #1
 		0.1.91		2nd pre-release RC #2
-	
+		...
 		0.2		second pre-release
 
+		...
+
 	1.0.80		begin first official release
-	1.0.80.1	after ABI change
-	1.0.80.2	after ABI change
+	1.0.80.1	after an ABI change
+	1.0.80.2	after an ABI change
 	...
 	1.0.81		first beta
 	...
 	1.0.90		first official release candidate
 	1.0.91		second official release candidate
 	1.0.92		third official release candidate
+	...
 
-	1.1	first official release
+	1.1	first official (major) release
 
 			1.1.0.80	begin branch development
+					(no ABI changes should be allowed)
 			1.1.0.81	1st beta
 			...
-			1.1.0.90	1st release candidate
-			1.1.0.91	2nd release candidate
+			1.1.0.90	1st RC for first patch
+			1.1.0.91	2nd RC for first patch
 			....
 			1.1.1		first patch release
 
@@ -259,24 +285,29 @@ A complete example:
 			...
 			1.1.3		third patch release
 
-		(in parallel with the 1.1.0.80 patch branch)
-		1.2.0.80	begin minor release
-		1.2.0.80.1	after ABI change
-		1.2.0.80.2	after ABI change
-		1.2.0.80.3	after ABI change
+			...
+
+			[1.1.79]	last possible patch release
+
+		(begin 1.2 on trunk in parallel with the 1.1.0 patch branch)
+		1.1.80		begin minor release
+		1.1.80.1	after ABI change
+		1.1.80.2	after ABI change
+		1.1.80.3	after ABI change
 		....
-		1.2.0.81
+		1.1.81		first beta
 		...
-		1.2.0.90	second official release beta #1
-		1.2.0.91	second official release beta #2
+		1.1.90		second official release RC #1
+		1.1.91		second official release RC #2
 		...
+
 		1.2	second official (minor) release
 
 			1.2.0.80	begin branch development
 			1.2.0.81	1st beta
 			...
-			1.2.0.90	1st release candidate
-			1.2.0.91	2nd release candidate
+			1.2.0.90	1st RC for first patch
+			1.2.0.91	2nd RC for first patch
 			...
 			1.2.1		first patch release
 
@@ -296,12 +327,19 @@ A complete example:
 			...
 			1.2.3		third patch release
 
-		1.3.0.80	begin next minor (in parallel with 1.2.0.80)
-		1.3.0.80.1
+			...
 
-	. . . and so on to where we are now with 1.6 . . .
+			[1.2.79]	last possible patch release
 
-	2.0.80		begin new major release (bump trunk)
+		(begin next minor on trunk in parallel with 1.2.0 patch branch)
+		1.2.80
+		1.2.80.1
+		
+		. . . and so on to 1.3, 1.4, etc. . . .
+
+	(to start a new major release we pretend to "branch" the trunk)
+
+	2.0.80		begin new major release
 	2.0.80.1	after ABI change
 	2.0.80.2	after ABI change
 	2.0.80.3	after ABI change
@@ -311,13 +349,14 @@ A complete example:
 	2.0.90		first RC
 	2.0.91		second RC
 	...
-	2.1		second major release
+
+	2.1	second major release
 
 			2.1.0.80	begin branch development
 			2.1.0.81	1st beta
 			...
-			2.1.0.90	1st release candidate
-			2.1.0.91	2nd release candidate
+			2.1.0.90	1st RC for first patch
+			2.1.0.91	2nd RC for first patch
 			....
 			2.1.1		first patch release
 
@@ -336,23 +375,27 @@ A complete example:
 			...
 			2.1.3		third patch release
 
-		2.2.0.80	begin next minor release
-		2.2.0.80.1	after ABI change
-		2.2.0.80.2	after ABI change
-		2.2.0.80.3	after ABI change
+			...
+
+		(in parallel with the 2.1.0.80 patch branch)
+		2.1.80		begin next minor release
+		2.1.80.1	after ABI change
+		2.1.80.2	after ABI change
+		2.1.80.3	after ABI change
 		....
-		2.2.0.81	first official beta
+		2.1.81		first beta
 		...
-		2.2.0.90	second official release candidate
-		2.2.0.91	second official release candidate
+		2.1.90		second official release candidate
+		2.1.91		second official release candidate
 		...
-		2.2		next official (minor) release
+
+		2.2	next official (minor) release
 
 			2.2.0.80	begin branch development
 			2.2.0.81	1st beta
 			...
-			2.2.0.90	1st release candidate
-			2.2.0.91	2nd release candidate
+			2.2.0.90	1st RC for first patch
+			2.2.0.91	2nd RC for first patch
 			...
 			2.2.1		first patch release
 
@@ -372,22 +415,28 @@ A complete example:
 			...
 			1.2.3		third patch release
 
-		2.3.0.80	begin next minor release
-		2.3.0.80.1
+		2.2.80		begin next minor release
+		2.2.80.1
+		...
+
+		2.3
 
 	3.0.80
 
-This might look like it adds another branch, but it doesn't have to.  It
-just depends on whether you want to bump the trunk to start the next
-major release, or whether you do want to go out on a branch for minor
-releases.  If you want to bump the trunk then at any point along the
-trunk when it's decided that the next release will be called a "major"
-release then 1.N.0.80.x can be promoted to become 2.0.80.x, just as in
-my example above.  In a volunteer project it's already asking a lot just
-to use branches for patch releases, let alone minor releases.
+Starting new major releases might look like it adds another branch,
+but it's only a conceptual branch.  At any point along the trunk when
+it's decided that the next release will be called a "major" release
+then the current X.N.8n.x beta or X.N.9n.x release candidate is simply
+promoted to become (X+1).0.[89]n.x, just as in my example above.  We
+really only create branches in the source code control system in order
+to maintain patch releases in parallel with ongoing development on the
+trunk and we don't maintain minor releases in parallel with the
+development of a new major release.  In a volunteer project it's
+already asking a lot just to use branches for patch releases, let
+alone minor releases.
 
 
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.15 2003/07/08 20:03:18 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.16 2006/06/20 21:16:59 woods Exp $"
