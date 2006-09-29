@@ -3,11 +3,11 @@ NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
 Patches to close any of these items will be gratefully accepted!  Other
 suggestions and comments are also encouraged.
 
-- we really need an option that just makes sure all the logs exist and
-  have the right ownerships and permissions (because '-F' is useless for
-  this purpose on any existing system).  [what about ownerships and
+- we really need an option (-C) that just makes sure all the logs exist
+  and have the right ownerships and permissions (because '-F' is useless
+  for this purpose on any existing system).  [what about ownerships and
   permissions of archived logs?  what about extra copies of archived
-  logs that'll never be overwritten?]
+  logs that'll never be overwritten, e.g. if the count is reduced?]
 
 - fix handling of log file timestamps to take into account timezones.
   Note that the common log format actually includes " {+-}TZOFF" after
@@ -18,9 +18,9 @@ suggestions and comments are also encouraged.
 - what happens, or should happen, if/when there are multiple PIDs in a
   pidfile?
 
-- how can we specify multiple pidfiles for a given log?
+- support specification of multiple pidfiles for a given log, e.g. as:
 
-	/var/run/smail.pid,/var/run/smail2.pid
+	/var/run/named-outside.pid,/var/run/named-inside.pid
 
 - Add one more optional field:  the format of the turnover message, with
   the default to be the "syslog" style:
@@ -114,4 +114,4 @@ suggestions and comments are also encouraged.
   (there, that's done! ;-)
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.13 2006/09/29 19:48:09 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.14 2006/09/29 20:15:43 woods Exp $"
