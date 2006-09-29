@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.13 2003/07/08 17:24:15 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.14 2006/09/29 19:49:31 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -22,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd July 3, 2002
+.Dd June 20, 2006
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -205,28 +205,6 @@ right after log file roll-over.
 This optional field specifies if the archive should have any
 special processing done to the archived log files.
 .Bl -tag -width indent
-.It Sy D
-The
-.Ar D
-flag prevents the creation of the new empty log file.  This can be
-useful to avoid cluttering log directories with files that'll never be
-used, or when a daemon creates its own log file(s) on demand (failure to
-use this flag in the latter case may result in spurious warnings should
-.Nm newsyslog
-and the daemon both try to create the log file).  Note though this flag
-should not be used with daemons like
-.Nm syslogd
-which require the log file to exist prior to when they start and prior
-to when they're signalled to re-open their log file(s).
-.It Sy Z
-The
-.Ar Z
-flag will make the archive files compress to save space by
-using
-.Nm compress
-or
-.Nm gzip ,
-depending on which was selected at compile time.
 .It Sy b
 The
 .Ar b
@@ -236,6 +214,50 @@ message which
 .Nm
 inserts to indicate the fact that the logs have been
 turned over should not be included.
+.It Sy C
+The
+.Ar C
+flag forces the creation of the new empty log file.  This is the
+opposite of the
+.Ar D
+flag and will re-enable file creation if it appears later in the field.
+This flag is for backward compatability with the native
+.Nx
+version of
+.Nm newsyslog .
+.It Sy D
+The
+.Ar D
+flag prevents the creation of the new empty log file.  This may be
+useful to avoid cluttering log directories with files that'll never be
+used, or when a daemon creates its own log file(s) on demand (failure to
+use this flag in the latter case may result in spurious warnings should
+.Nm newsyslog
+and the daemon both try to create the log file).  Note though this flag
+should not be used with daemons like
+.Nm syslogd
+which require the log file to exist prior to when they start and prior
+to when they're signalled to re-open their log file(s).
+.It Sy N
+The
+.Ar N
+flag prevents
+.Nm newsyslog
+from sending any signal to any process when the associated file is
+rolled over.  This is the equivalent of specifying
+.Dq Pa /dev/null
+in the
+.Ar path_to_pid_file
+field.
+.It Sy Z
+The
+.Ar Z
+flag will make the archive files compress to save space by
+using
+.Nm compress
+or
+.Nm gzip ,
+depending on which was selected at compile time.
 .It Sy 0
 The
 .Ar 0
@@ -262,7 +284,7 @@ etc.
 .It Sy -
 The
 .Ar -
-flag means nothing, but can be used as a place-holder when either or
+flag means nothing, but may be used as a place-holder when either or
 both of the
 .Ar path_to_pid_file
 and
@@ -270,13 +292,22 @@ and
 fields are specified for entries without any flags.
 .El
 .Pp
-Flags can be specified in either uppercase or lowercase.
+Flags may be specified in either uppercase or lowercase.
 .It Ar path_to_pid_file
 This optional field specifies the file name from which to read the
-associated daemon's process-id.  If this field is present, and not
+associated daemon's process-ID.  If this field is present, and is not
 .Dq Pa /dev/null ,
-a SIGHUP is sent the process id contained in this file.  This field must
-start with a slash (i.e.\ 
+a SIGHUP is sent the process-ID contained in this file.  If this field
+is not present then the process-ID found in the default file (the one
+given by the parameter of the
+.Fl p
+flag on the
+.Nm newsyslog
+command line, or by default
+.Pa @syslogd_pidfile@ ) .
+.Pp
+This field must
+start with a slash (i.e.
 .Dq Pa / )
 in order to be recognised properly.
 .It Ar sigtype
@@ -340,13 +371,16 @@ version) allows a restricted form of an ISO 8601 time format to specify
 the time of day when a log file should be rotated.  In those versions
 such a specification was given by placing it after an
 .So Li \&@ Sc Ns No -sign
-following the [optional] interval.  This version only allows the
-sufficiently useful daily, weekly, and/or monthly time specification
-with optional hour of day (also innovated by
+following the [optional] interval.  This version does not support that
+feature.
+.Pp
+This version only allows the sufficiently useful daily, weekly, and/or
+monthly time specification with optional hour of day (also innovated by
 .Fx ) ,
-but it uses the hyphen (\-) as a separator from the optional interval
-instead of the more confusing
+and this version prefers to use the hyphen (\-) as a separator from the
+optional interval instead of the far more confusing
 .So Li \&$ Sc Ns No -sign.
+However the latter is permitted to allow for backwards compatability.
 .Sh "HISTORY"
 Originated at MIT Project Athena.
 .Pp
@@ -403,7 +437,7 @@ hopefully been closed but in theory should be optimised to only notify
 daemon(s) once (and of course to batch all the compression commands to
 the end of the process).  This behaviour is normally harmless for
 .Nm syslogd
-and multiple signals can be avoided for other daemons by ensuring their
+and multiple signals may be avoided for other daemons by ensuring their
 PID files are only listed once and that the
 .Ar 0
 flag is used to ensure the most recent log file is not immediately
