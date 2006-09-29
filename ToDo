@@ -3,11 +3,24 @@ NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
 Patches to close any of these items will be gratefully accepted!  Other
 suggestions and comments are also encouraged.
 
+- we really need an option that just makes sure all the logs exist and
+  have the right ownerships and permissions (because '-F' is useless for
+  this purpose on any existing system).  [what about ownerships and
+  permissions of archived logs?  what about extra copies of archived
+  logs that'll never be overwritten?]
+
 - fix handling of log file timestamps to take into account timezones.
   Note that the common log format actually includes " {+-}TZOFF" after
   the time, but strptime() doesn't seem to have a way to parse and use
   this value.  Syslog timestamps are in local time, so watch out for
   stupid daylight savings confusion too!
+
+- what happens, or should happen, if/when there are multiple PIDs in a
+  pidfile?
+
+- how can we specify multiple pidfiles for a given log?
+
+	/var/run/smail.pid,/var/run/smail2.pid
 
 - Add one more optional field:  the format of the turnover message, with
   the default to be the "syslog" style:
@@ -81,15 +94,17 @@ suggestions and comments are also encouraged.
   a given entry.
 
 - think (but not too hard, this is ugly) about supporting the FreeBSD
-  'G' (glob(3)) flag.  Yuck.  But it would help some RADIUS daemons....
+  'G' (glob(3)) flag.  Yuck.  But it would make it easier to manage the
+  logs of some RADIUS daemons....
 
 - think about OpenBSD's "monitor" feature:  an 'M' in the flag field
   which says the next field is an account name to receive an e-mail
   notification whenever the log file is rolled over.
 
-- think about OpenBSD's optional command-run feature which uses the
-  pid_file field when the signal number is specified '-1' to specify a
-  command to run instead of sending a signal.
+- think (briefly) about OpenBSD's optional command-run feature which
+  uses the pid_file field when the signal number is specified '-1' to
+  specify a command to run instead of sending a signal.  Perhaps there's
+  a better syntax that should be used, eg. another new flag letter.
 
 - consider mentioning cronolog (good for things that can pipe to logs,
   as well as possibly a post-processor for archiving logs):
@@ -99,4 +114,4 @@ suggestions and comments are also encouraged.
   (there, that's done! ;-)
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.12 2003/07/08 18:50:59 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.13 2006/09/29 19:48:09 woods Exp $"
