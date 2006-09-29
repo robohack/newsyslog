@@ -76,7 +76,7 @@ suggestions and comments are also encouraged.
   ".YYYY-MM-DD.HH:MM:SS" or whatever)
 
   FreeBSD may someday use the Toshihisa Eto <eto@clave.gr.jp> patch with
-  the format ".YYYMMDD-NN":
+  the format ".YYYMMDD-NN", triggered by a negative 'count' field:
 
     http://www.clave.gr.jp/~eto/software/newsyslog/newsyslog.diff.gz
 
@@ -114,4 +114,4 @@ suggestions and comments are also encouraged.
   (there, that's done! ;-)
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.14 2006/09/29 20:15:43 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.15 2006/09/29 22:59:57 woods Exp $"
