@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.14 2006/09/29 19:49:31 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.15 2006/09/29 20:15:28 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -22,7 +22,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd June 20, 2006
+.Dd September 29, 2006
 .Dt NEWSYSLOG.CONF 5
 .Os
 .Sh "NAME"
@@ -71,7 +71,7 @@ is replaced by a
 .Ar * ,
 then the size of the log file is not taken into account
 when determining when to trim the log file.
-.It Ar interval
+.It Ar when
 The
 .Ar when
 field can consist of an interval, a specific time, or both.  If the
