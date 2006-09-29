@@ -6,7 +6,8 @@
 /*
  * This file contains changes from Greg A. Woods; Planix, Inc.
  *
- * Copyright for these changes is hereby assigned to MIT.
+ * Copyright for these changes is hereby assigned to MIT under the license
+ * given below.
  */
 
 /*
@@ -45,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.48 2003/07/08 18:02:13 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.49 2006/09/29 19:57:23 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -123,18 +124,6 @@ extern int errno;
 
 #include "newsyslog.h"			/* portability defines */
 
-#define kbytes(size)	(((size) + 1023) >> 10)
-
-#ifdef _IBMR2
-# define dbtob(db)	((unsigned) (db) << UBSHIFT) /* Calculates (db * DEV_BSIZE) */
-#endif
-#ifndef dbtob
-# ifndef DEV_BSHIFT
-#  define DEV_BSHIFT	9		/* log2(DEV_BSIZE) */
-# endif
-# define dbtob(x)	(((unsigned long) (x)) << DEV_BSHIFT)
-#endif
-
 #ifndef MAX_FORK_RETRIES
 # define MAX_FORK_RETRIES	5	/* a reasonable effort.... */
 #endif
@@ -157,8 +146,10 @@ extern int errno;
 struct conf_entry {
 	char           *log;		/* Name of the log */
 	char           *pid_file;	/* PID file */
-	uid_t           uid;		/* Owner of log */
-	uid_t           gid;		/* Group of log */
+	char           *user;		/* Owner name of log */
+	uid_t           uid;		/* Owner ID of log */
+	char           *group;		/* Group name of log */
+	uid_t           gid;		/* Group ID of log */
 	unsigned int    numlogs;	/* Number of logs to keep */
 	long            size;		/* maximum log size in KB */
 	int             hours;		/* maximum hours between log trimming */
@@ -175,19 +166,23 @@ const char      tarname[] = PACKAGE;		/* the original dist name (not PACKAGE_TAR
 const char      version[] = VERSION;		/* the package version (not PACKAGE_VERSION, not yet) */
 const char      bugreport[] = PACKAGE_BUGREPORT;
 
-int             verbose = 0;	/* Print out what's going on */
-int             needroot = 1;	/* Root privs are necessary for default conf */
-int             show_script = 0;/* Show sh-script on stdout instead of doing the job */
-int             debug = 0;	/* Don't do anything, don't show script (use with -v) */
+int             verbose = FALSE;/* Print out what's going on */
+int             quiet = FALSE;	/* Don't print certain useless errors (use with '-F') */
+int             write_metalog = FALSE;/* Magic for NetBSD unprivileged builds (use with '-F') */
+int             needroot = TRUE;/* Root privs are necessary for default conf */
+int             show_script = FALSE;/* Show sh-script on stdout instead of doing the job */
+int             debug = FALSE;	/* Don't do anything, don't show script (use with -v) */
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
 int             run_interval = -1;/* interval in minutes at which we are run by cron */
-int             force = 0;	/* force all files to be trimmed */
+int             force = FALSE;	/* force all files to be trimmed */
 const char     *config_file = PATH_CONFIG;/* Configuration file to use */
 const char     *syslogd_pidfile = PATH_SYSLOGD_PIDFILE;/* syslogd's pid file */
 time_t          timenow;
 pid_t           syslogd_pid;	/* read in from /etc/syslog.pid */
 char            hostname[MAXHOSTNAMELEN + 1];	/* hostname */
 char           *localdomain = NULL;		/* not currently used.... */
+char           *my_uname;
+char           *my_gname;
 char           *daytime;		/* timenow in human readable form */
 
 int                     main __P((int, char **)); /* XXX HACK for WARNS=1 */
@@ -203,7 +198,7 @@ static void             help __P((void));
 static void             do_trim __P((struct conf_entry *));
 static int              note_trim __P((char *));
 static void             compress_log __P((char *));
-static long             check_file_size __P((char *));
+static off_t            check_file_size __P((char *));
 static int              check_old_log_age __P((struct conf_entry *));
 static time_t           read_first_timestamp __P((char *));
 static pid_t            get_pid_file __P((const char *));
@@ -245,6 +240,8 @@ main(argc, argv)
 	int             cstatus;
 	int             cpid;
 	struct conf_entry *p, *q;
+	struct passwd  *pass;
+	struct group   *grp;
 
 	timenow = time((time_t *) 0);
 
@@ -264,10 +261,22 @@ main(argc, argv)
 	daytime = ctime(&timenow) + 4;		/* trim the day name off */
 	daytime[15] = '\0';			/* trim the year off too */
 
-	if (needroot && getuid()) {
+	if (needroot && getuid()) {		/* using geteuid() would allow making program setuid */
 		fprintf(stderr, "%s: you do not have root privileges\n", argv0);
 		exit(1);
 	}
+
+	if ((pass = getpwuid(geteuid())) == NULL) {
+		fprintf(stderr, "%s: you do not have a valid user name!\n", argv0);
+		exit(1);
+	}
+	my_uname = strdup(pass->pw_name);
+
+	if ((grp = getgrgid(getegid())) == NULL) {
+		fprintf(stderr, "%s: you do not have a valid group name\n", argv0);
+		exit(1);
+	}
+	my_gname = strdup(grp->gr_name);
 
 	p = q = parse_file(argv + optind);
 
@@ -334,8 +343,8 @@ static void
 do_entry(ent)
 	struct conf_entry *ent;
 {
-	int             we_trim_it = 0;
-	long            size;			/* in kbytes */
+	int             we_trim_it = FALSE;
+	off_t           size;			/* in kbytes */
 	int             modtime = 0;		/* in hours */
 
 	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
@@ -362,16 +371,16 @@ do_entry(ent)
 		printf("is empty ");
 	if (size > 0) {				/* ignore empty/missing ones */
 		if (verbose && (ent->size > 0))
-			printf("size (Kb): %ld [allow %ld] ", size, ent->size);
+			printf("size (Kb): %ld [allow %ld] ", (long) size, ent->size);
 		if ((ent->size > 0) && (size >= ent->size))
-			we_trim_it = 1;
+			we_trim_it = TRUE;
 		if (ent->hours > 0) {
 			modtime = check_old_log_age(ent);
 			if (verbose)
 				printf("age (hr): %d [allow %d] ", modtime, ent->hours);
 			/* always trim if timestamp FUBAR */
 			if (modtime >= ent->hours || modtime < 0)
-				we_trim_it = 1;
+				we_trim_it = TRUE;
 		}
 		if (ent->flags & CE_TRIMAT && domidnight == -1) {
 			/*
@@ -382,11 +391,11 @@ do_entry(ent)
 			    (difftime(timenow, ent->trim_at) < 60 * run_interval)) {
 				if (verbose)
 					printf("(time to trim) ");
-				we_trim_it = 1;
+				we_trim_it = TRUE;
 			} else {
 				if (verbose)
 					printf("(but not time to trim) ");
-				we_trim_it = 0;
+				we_trim_it = FALSE;
 			}
 		}
 	}
@@ -403,12 +412,12 @@ do_entry(ent)
 	} else if (domidnight == 0 && (ent->hours % 24) == 0) {
 		if (verbose && !force)
 			printf("(not the daily trim, -M set) ");
-		we_trim_it = 0;
+		we_trim_it = FALSE;
 	}
 	if (force & !we_trim_it) {
 		if (verbose)
 			printf("(forced )");
-		we_trim_it = 1;
+		we_trim_it = TRUE;
 	}
 	if (we_trim_it) {
 		if (verbose)
@@ -438,10 +447,10 @@ parse_options(argc, argv)
 
 	optind = 1;		/* Start options parsing */
 	opterr = 0;
-	while ((c = getopt(argc, argv, "FMT:Vdf:hi:mnp:rt:v")) != -1) {
+	while ((c = getopt(argc, argv, "FMT:UVdf:hi:mnp:qrt:v")) != -1) {
 		switch (c) {
 		case 'F':
-			force = 1;
+			force = TRUE;
 			break;
 		case 'M':		/* NOT the midnight run */
 			domidnight = 0;
@@ -475,13 +484,17 @@ parse_options(argc, argv)
 			if (verbose)
 				printf("----> have adjusted timenow to: %s", ctime(&timenow));
 			break;
+		case 'U':
+			write_metalog = TRUE;
+			needroot = FALSE;	/* don't need root */
+			break;
 		case 'V':
 			printf("%s: version %s-%s.\n", argv0, package, version);
 			exit(0);
 			/* NOTREACHED */
 		case 'd':
 			debug++;
-			needroot = 0;	/* don't need root */
+			needroot = FALSE;	/* don't need root */
 			break;
 		case 'f':
 			config_file = optarg;
@@ -516,14 +529,17 @@ parse_options(argc, argv)
 			domidnight = 1;	/* the midnight run */
 			break;
 		case 'n':
-			show_script++;
-			needroot = 0;	/* don't need root */
+			show_script = TRUE;
+			needroot = FALSE;	/* don't need root */
 			break;
 		case 'p':
 			syslogd_pidfile = optarg;
 			break;
+		case 'q':
+			quiet++;
+			break;
 		case 'r':
-			needroot = 0;
+			needroot = FALSE;
 			break;
 		case 'v':
 			verbose++;
@@ -561,6 +577,7 @@ help()
 	printf("	-F		force immediate trimming\n");
 	printf("	-M		select normal periodic processing [opposite of -m]\n");
 	printf("	-T hh:mm	adjust current time\n");
+	printf("	-U		magic 'unprivileged' feature for use in NetBSD builds\n");
 	printf("	-V		display version and exit\n");
 	printf("	-d		don't do anything, just debug (repeat as desired)\n");
 	printf("	-f config_fn	configuration file [default: %s]\n", config_file);
@@ -599,7 +616,7 @@ parse_file(files )
 	struct conf_entry *working = NULL;
 	struct passwd  *pass;
 	struct group   *grp;
-	int             eol;
+	int             eol = FALSE;
 	int             lnum = 0;
 	char            prev = '\0';
 
@@ -722,39 +739,53 @@ parse_file(files )
 			*group++ = '\0';
 			if (*q) {
 				if (!(isdigit(*q))) {
-					if ((pass = getpwnam(q)) == NULL) {
-						fprintf(stderr,
-							"%s: error in config file; unknown user: '%s', in line:\n%6d:\t'%s'\n",
-							argv0,
-							q,
-							lnum,
-							errline);
-						exit(1);
+					working->user = strdup(q);
+					working->uid = NO_ID;
+					if (!write_metalog) {
+						if ((pass = getpwnam(q)) == NULL) {
+							fprintf(stderr,
+								"%s: error in config file; unknown user: '%s', in line:\n%6d:\t'%s'\n",
+								argv0,
+								q,
+								lnum,
+								errline);
+							exit(1);
+						}
+						working->uid = pass->pw_uid;
 					}
-					working->uid = pass->pw_uid;
-				} else
+				} else {
+					working->user = NULL; /* XXX look up name!!! */
 					working->uid = atoi(q);	/* XXX use strtol()? */
-			} else
+				}
+			} else {
+				working->user = NULL;
 				working->uid = NO_ID;
-
+			}
 			q = group;
 			if (*q) {
 				if (!(isdigit(*q))) {
-					if ((grp = getgrnam(q)) == NULL) {
-						fprintf(stderr,
-							"%s: error in config file; unknown group: '%s', in line:\n%6d:\t'%s'\n",
-							argv0,
-							q,
-							lnum,
-							errline);
-						exit(1);
+					working->group = strdup(q);
+					working->gid = NO_ID;
+					if (!write_metalog) {
+						if ((grp = getgrnam(q)) == NULL) {
+							fprintf(stderr,
+								"%s: error in config file; unknown group: '%s', in line:\n%6d:\t'%s'\n",
+								argv0,
+								q,
+								lnum,
+								errline);
+							exit(1);
+						}
+						working->gid = grp->gr_gid;
 					}
-					working->gid = grp->gr_gid;
-				} else
-					working->gid = atoi(q);
-			} else
+				} else {
+					working->user = NULL; /* XXX look up name!!! */
+					working->gid = atoi(q);	/* XXX use strtol()? */
+				}
+			} else {
+				working->group = NULL;
 				working->gid = NO_ID;
-
+			}
 			q = parse = missing_field(strsob(++parse), lnum, errline);
 			parse = strson(parse);
 			if (!*parse) {
@@ -766,9 +797,10 @@ parse_file(files )
 				exit(1);
 			}
 			*parse = '\0';
-		} else
+		} else {
+			working->user = working->group = NULL;
 			working->uid = working->gid = NO_ID;
-
+		}
 		if (!sscanf(q, "%o", &working->permissions)) {
 			fprintf(stderr,
 				"%s: error in config file; %s: '%s', in line:\n%6d:\t'%s'\n",
@@ -819,7 +851,7 @@ parse_file(files )
 
 		q = parse = missing_field(strsob(++parse), lnum, errline);
 		if (*q == '#') {
-			eol = 1;
+			eol = TRUE;
 			q = NULL;
 		}
 		parse = strson(parse);
@@ -846,10 +878,11 @@ parse_file(files )
 				working->hours = (int) ul;
 			}
 			/*
-			 * interval may be followed by a specification of when
-			 * to trim the file....
+			 * the interval may be followed by a specification of
+			 * when to trim the file (making the interval really a
+			 * maximum age)....
 			 */
-			if ((*q == '-') || (working->hours == -1)) {
+			if ((*q == '-') || (*q == '$') || (working->hours == -1)) {
 				if (domidnight != -1) {
 					fprintf(stderr,
 						"%s: a trim time is nonsensical with %s: '%s', in line\n%6d:\t'%s'\n",
@@ -896,12 +929,12 @@ parse_file(files )
 		else {
 			q = parse = strsob(++parse);	/* Optional field */
 			if (q && *q == '#') {
-				eol = 1;
+				eol = TRUE;
 				q = NULL;
 			}
 			parse = strson(parse);
 			if (!*parse)
-				eol = 1;
+				eol = TRUE;
 			*parse = '\0';
 		}
 		while (q && *q && !isspace(*q)) {
@@ -915,6 +948,8 @@ parse_file(files )
 				working->flags |= CE_NOSIGNAL;
 			else if ((*q == '0') || (*q == 'p') || (*q == 'P'))
 				working->flags |= CE_PLAIN0;
+			else if ((*q == 'c') || (*q == 'C'))
+				working->flags &= ~CE_NOCREATE;
 			else if (*q != '-') {
 				fprintf(stderr,
 					"%s: illegal flag in config file -- %c on line:\n%6d:\t'%s'\n",
@@ -932,12 +967,12 @@ parse_file(files )
 		else {
 			q = parse = strsob(++parse);	/* Optional field */
 			if (q && *q == '#') {
-				eol = 1;
+				eol = TRUE;
 				q = NULL;
 			}
 			parse = strson(parse);
 			if (!*parse)
-				eol = 1;
+				eol = TRUE;
 			prev = *parse;
 			*parse = '\0';
 		}
@@ -959,7 +994,7 @@ parse_file(files )
 		else {
 			q = parse = strsob(++parse);	/* Optional field */
 			if (q && *q == '#') {
-				eol = 1;
+				eol = TRUE;
 				q = NULL;
 			}
 			*(parse = strson(parse)) = '\0';
@@ -1029,33 +1064,41 @@ do_trim(ent)
         int             fd;
 	unsigned int    numlogs;
 	struct stat     st;
-	pid_t           pid = 0;
-	int             might_need_newlog = 0;
-	int             need_compress = 0;
-	int             might_timestamp = 0;
-	int             notified = 0;		/* we could combine these... */
-	int             need_notification= 0;	/* ... but this reads better */
+	pid_t           pid = 0;	/* zero means "don't send signal" */
+	struct passwd  *pass;
+	struct group   *grp;
+	int             might_need_newlog = FALSE;
+	int             need_compress = FALSE;
+	int             might_timestamp = FALSE;
+	int             notified = FALSE;
 
 	/*
 	 * first learn about the existing log file, if it exists
 	 */
 	if (stat(ent->log, &st) < 0) {
-		fprintf(stderr,
-			"%s: can't stat file (will %s): %s: %s.\n",
-			argv0,
-			(ent->flags & CE_NOCREATE) ? "ignore" : "create",
-			ent->log,
-			strerror(errno));
+		if (!quiet) {
+			fprintf(stderr,
+				"%s: can't stat file (will %s): %s: %s.\n",
+				argv0,
+				(ent->flags & CE_NOCREATE) ? "ignore" : "create",
+				ent->log,
+				strerror(errno));
+		}
 		log_exists = FALSE;
+		might_need_newlog = TRUE;
 		/*
 		 * Most implementations of chown(2) "do the right thing" with
 		 * -1, but some don't (e.g. AIX-3.1), so we'll just play it
 		 * safe and always set them to the most likely correct values.
 		 */
 		if (ent->uid == NO_ID)
-			ent->uid = geteuid();
+			ent->uid = write_metalog ? 0 : geteuid();
+		if (!ent->user)
+			ent->user = write_metalog ? strdup("root") : my_uname;
 		if (ent->gid == NO_ID)
-			ent->gid = getegid();
+			ent->gid = write_metalog ? 0 : getegid();
+		if (!ent->group)
+			ent->group = write_metalog ? strdup("wheel") : my_gname;
 	} else {
 		log_exists = TRUE;
 		/*
@@ -1066,8 +1109,32 @@ do_trim(ent)
 		 */
 		if (ent->uid == NO_ID)
 			ent->uid = st.st_uid;
+		if (!ent->user) {
+			if ((pass = getpwuid(st.st_uid)) == NULL) {
+				ent->user = write_metalog ? strdup("root") : my_uname;
+				fprintf(stderr,
+					"%s: %s has unknown user-ID: '%u', using '%s'\n",
+					argv0,
+					ent->log,
+					st.st_uid,
+					ent->user);
+			} else
+				ent->user = strdup(pass->pw_name);
+		}
 		if (ent->gid == NO_ID)
 			ent->gid = st.st_gid;
+		if (!ent->group) {
+			if ((grp = getgrgid(st.st_gid)) == NULL) {
+				ent->group = write_metalog ? strdup("wheel") : my_gname;
+				fprintf(stderr,
+					"%s: %s has unknown group-ID: '%u', using '%s'\n",
+					argv0,
+					ent->log,
+					st.st_uid,
+					ent->group);
+			} else
+				ent->group = strdup(grp->gr_name);
+		}
 	}
 	/* prepare the temporary name for a newly created log file */
 	if (snprintf(newlog, sizeof(newlog), "%s.XXXXXX", ent->log) >= (int) sizeof(file1)) {
@@ -1123,7 +1190,7 @@ do_trim(ent)
 				continue; /* not this many aged files yet... */
 		}
 		if ((ent->flags & CE_COMPACT) && (numlogs == (ent->flags & CE_PLAIN0) ? 1 : 0))
-			need_compress = 1;	/* expect to compress 'file1'... */
+			need_compress = TRUE;	/* expect to compress 'file1'... */
 		if (verbose && debug > 2)
 			printf("-> renaming %s to %s\n", zfile1, zfile2);
 		if (show_script)
@@ -1143,7 +1210,7 @@ do_trim(ent)
 		}
 	}
 	if (log_exists && st.st_size > 0) {
-		might_need_newlog = 1;
+		might_need_newlog = TRUE;
 		/*
 		 * are we keeping any aged files at all?
 		 */
@@ -1162,7 +1229,7 @@ do_trim(ent)
 						strerror(errno));
 				}
 			}
-			might_timestamp = 1;
+			might_timestamp = TRUE;
 		} else {
 			/*
 			 * if not just remove the current file...
@@ -1201,40 +1268,75 @@ do_trim(ent)
 					argv0,
 					newlog,
 					strerror(errno));
-			} else if (fchown(fd, ent->uid, ent->gid)) {
-				fprintf(stderr,
-					"%s: can't chown %d:%d new log file: %s: %s.\n",
-					argv0,
-					ent->uid, ent->gid,
-					newlog,
-					strerror(errno));
-			} else if (fchmod(fd, ent->permissions)) {
-				fprintf(stderr,
-					"%s: can't chmod 0%o new log file: %s: %s.\n",
-					argv0,
-					ent->permissions,
-					newlog,
-					strerror(errno));
-			} else if (close(fd) < 0) {
-				fprintf(stderr,
-					"%s: failed to close new log file: %s: %s.\n",
-					argv0,
-					newlog,
-					strerror(errno));
-			} else if (rename(newlog, ent->log)) {
-				fprintf(stderr,
-					"%s: failed to rename new log file: %s -> %s: %s.\n",
-					argv0,
-					newlog,
-					ent->log,
-					strerror(errno));
-				if (unlink(newlog) < 0) {
+			} else {
+				if (fchown(fd, ent->uid, ent->gid) && !quiet && !write_metalog) {
 					fprintf(stderr,
-						"%s: failed to unlink new log file template: %s: %s.\n",
+						"%s: can't chown %d:%d new log file: %s: %s.\n",
+						argv0,
+						ent->uid, ent->gid,
+						newlog,
+						strerror(errno));
+				}
+				if (fchmod(fd, ent->permissions) && !quiet && !write_metalog) {
+					fprintf(stderr,
+						"%s: can't chmod 0%o new log file: %s: %s.\n",
+						argv0,
+						ent->permissions,
+						newlog,
+						strerror(errno));
+				}
+				if (close(fd) < 0) {
+					fprintf(stderr,
+						"%s: failed to close new log file: %s: %s.\n",
 						argv0,
 						newlog,
 						strerror(errno));
 				}
+				if (rename(newlog, ent->log)) {
+					fprintf(stderr,
+						"%s: failed to rename new log file: %s -> %s: %s.\n",
+						argv0,
+						newlog,
+						ent->log,
+						strerror(errno));
+					/*
+					 * hopefully this never happens as
+					 * there is some risk that a directory
+					 * in the path to newlog could have
+					 * just been changed to a symlink thus
+					 * pointing the newlog pathname at some
+					 * other existing file.  Of course
+					 * we're only removing a file with a
+					 * magic random name so the risk that
+					 * its name matches one we wouldn't
+					 * want to remove is almost zero....
+					 */
+					if (unlink(newlog) < 0) {
+						fprintf(stderr,
+							"%s: failed to unlink new log file template: %s: %s.\n",
+							argv0,
+							newlog,
+							strerror(errno));
+					}
+				}
+			}
+			/*
+			 * When run as part of the NetBSD system build we print
+			 * part of a "METALOG" (mtree like) entry for every
+			 * file created so that the NetBSD src/etc/Makefile can
+			 * know what files were created and what permissions
+			 * and ownerships they should have in the final
+			 * installed system.  These lines will be fixed up with
+			 * any localisations (e.g. append a "tag=etc" field) by
+			 * a sed filter in the Makefile and then appened to the
+			 * install METALOG file.
+			 */
+			if (write_metalog) {
+				printf("%s type=file mode=%#o uname=%s gname=%s\n",
+				       ent->log,
+				       ent->permissions,
+				       ent->user,
+				       ent->group);
 			}
 		}
 #ifdef LOG_TURNOVER_IN_NEW_FILE_TOO
@@ -1259,49 +1361,48 @@ do_trim(ent)
 		}
 #endif
 	}
-	if (might_need_newlog && !(ent->flags & CE_NOSIGNAL)) {
-		need_notification = 1;
+	if (log_exists && might_need_newlog && !(ent->flags & CE_NOSIGNAL)) {
 		if (ent->pid_file)
 			pid = get_pid_file(ent->pid_file);
 		else
 			pid = syslogd_pid;
-	}
-	if (pid) { /* && ent->signum */
-		char            signame[SIG2STR_MAX];
+		if (pid) { /* && ent->signum */
+			char            signame[SIG2STR_MAX];
 
-		if (sig2str(ent->signum, signame) == -1)
-			strcpy(signame, "(not a signal)");
-		if (verbose && debug > 1) {
-			printf("--> sending SIG%s to process in %s, %d\n",
-			       signame,
-			       ent->pid_file ? ent->pid_file : syslogd_pidfile,
-			       (int) pid);
-		}
-		if (show_script || debug) {
-			notified = 1;		/* pretend it works.... */
-			if (show_script)
-				printf("kill -%s %d\n", signame, (int) pid);
-			if (!(ent->flags & CE_PLAIN0)) {
-				if (verbose && debug > 1)
-					puts("--> small pause now to allow daemon to close log.");
-				if (show_script)
-					puts("sleep 5");
+			if (sig2str(ent->signum, signame) == -1)
+				strcpy(signame, "(not a signal)");
+			if (verbose && debug > 1) {
+				printf("--> sending SIG%s to process in %s, %d\n",
+				       signame,
+				       ent->pid_file ? ent->pid_file : syslogd_pidfile,
+				       (int) pid);
 			}
-		} else if (kill(pid, ent->signum)) {
-			fprintf(stderr,
-				"%s: cannot notify daemon with SIG%s, pid %d: %s\n.",
-				argv0,
-				signame,
-				(int) pid,
-				strerror(errno));
-		} else {
-			notified = 1;
-			if ((ent->flags & CE_COMPACT) && !(ent->flags & CE_PLAIN0)) {
-				if (verbose)
-					printf("-> small pause now to allow daemon to close log... ");
-				(void) sleep(5);
-				if (verbose)
-					puts("done.");
+			if (show_script || debug) {
+				notified = TRUE;	/* pretend it works.... */
+				if (show_script)
+					printf("kill -%s %d\n", signame, (int) pid);
+				if (!(ent->flags & CE_PLAIN0)) {
+					if (verbose && debug > 1)
+						puts("--> small pause now to allow daemon to close log.");
+					if (show_script)
+						puts("sleep 5");
+				}
+			} else if (kill(pid, ent->signum)) {
+				fprintf(stderr,
+					"%s: cannot notify daemon with SIG%s, pid %d: %s\n.",
+					argv0,
+					signame,
+					(int) pid,
+					strerror(errno));
+			} else {
+				notified = TRUE;
+				if ((ent->flags & CE_COMPACT) && !(ent->flags & CE_PLAIN0)) {
+					if (verbose)
+						printf("-> small pause now to allow daemon to close log... ");
+					(void) sleep(5);
+					if (verbose)
+						puts("done.");
+				}
 			}
 		}
 	}
@@ -1315,7 +1416,7 @@ do_trim(ent)
 			"%s.%s",
 			ent->log,
 			(ent->flags & CE_PLAIN0) ? "1" : "0");
-		if (!(ent->flags & CE_PLAIN0) && need_notification && !notified) {
+		if (!(ent->flags & CE_PLAIN0) && pid && !notified) {
 			fprintf(stderr,
 				"%s: %s (level zero) not compressed because daemon not notified.\n",
 				argv0, zfile1);
@@ -1424,7 +1525,7 @@ compress_log(log)
 /*
  * Return size, in kilobytes, of the specified file
  */
-static long
+static off_t
 check_file_size(file)
 	char           *file;
 {
@@ -1433,7 +1534,7 @@ check_file_size(file)
 	if (stat(file, &sb) < 0)
 		return (-1);
 
-	return ((long) kbytes(dbtob(sb.st_blocks)));
+	return (sb.st_size / 1024);
 }
 
 /*
@@ -1543,6 +1644,8 @@ read_first_timestamp(file)
 
 /*
  * Read a process ID from the specified file.
+ *
+ * Reports errors to stderr, and then return zero.
  */
 static pid_t
 get_pid_file(pid_file)
@@ -1658,8 +1761,8 @@ parse_dwm(s, trim_at)
 	u_long ul;
 	int nd;
 	static int mtab[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-	int WMseen = 0;
-	int Dseen = 0;
+	int WMseen = FALSE;
+	int Dseen = FALSE;
 
 	tms = *localtime(&timenow);
 
@@ -1679,6 +1782,7 @@ parse_dwm(s, trim_at)
 	for (;;) {
 		switch (*s) {
 		case '-':
+		case '$':
 			/* this is primarily just to skip any optional initial
 			 * hyphen, but also allows sub-fields in the time spec
 			 * to be hyphen separated as well...
@@ -1692,7 +1796,7 @@ parse_dwm(s, trim_at)
 				fprintf(stderr, "%s: already saw a 'D' in trimtime!\n", argv0);
 				return (-1);
 			}
-			Dseen++;
+			Dseen = TRUE;
 			s++;
 			ul = strtoul(s, &t, 10);
 			if (ul > 23) {
@@ -1708,7 +1812,7 @@ parse_dwm(s, trim_at)
 				fprintf(stderr, "%s: already saw a 'W' in trimtime!\n", argv0);
 				return (-1);
 			}
-			WMseen++;
+			WMseen = TRUE;
 			s++;
 			ul = strtoul(s, &t, 10);
 			if (ul > 6) {
@@ -1738,7 +1842,7 @@ parse_dwm(s, trim_at)
 				fprintf(stderr, "%s: already saw a 'M' in trimtime!\n", argv0);
 				return (-1);
 			}
-			WMseen++;
+			WMseen = TRUE;
 			s++;
 			if (tolower(*s) == 'l') {
 				tms.tm_mday = nd;
