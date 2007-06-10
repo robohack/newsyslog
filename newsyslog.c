@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.50 2007/06/10 23:58:34 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.51 2007/06/10 23:59:23 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -1660,6 +1660,14 @@ get_pid_file(pid_file)
 	char            line[BUFSIZ];
 	pid_t           pid = 0;
 
+#ifdef notyet
+	char		tmp[MAXPATHLEN];
+
+	if (pid_file[0] != '/')
+		snprintf(tmp, sizeof(tmp), "%s%s", _PATH_VARRUN, pid_file);
+	else
+		strlcpy(tmp, pid_file, sizeof(tmp));
+#endif
 	if ((fp = fopen(pid_file, "r")) == NULL) {
 		fprintf(stderr, "%s: can't open pid file: %s: %s.\n",
 			argv0, pid_file, strerror(errno));
