@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.49 2006/09/29 19:57:23 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.50 2007/06/10 23:58:34 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -365,9 +365,11 @@ do_entry(ent)
 		}
 	}
 	size = check_file_size(ent->log);
-	if (size < 0 && verbose)
+	if (size < 0 && verbose) {
 		printf("does not exist ");
-	else if (size == 0 && verbose)
+		if (!(ent->flags & CE_NOCREATE))
+			we_trim_it = TRUE;
+	} else if (size == 0 && verbose)
 		printf("is empty ");
 	if (size > 0) {				/* ignore empty/missing ones */
 		if (verbose && (ent->size > 0))
@@ -1165,7 +1167,10 @@ do_trim(ent)
 		(void) unlink(file1);
 		(void) unlink(zfile1);
 	}
-	numlogs = ent->numlogs;		      /* we don't modify ent's contents */
+	if (log_exists)
+		numlogs = ent->numlogs;	/* we don't modify ent's contents */
+	else
+		numlogs = 0;
 	/*
 	 * Now move backwards down the list of archived log files, incrementing
 	 * their generation number by renaming the previous one to the next one
@@ -1176,8 +1181,8 @@ do_trim(ent)
 	 * as the manual (un)compress isn't running when the next rotation
 	 * happens.
 	 */
-	if (verbose && debug <= 2)
-		printf("--> rotating archived logs up by one...\n");
+	if (numlogs && verbose && debug <= 2)
+		printf("--> attempting to rotate %d archives of '%s' up by one...\n", numlogs, ent->log);
 	while (numlogs--) {
 		(void) strcpy(file2, file1);
 		(void) sprintf(file1, "%s.%u", ent->log, numlogs); /* sprintf() OK here */
@@ -1445,7 +1450,7 @@ do_trim(ent)
 }
 
 /*
- * Note the fact that the  were turned over
+ * Note the fact that the logfile was turned over in the logfile
  */
 static int
 note_trim(log)
