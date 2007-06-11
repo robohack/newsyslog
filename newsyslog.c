@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.51 2007/06/10 23:59:23 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.52 2007/06/11 00:00:51 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -115,6 +115,13 @@ extern int errno;
 # endif /* !errno */
 #endif /* HAVE_ERRNO_H */
 
+#ifdef HAVE_PATHS_H
+# include <paths.h>
+#endif
+#ifdef HAVE_PATHNAMES_H
+# include "pathnames.h"			/* a "local" file in *BSD */
+#endif
+
 #ifdef HAVE_LINUX_THREADS_H
 # include <linux/threads.h>		/* PID_MAX? */
 #endif
@@ -123,6 +130,28 @@ extern int errno;
 #endif
 
 #include "newsyslog.h"			/* portability defines */
+
+#ifndef PATH_COMPRESS
+# if defined(_PATH_COMPRESS
+#  define PATH_COMPRESS		_PATH_COMPRESS
+#  define COMPRESS_SUFFIX	".Z"
+# elif defined(_PATH_GZIP)
+#  define PATH_GZIP		_PATH_GZIP
+#  define COMPRESS_SUFFIX	".gz"
+# endif
+#endif
+
+#ifndef PATH_CONFIG
+# ifdef _PATH_NEWSYSLOGCONF
+#  define PATH_CONFIG		_PATH_NEWSYSLOGCONF
+# endif
+#endif
+
+#ifndef PATH_SYSLOGD_PIDFILE
+# ifdef _PATH_SYSLOGDPID
+#  define PATH_SYSLOGD_PIDFILE	_PATH_SYSLOGDPID
+# endif
+#endif
 
 #ifndef MAX_FORK_RETRIES
 # define MAX_FORK_RETRIES	5	/* a reasonable effort.... */
