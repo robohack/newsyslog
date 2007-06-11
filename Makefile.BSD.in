@@ -4,7 +4,7 @@
 # This file Copyright (C) by Planix, Inc.
 # - see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.15 2003/08/02 17:29:52 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.16 2007/06/11 00:01:24 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with:
@@ -36,10 +36,10 @@ __GNULD__ = 2
 
 CPPFLAGS += -DDEBUG
 
-CPPFLAGS+= -DPATH_COMPRESS="\"@PATH_COMPRESS@\""
-CPPFLAGS+= -DCOMPRESS_SUFFIX="\"@COMPRESS_SUFFIX@\""
-CPPFLAGS+= -DPATH_CONFIG="\"@path_config@\""
-CPPFLAGS+= -DPATH_SYSLOGD_PIDFILE="\"@syslogd_pidfile@\""
+#CPPFLAGS+= -DPATH_COMPRESS="\"@PATH_COMPRESS@\""
+#CPPFLAGS+= -DCOMPRESS_SUFFIX="\"@COMPRESS_SUFFIX@\""
+#CPPFLAGS+= -DPATH_CONFIG="\"@path_config@\""
+#CPPFLAGS+= -DPATH_SYSLOGD_PIDFILE="\"@syslogd_pidfile@\""
 
 CPPFLAGS+= -DRETSIGTYPE=void
 CPPFLAGS+= -DSTDC_HEADERS
@@ -57,6 +57,8 @@ CPPFLAGS+= -DHAVE_MEMORY_H
 CPPFLAGS+= -DHAVE_MEMSET
 CPPFLAGS+= -DHAVE_MKSTEMP
 CPPFLAGS+= -DHAVE_RENAME
+CPPFLAGS+= -DHAVE_PATHNAMES_H
+CPPFLAGS+= -DHAVE_PATHS_H
 CPPFLAGS+= -DHAVE_STRCHR
 CPPFLAGS+= -DHAVE_STRDUP
 CPPFLAGS+= -DHAVE_STRERROR
@@ -130,7 +132,7 @@ CWARNFLAGS += -Wcomment
 CWARNFLAGS += -Wtraditional
 CWARNFLAGS += -Wcast-qual
 # -Wid-clash-LEN is sadly no longer supported in 3.2.2
-CWARNFLAGS += -Wid-clash-30
+#CWARNFLAGS += -Wid-clash-30
 CWARNFLAGS += -Wpointer-arith
 CWARNFLAGS += -Wshadow
 #
@@ -185,7 +187,6 @@ __GNULD__ ?= 1
 .if $(__GNULD__) >= 1
 LDFLAGS += -W
 LDFLAGS += -Wall
-LDFLAGS += -Wid-clash-30
 LDFLAGS += -Wl,--warn-common
 .endif
 
