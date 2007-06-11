@@ -21,47 +21,63 @@ inspect each for any additional copyright terms.
 
 Complete Package and noted individual files:
 
+
 /*
- * Copyright (c) by Planix, Inc.
- *
- * Years of publication:  1997,1998,1999,2000,2001,2002
- *
- * Contact:  Greg A. Woods <woods-copyright@planix.com>
+ * This work is Copyright (c) by Planix, Inc.
  * 
+ * Years of publication:  1997,1998,1999,2000,2001,2002,2003,2007
+ *
+ * This is a near-public-domain equivalent copyright license.
+ *
  * Redistribution of this software in both source and binary forms, with
- * or without modification, is permitted provided that all of the
+ * or without modification, alone or as part of a collective work or as
+ * a component in a new work, is permitted provided that all of the
  * following conditions are met:
  * 
- * 1. Redistributions of source code, either alone or as part of a
- *    collective work, must retain this entire copyright notice, and the
- *    following disclaimer, without alteration, in each file that
- *    contains part of this software.
+ * 1. Re-distributions of this software in its original source code
+ *    form, either alone or as part of a collective work, must retain
+ *    this entire copyright notice, and the following disclaimer,
+ *    without alteration, in each file that contains any part of this
+ *    software.
  * 
- * 2. Redistributions of this software in binary form, either alone or
- *    as part of a collective work, must reproduce this entire copyright
- *    notice, and the following disclaimer, without alteration, in
- *    either the documentation (as text files in electronic media, or in
- *    printed matter), and/or any original header files from this
- *    software as per the previous term, and/or other materials provided
- *    as part of the distribution.
+ * 2. Re-distributions of this software in any binary form (or indeed in
+ *    any translation into any other language from the original source
+ *    code, either human or computer), either alone or as a part of a
+ *    collective work, or as a component in a new work, must reproduce
+ *    this entire copyright notice, and the following disclaimer,
+ *    without alteration, in either the documentation (as text files in
+ *    electronic media, or in printed matter), and/or any original
+ *    header files from this software as per the previous term, and/or
+ *    other materials provided as part of the distribution.
  * 
- * 3. Collective works including this software must also include the
- *    following acknowledgement, either alone or as part of this entire
- *    copyright license, in any printed documentation accompanying a
- *    physical distribution (if there is printed documentation), and in
- *    a plain text file separate from the archive files (but perhaps
- *    along with other similar acknowledgments) on any electronic
- *    medium:
+ * 3. Other software including this software, or any derivative of this
+ *    software, as a component must grant this license in full for those
+ *    parts of the work which are made up of this software.  I.e. anyone
+ *    granted license to the new work may extract this software
+ *    (including any derivative form of this software) from that work
+ *    and use this software under this license regardless of what
+ *    restrictions the license for the new work may impose or the rights
+ *    it may grant.
  * 
- * 	This product includes software developed in part by Planix, Inc.
+ * 4. All collective works including this software or any derivative,
+ *    and all new works including this software or any derivative as a
+ *    component, must also include the following acknowledgment, either
+ *    alone or as part of this entire copyright license, in any printed
+ *    documentation accompanying a physical distribution (if there is
+ *    printed documentation), and in a plain text file separate from the
+ *    archive files (but perhaps along with other similar
+ *    acknowledgments) on any electronic, magnetic, optical, or other
+ *    data storage medium:
  * 
- * 4. The name of the author may NOT be used to endorse or promote
+ * 	This product includes software developed by Greg A. Woods.
+ * 
+ * 5. The name of the author may NOT be used to endorse or promote
  *    products derived from this software without specific prior written
  *    permission.  The use of the author's name strictly to meet the
  *    requirements of the previous terms is not to be considered
  *    promotion or endorsement under this term.
  * 
- * 5. Altered versions (derivative works) must be plainly marked as
+ * 6. Altered versions (derivative works) must be plainly marked as
  *    such, and must not be misrepresented as being the original
  *    software.  This copyright notice, and the following disclaimer,
  *    must not be removed from any derivative work and must not be
@@ -71,7 +87,7 @@ Complete Package and noted individual files:
  * 
  * DISCLAIMER:
  * 
- * THIS SOFTWARE IS PROVIDED BY PLANIX, INC. ``AS IS'' AND ANY EXPRESS
+ * THIS SOFTWARE IS PROVIDED BY GREG A. WOODS ``AS IS'' AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
