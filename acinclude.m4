@@ -5,12 +5,12 @@ dnl
 dnl This file:  Copyright (C) by Planix, Inc.
 dnl             see COPYING for details
 
-dnl #ident "@(#)newsyslog:$Name:  $:$Id: acinclude.m4,v 1.7 2003/07/08 16:54:53 woods Exp $"
+dnl #ident "@(#)newsyslog:$Name:  $:$Id: acinclude.m4,v 1.8 2007/07/18 23:30:48 woods Exp $"
 
 AC_DEFUN([AC_SOURCE_VERSION], [. $srcdir/$1])
 
 dnl Specific check for declaration of sys_signame in <signal.h>
-AC_DEFUN(AC_DECL_SYS_SIGNAME,
+AC_DEFUN([AC_DECL_SYS_SIGNAME],
 [AC_CACHE_CHECK([for sys_signame declaration in signal.h],
   ac_cv_decl_sys_signame,
 [AC_TRY_COMPILE([
@@ -26,7 +26,7 @@ fi
 ])
 
 dnl Specific check for declaration of sys_nsig in <signal.h>
-AC_DEFUN(AC_DECL_SYS_NSIG,
+AC_DEFUN([AC_DECL_SYS_NSIG],
 [AC_CACHE_CHECK([for sys_nsig declaration in signal.h],
   ac_cv_decl_sys_nsig,
 [AC_TRY_COMPILE([
