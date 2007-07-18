@@ -5,11 +5,12 @@
 .\" This file contains changes from the Open Software Foundation.
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
+.\" See the file COPYING for additional copyright license information.
 .\"
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.13 2003/08/02 17:30:51 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.14 2007/07/18 22:12:28 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -25,7 +26,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd July 31, 2003
+.Dd June 10, 2007
 .Dt NEWSYSLOG 8
 .Os BSD
 .\"
@@ -120,12 +121,14 @@ into debug mode.  No actions will be performed.  If the
 option is also given then messages about what would be done will be
 printed without doing anything.  Repeat
 .Fl d
-as desired to see more detailed debugging messages.  Use of this option
-implies
+to debug all archive rollovers even if they don't yet exist.  Use of
+this option implies
 .Fl r
 too.
 .It Fl f Ar config_file
-Instruct newsyslog to use 
+Instruct
+.Nm
+to use
 .Ar config_file
 instead of
 .Pa @path_config@
@@ -158,6 +161,14 @@ day, week, or month).  If you are running
 .Nm
 by hand then just specify an interval of
 .Em 1 .
+The
+.Fl i
+option is preferred over the
+.Fl m
+and
+.Fl M
+options as this is the only way time-of-day specifications as the trim
+interval are supported.
 .It Fl m
 Cause
 .Nm
@@ -173,6 +184,8 @@ days.  You probably only want to specify this option for one invocation
 per 24 hours and you probably want to use the corresponding
 .Fl M
 flag on all other periodic invocations.
+.Pp
+This option is deprecated and will be removed in the next major release.
 .It Fl M
 Prevent
 .Nm
@@ -182,14 +195,14 @@ specified as an even multiple of 24 hours (i.e. the ones that would be
 archived when the
 .Fl m
 option is given).
+.Pp
+This option is deprecated and will be removed in the next major release.
 .It Fl n
 Cause
 .Nm
 not to trim the logs, but to print on its standard output what it would
-do if this option were not specified.  If used without the
-.Fl v
-(verbose) flag the result should be a shell script that would duplicate
-the actions of
+do if this option were not specified.  The result should be a shell
+script that would duplicate the actions of
 .Nm
 were it to be run without the
 .Fl n
@@ -281,7 +294,9 @@ When the
 .Fl m
 and
 .Fl M
-options are not in use, and when the time period is not evenly divisible
+options, or the
+.Fl i
+option, are not in use, and when the time period is not evenly divisible
 by 24, log files that are archived based on a time period will not be
 rolled over at the same time of day.  In fact the roll-over time will
 likely creep around the clock.
