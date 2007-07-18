@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.52 2007/06/11 00:00:51 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.53 2007/07/18 22:17:28 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -132,11 +132,11 @@ extern int errno;
 #include "newsyslog.h"			/* portability defines */
 
 #ifndef PATH_COMPRESS
-# if defined(_PATH_COMPRESS
+# if defined(_PATH_COMPRESS)
 #  define PATH_COMPRESS		_PATH_COMPRESS
 #  define COMPRESS_SUFFIX	".Z"
 # elif defined(_PATH_GZIP)
-#  define PATH_GZIP		_PATH_GZIP
+#  define PATH_COMPRESS		_PATH_GZIP
 #  define COMPRESS_SUFFIX	".gz"
 # endif
 #endif
@@ -378,12 +378,12 @@ do_entry(ent)
 
 	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 	if (verbose) {
-		printf("====> %s <#%u,%s%s%s%s%s>: ", ent->log, ent->numlogs,
-		       (ent->flags & CE_NOCREATE) ? "C" : "",
-		       (ent->flags & CE_COMPACT) ? "Z" : "",
-		       (ent->flags & CE_BINARY) ? "b" : "",
-		       (ent->flags & CE_NOSIGNAL) ? "n" : "",
-		       (ent->flags & CE_PLAIN0) ? "0" : "");
+		printf("## %s <#%u,%s%s%s%s%s>: ", ent->log, ent->numlogs,
+		       (ent->flags & CE_NOCREATE) ? "nocreate," : "",
+		       (ent->flags & CE_COMPACT) ? "compact," : "",
+		       (ent->flags & CE_BINARY) ? "binary," : "",
+		       (ent->flags & CE_NOSIGNAL) ? "nosig," : "",
+		       (ent->flags & CE_PLAIN0) ? "plain.0" : "");
 		if (ent->flags & CE_TRIMAT) {
 			struct tm tms;
 			char trimtime[20];
@@ -394,10 +394,14 @@ do_entry(ent)
 		}
 	}
 	size = check_file_size(ent->log);
-	if (size < 0 && verbose) {
-		printf("does not exist ");
-		if (!(ent->flags & CE_NOCREATE))
+	if (size < 0) {
+		if (verbose)
+			printf("does not exist ");
+		if (!(ent->flags & CE_NOCREATE)) {
+			if (verbose)
+				printf("(will create) ");
 			we_trim_it = TRUE;
+		}
 	} else if (size == 0 && verbose)
 		printf("is empty ");
 	if (size > 0) {				/* ignore empty/missing ones */
@@ -423,7 +427,7 @@ do_entry(ent)
 				if (verbose)
 					printf("(time to trim) ");
 				we_trim_it = TRUE;
-			} else {
+			} else if (!we_trim_it) { /* don't not trim if we should! */
 				if (verbose)
 					printf("(but not time to trim) ");
 				we_trim_it = FALSE;
@@ -432,7 +436,7 @@ do_entry(ent)
 	}
 	if (domidnight == -1 ) {
 		if (verbose && !(ent->flags & CE_TRIMAT))
-			printf("(no -m/-M/trimtime) ");
+			printf("(no -m|-M|trimtime) ");
 	} else if (domidnight == 1 && (ent->hours % 24) == 0) {
 		/*
 		 * we've already set we_trim_it above if the file is as old or
@@ -452,7 +456,7 @@ do_entry(ent)
 	}
 	if (we_trim_it) {
 		if (verbose)
-			puts(": trimming log...");
+			puts(": creating and/or trimming log...");
 		do_trim(ent);
 	} else {
 		if (verbose)
@@ -471,9 +475,14 @@ parse_options(argc, argv)
 	long            l;
 	char           *p;
 	struct tm       tms;
-	int		tms_hour;
-	int		tms_min;
+	int             tms_hour;
+	int             tms_min;
 
+#ifdef notyet
+/* #ifdef HAVE_GETPROGNAME */
+	argv0 = getprogname();
+/* #else */
+#endif
 	argv0 = (argv0 = strrchr(argv[0], '/')) ? argv0 + 1 : argv[0];
 
 	optind = 1;		/* Start options parsing */
@@ -513,7 +522,7 @@ parse_options(argc, argv)
 			if (timenow < time((time_t *) NULL))
 				timenow += 24*60*60; /* go to tomorrow */
 			if (verbose)
-				printf("----> have adjusted timenow to: %s", ctime(&timenow));
+				printf("%s: have adjusted timenow to: %s", argv0, ctime(&timenow));
 			break;
 		case 'U':
 			write_metalog = TRUE;
@@ -610,7 +619,7 @@ help()
 	printf("	-T hh:mm	adjust current time\n");
 	printf("	-U		magic 'unprivileged' feature for use in NetBSD builds\n");
 	printf("	-V		display version and exit\n");
-	printf("	-d		don't do anything, just debug (repeat as desired)\n");
+	printf("	-d		don't do anything, just debug (repeat for in-depth)\n");
 	printf("	-f config_fn	configuration file [default: %s]\n", config_file);
 	printf("	-h		print this help and exit\n");
 	printf("	-i minutes	specify how often %s is invoked\n", argv0);
@@ -735,8 +744,8 @@ parse_file(files )
 					break;
 			}
 			if (!*p) {
-				if (verbose)
-					printf("skipping over %s...\n", q);
+				if (debug)
+					printf("ignoring %s, not on command line...\n", q);
 				continue;
 			}
 		}
@@ -1092,7 +1101,7 @@ do_trim(ent)
 	char            zfile2[PATH_MAX];
 	char            newlog[PATH_MAX];
 	int             log_exists;
-        int             fd;
+	int             fd;
 	unsigned int    numlogs;
 	struct stat     st;
 	pid_t           pid = 0;	/* zero means "don't send signal" */
@@ -1109,7 +1118,7 @@ do_trim(ent)
 	if (stat(ent->log, &st) < 0) {
 		if (!quiet) {
 			fprintf(stderr,
-				"%s: can't stat file (will %s): %s: %s.\n",
+				"%s: can't stat file (will %s it): %s: %s.\n",
 				argv0,
 				(ent->flags & CE_NOCREATE) ? "ignore" : "create",
 				ent->log,
@@ -1143,12 +1152,14 @@ do_trim(ent)
 		if (!ent->user) {
 			if ((pass = getpwuid(st.st_uid)) == NULL) {
 				ent->user = write_metalog ? strdup("root") : my_uname;
-				fprintf(stderr,
-					"%s: %s has unknown user-ID: '%u', using '%s'\n",
-					argv0,
-					ent->log,
-					st.st_uid,
-					ent->user);
+				if (!quiet) {
+					fprintf(stderr,
+						"%s: %s has unknown user-ID: '%u', using '%s'\n",
+						argv0,
+						ent->log,
+						st.st_uid,
+						ent->user);
+				}
 			} else
 				ent->user = strdup(pass->pw_name);
 		}
@@ -1157,12 +1168,14 @@ do_trim(ent)
 		if (!ent->group) {
 			if ((grp = getgrgid(st.st_gid)) == NULL) {
 				ent->group = write_metalog ? strdup("wheel") : my_gname;
-				fprintf(stderr,
-					"%s: %s has unknown group-ID: '%u', using '%s'\n",
-					argv0,
-					ent->log,
-					st.st_uid,
-					ent->group);
+				if (!quiet) {
+					fprintf(stderr,
+						"%s: %s has unknown group-ID: '%u', using '%s'\n",
+						argv0,
+						ent->log,
+						st.st_uid,
+						ent->group);
+				}
 			} else
 				ent->group = strdup(grp->gr_name);
 		}
@@ -1181,25 +1194,28 @@ do_trim(ent)
 	(void) strcpy(zfile1, file1);
 	(void) strcat(zfile1, COMPRESS_SUFFIX);
 
-	/*
-	 * Remove the oldest expected log, compressed or not.
-	 *
-	 * We don't really care if that last log exists or not... we just need
-	 * to remove it if it does, so we explicitly ignore any errors.
-	 */
-	if (verbose && debug > 1)
-		printf("--> removing oldest (expected) log: %s and/or %s\n", file1, zfile1);
-	if (show_script) {
-		printf("rm -f %s\n", file1);
-		printf("rm -f %s\n", zfile1);
-	} else if (!debug) {
-		(void) unlink(file1);
-		(void) unlink(zfile1);
-	}
 	if (log_exists)
 		numlogs = ent->numlogs;	/* we don't modify ent's contents */
 	else
 		numlogs = 0;
+	if (numlogs) {
+		/*
+		 * Remove the oldest expected log, compressed or not.
+		 *
+		 * We don't really care if that last log exists or not... we
+		 * just need to remove it if it does, so we explicitly ignore
+		 * any errors.
+		 */
+		if (verbose)
+			printf("# removing oldest (expected) log: %s and/or %s\n", file1, zfile1);
+		if (show_script) {
+			printf("rm -f %s\n", file1);
+			printf("rm -f %s\n", zfile1);
+		} else if (!debug) {
+			(void) unlink(file1);
+			(void) unlink(zfile1);
+		}
+	}
 	/*
 	 * Now move backwards down the list of archived log files, incrementing
 	 * their generation number by renaming the previous one to the next one
@@ -1210,8 +1226,8 @@ do_trim(ent)
 	 * as the manual (un)compress isn't running when the next rotation
 	 * happens.
 	 */
-	if (numlogs && verbose && debug <= 2)
-		printf("--> attempting to rotate %d archives of '%s' up by one...\n", numlogs, ent->log);
+	if (numlogs && verbose)
+		printf("# attempting to rotate %d archives up by one...\n", numlogs);
 	while (numlogs--) {
 		(void) strcpy(file2, file1);
 		(void) sprintf(file1, "%s.%u", ent->log, numlogs); /* sprintf() OK here */
@@ -1220,17 +1236,21 @@ do_trim(ent)
 		if (stat(file1, &st) < 0) {	/* is the file uncompressed? */
 			(void) strcat(zfile1, COMPRESS_SUFFIX);	/* strcat() OK too */
 			(void) strcat(zfile2, COMPRESS_SUFFIX);
-			if (debug <= 4 && stat(zfile1, &st) < 0)
-				continue; /* not this many aged files yet... */
+			if (!show_script && stat(zfile1, &st) < 0) {
+				if (debug < 2)
+					continue; /* not this many aged files yet... */
+			}
 		}
 		if ((ent->flags & CE_COMPACT) && (numlogs == (ent->flags & CE_PLAIN0) ? 1 : 0))
 			need_compress = TRUE;	/* expect to compress 'file1'... */
-		if (verbose && debug > 2)
-			printf("-> renaming %s to %s\n", zfile1, zfile2);
+		if (verbose)
+			printf("# renaming %s to %s\n", zfile1, zfile2);
 		if (show_script)
 			printf("mv %s %s\n", zfile1, zfile2);
-		if (verbose && debug > 3) {
-			printf("-> forcing owner/perms of %s to %d:%d/0%o\n",
+		else if (!debug)
+			(void) rename(zfile1, zfile2); /* XXX error check (non-fatal?) */
+		if (verbose) {
+			printf("# forcing owner/perms of %s to %d:%d/0%o\n",
 			       zfile2, ent->uid, ent->gid, ent->permissions);
 		}
 		if (show_script) {
@@ -1238,7 +1258,6 @@ do_trim(ent)
 			printf("chown %d:%d %s\n",
 			       ent->uid, ent->gid, zfile2);
 		} else if (!debug) {
-			(void) rename(zfile1, zfile2); /* XXX error check (non-fatal?) */
 			(void) chmod(zfile2, ent->permissions); /* XXX error check (non-fatal?) */
 			(void) chown(zfile2, ent->uid, ent->gid); /* XXX error check (non-fatal?) */
 		}
@@ -1249,8 +1268,8 @@ do_trim(ent)
 		 * are we keeping any aged files at all?
 		 */
 		if (ent->numlogs) {
-			if (verbose && debug > 2)
-				printf("-> renaming %s to %s\n", ent->log, file1);
+			if (verbose)
+				printf("# renaming %s to %s\n", ent->log, file1);
 			if (show_script)
 				printf("mv %s %s\n", ent->log, file1);
 			else if (!debug) {
@@ -1269,7 +1288,7 @@ do_trim(ent)
 			 * if not just remove the current file...
 			 */
 			if (verbose)
-				printf("--> not keeping multiples archives, just removing %s\n", ent->log);
+				printf("# not keeping multiples archives, just removing %s\n", ent->log);
 			if (show_script)
 				printf("rm %s\n", ent->log);
 			else if (!debug) {
@@ -1285,8 +1304,8 @@ do_trim(ent)
 	}
 	/* logic is split here to keep indentation sane.... */
 	if (might_need_newlog && !(ent->flags & CE_NOCREATE)) {
-		if (verbose && debug > 1) {
-			printf("--> creating new %s as %d:%d, mode 0%o\n",
+		if (verbose) {
+			printf("# creating new %s as %d:%d, mode 0%o\n",
 			       ent->log, ent->uid, ent->gid, ent->permissions);
 		}
 		if (show_script) {
@@ -1382,7 +1401,8 @@ do_trim(ent)
 		 *
 		 * Note also this might not end up the first entry since it
 		 * happens after the temporary new file has been renamed to
-		 * become the live log file.
+		 * become the live log file (though it does happen before the
+		 * daemon is signaled).
 		 */
 		if (!(ent->flags & CE_BINARY) && (ent->flags & CE_NOCREATE)) {
 			if (note_trim(ent->log)) {
@@ -1395,7 +1415,7 @@ do_trim(ent)
 		}
 #endif
 	}
-	if (log_exists && might_need_newlog && !(ent->flags & CE_NOSIGNAL)) {
+	if (might_need_newlog && !(ent->flags & CE_NOSIGNAL)) {
 		if (ent->pid_file)
 			pid = get_pid_file(ent->pid_file);
 		else
@@ -1404,9 +1424,9 @@ do_trim(ent)
 			char            signame[SIG2STR_MAX];
 
 			if (sig2str(ent->signum, signame) == -1)
-				strcpy(signame, "(not a signal)");
-			if (verbose && debug > 1) {
-				printf("--> sending SIG%s to process in %s, %d\n",
+				sprintf(signame, "(unknown signal %d)", ent->signum);
+			if (verbose) {
+				printf("# sending SIG%s to process in %s, %d\n",
 				       signame,
 				       ent->pid_file ? ent->pid_file : syslogd_pidfile,
 				       (int) pid);
@@ -1414,16 +1434,16 @@ do_trim(ent)
 			if (show_script || debug) {
 				notified = TRUE;	/* pretend it works.... */
 				if (show_script)
-					printf("kill -%s %d\n", signame, (int) pid);
+					printf("kill -%d %d\n", ent->signum, (int) pid);
 				if (!(ent->flags & CE_PLAIN0)) {
-					if (verbose && debug > 1)
-						puts("--> small pause now to allow daemon to close log.");
+					if (verbose)
+						puts("# small pause now to allow daemon to close log.");
 					if (show_script)
 						puts("sleep 5");
 				}
 			} else if (kill(pid, ent->signum)) {
 				fprintf(stderr,
-					"%s: cannot notify daemon with SIG%s, pid %d: %s\n.",
+					"%s: cannot notify daemon with SIG%s, pid %d: %s.\n",
 					argv0,
 					signame,
 					(int) pid,
@@ -1432,16 +1452,17 @@ do_trim(ent)
 				notified = TRUE;
 				if ((ent->flags & CE_COMPACT) && !(ent->flags & CE_PLAIN0)) {
 					if (verbose)
-						printf("-> small pause now to allow daemon to close log... ");
+						printf("...small pause now to allow daemon to close log... ");
 					(void) sleep(5);
 					if (verbose)
 						puts("done.");
 				}
 			}
-		}
+		} else if (verbose)
+			printf("# (no signal)\n");
 	}
 	if (might_timestamp && !(ent->flags & CE_BINARY))
-		note_trim(file1);
+		(void) note_trim(file1);
 	if (ent->flags & CE_COMPACT) {
 		int             rt;
 
@@ -1452,7 +1473,7 @@ do_trim(ent)
 			(ent->flags & CE_PLAIN0) ? "1" : "0");
 		if (!(ent->flags & CE_PLAIN0) && pid && !notified) {
 			fprintf(stderr,
-				"%s: %s (level zero) not compressed because daemon not notified.\n",
+				"%s: %s (level zero) not compressed because daemon was not notified.\n",
 				argv0, zfile1);
 		} else if (debug || show_script ||
 			   ((rt = stat(zfile1, &st)) >= 0 && (st.st_size > 0))) {
@@ -1462,11 +1483,11 @@ do_trim(ent)
 			 * (i.e. even if not need_compress)....
 			 */
 			compress_log(zfile1);	/* do the deed (or say how to) */
-		} else if (verbose || need_compress) {
+		} else if (need_compress || verbose) {
 			/*
-			 * .... but we'll only complain if we're being noisy or
-			 * if we really expected to have to compress it (and
-			 * we're not in debug mode or generating a script).
+			 * .... but we'll only complain if we really expected
+			 * to have to compress it (and we're not in debug mode
+			 * or generating a script).
 			 */
 			fprintf(stderr, "%s: %s not compressed: %s.\n",
 				argv0,
@@ -1480,6 +1501,9 @@ do_trim(ent)
 
 /*
  * Note the fact that the logfile was turned over in the logfile
+ *
+ * XXX ideally this would try to use the same timestamp format as determined by
+ * read_first_timestamp()
  */
 static int
 note_trim(log)
@@ -1487,8 +1511,8 @@ note_trim(log)
 {
 	FILE           *fp;
 
-	if (verbose && (debug > 1))
-		printf("--> adding time stamp to most recent archive %s\n", log);
+	if (verbose)
+		printf("# adding time stamp to most recent archive %s\n", log);
 	if (show_script) {
 		printf("echo '%s %s newsyslog[%d]: logfile turned over' >> %s\n",
 		       daytime, hostname, (int) getpid(), log);
@@ -1526,8 +1550,8 @@ compress_log(log)
 
 	c_prog = (c_prog = strrchr(c_path, '/')) ? c_prog + 1 : c_path;
 
-	if (verbose && debug > 1)
-		printf("--> starting compressor [%s] as '%s -f %s &'\n", c_path, c_prog, log);
+	if (verbose)
+		printf("# starting compressor [%s] as '%s -f %s &'\n", c_path, c_prog, log);
 	if (show_script)
 		printf("%s -f %s &\n", c_path, log);
 	if (debug || show_script)
@@ -1549,7 +1573,7 @@ compress_log(log)
 		perror(c_path);
 		return;
 	} else if (verbose)
-		printf("-> %s: started '%s -f %s &' as pid# %d\n", argv0, c_prog, log, pid);
+		printf("%s: started '%s -f %s &' as pid# %d\n", argv0, c_prog, log, pid);
 	/*
 	 * NOTE: we'll just leave our zombie children to wait until we exit
 	 */
@@ -1639,7 +1663,7 @@ read_first_timestamp(file)
 		else if (strptime(line, "[%c]", &tms)) /* old httpd */
 			;
 		else {
-			fprintf(stderr, "%s: can't parse initial timestamp from %s:\n --> %s",
+			fprintf(stderr, "%s: can't parse initial timestamp from %s:\ntext is: '%s'",
 				argv0, file, line);
 			return -1;
 		}
@@ -1687,7 +1711,7 @@ get_pid_file(pid_file)
 {
 	FILE           *fp;
 	char            line[BUFSIZ];
-	pid_t           pid = 0;
+	pid_t           pid = 0;	/* XXX should we use -1 instead? */
 
 #ifdef notyet
 	char		tmp[MAXPATHLEN];
