@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 dnl Required Autoconf version.
 AC_PREREQ(2.57)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.44 2007/06/10 23:56:18 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.45 2007/07/18 23:31:01 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -106,7 +106,7 @@ dnl Note that although bzero() is deprectated and non-standard we only
 dnl need its capabilities, not those of the fancier and more standard
 dnl memset(), so because bzero() can be defined in terms of memset()
 dnl by a macro, but not the other way around, we use bzero() in the
-dnl code and account for its absense with a macro.
+dnl code and account for its absence with a macro.
 
 dnl Also note that checking for flock() here doesn't guarantee a
 dnl working flock()!
