@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.53 2007/07/18 22:17:28 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.54 2007/07/20 19:42:04 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -230,6 +230,7 @@ static void             compress_log __P((char *));
 static off_t            check_file_size __P((char *));
 static int              check_old_log_age __P((struct conf_entry *));
 static time_t           read_first_timestamp __P((char *));
+static time_t           parse_tmstamp __P((char *, char *));
 static pid_t            get_pid_file __P((const char *));
 static int              getsig __P((char *));
 static int              parse_dwm __P((char *, time_t *));
@@ -1644,58 +1645,70 @@ read_first_timestamp(file)
 	if ((fp = fopen(file, "r")) == NULL) {
 		fprintf(stderr, "%s: can't open %s to read initial timestamp: %s.\n",
 			argv0, file, strerror(errno));
-		return -1;
+		return tmstamp;
 	}
 	if (fgets(line, BUFSIZ, fp)) {
-		bzero((void *) &tms, sizeof(tms));
-		if (strptime(line, "%b %d %T ", &tms)) /* syslog */
-			;
-		else if (strptime(line, "%m/%d/%Y %T", &tms)) /* smail */
-			;
-		else if (strptime(line, "%Y/%m/%d %T", &tms)) /* ISO */
-			;
-		else if (strptime(line, "%Y/%m/%d-%T", &tms)) /* ISO */
-			;
-		else if (strptime(line, "[%d/%b/%Y:%T ", &tms)) /* httpd [DD/Mon/YYYY:HH:MM:SS +/-ZONE] */
-			;
-		else if (strptime(line, "%c", &tms)) /* ctime */
-			;
-		else if (strptime(line, "[%c]", &tms)) /* old httpd */
-			;
-		else {
-			fprintf(stderr, "%s: can't parse initial timestamp from %s:\ntext is: '%s'",
-				argv0, file, line);
-			return -1;
-		}
-		tms.tm_isdst = -1;	/* make mktime() guess the right time */
-		if ((tmstamp = mktime(&tms)) < 0) {
-			struct tm *tmy;
-
-			/* some formats don't include the current year, so we
-			 * try to provide it....
-			 */
-			tmy = localtime(&timenow);
-			tms.tm_year = tmy->tm_year;
-			tmstamp = mktime(&tms);
-		}
-		if (tmstamp == -1) {
-			fprintf(stderr, "%s: can't understand initial timestamp from %s:\n -- %s",
-				argv0, file, line);
-			return -1;
-		}
-		if (tmstamp > timenow) {
-			tms.tm_year--;	/* musta been last year! */
-			tmstamp = mktime(&tms);
-		}
+		tmstamp = parse_tmstamp(file, line);
 	} else {
 		fprintf(stderr, "%s: can't read %s for initial timestamp: %s.\n",
 			argv0, file,
 			feof(fp) ? "file is empty" :
 			ferror(fp) ? strerror(errno) : "unknown fgets() failure");
-		(void) fclose(fp);
-		return -1;
+		tmstamp = -1;
 	}
 	(void) fclose(fp);
+
+	return tmstamp;
+}
+
+static time_t
+parse_tmstamp(file, line)
+	char           *file;
+	char           *line;
+{
+	time_t          tmstamp = -1;
+	struct tm       tms;
+
+	bzero((void *) &tms, sizeof(tms));
+	if (strptime(line, "%b %d %T ", &tms)) /* syslog */
+		;
+	else if (strptime(line, "%m/%d/%Y %T", &tms)) /* smail */
+		;
+	else if (strptime(line, "%Y/%m/%d %T", &tms)) /* ISO */
+		;
+	else if (strptime(line, "%Y/%m/%d-%T", &tms)) /* ISO */
+		;
+	else if (strptime(line, "[%d/%b/%Y:%T ", &tms)) /* httpd [DD/Mon/YYYY:HH:MM:SS +/-ZONE] */
+		;
+	else if (strptime(line, "%c", &tms)) /* ctime */
+		;
+	else if (strptime(line, "[%c]", &tms)) /* old httpd */
+		;
+	else {
+		fprintf(stderr, "%s: can't parse initial timestamp from %s:\ntext is: '%s'",
+			argv0, file, line);
+		return -1;
+	}
+	tms.tm_isdst = -1;	/* make mktime() guess the right time */
+	if ((tmstamp = mktime(&tms)) < 0) {
+		struct tm *tmy;
+		
+		/* some formats don't include the current year, so we
+		 * try to provide it....
+		 */
+		tmy = localtime(&timenow);
+		tms.tm_year = tmy->tm_year;
+		tmstamp = mktime(&tms);
+	}
+	if (tmstamp == -1) {
+		fprintf(stderr, "%s: can't understand initial timestamp from %s:\n -- %s",
+			argv0, file, line);
+		return -1;
+	}
+	if (tmstamp > timenow) {
+		tms.tm_year--;	/* musta been last year! */
+		tmstamp = mktime(&tms);
+	}
 
 	return tmstamp;
 }
