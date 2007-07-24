@@ -1,4 +1,4 @@
-#ident "@(#)newsyslog:$Name:  $:$Id: newsyslog.h,v 1.1 2003/07/08 18:02:13 woods Exp $"
+#ident "@(#)newsyslog:$Name:  $:$Id: newsyslog.h,v 1.2 2007/07/24 18:25:43 woods Exp $"
 
 /*
  * various portability related defintions
@@ -57,39 +57,39 @@
 #ifndef MAXINT_B10_DIGITS
 # if (__STDC__ - 0) > 0
 #  if (UINT_MAX > 0xffffffffU)
-#   define MAXINT_B10_DIGITS	(20)	/* for a 64-bit system: 9,223,372,036,854,775,808 */
+#   define MAXINT_B10_DIGITS	(20)	/* for a 64-bit int: 9,223,372,036,854,775,808 */
 #  else
-#   define MAXINT_B10_DIGITS	(10)	/* for a 32-bit system 2,147,483,648 */
+#   define MAXINT_B10_DIGITS	(10)	/* for a 32-bit int 2,147,483,648 */
 #  endif
 # else
-#  define MAXINT_B10_DIGITS	(10)	/* assume a 32-bit system */
+#  define MAXINT_B10_DIGITS	(10)	/* assume a 32-bit int */
 # endif
 #endif
 
 #ifndef MAXLONG_B10_DIGITS
 # if (__STDC__ - 0) > 0
 #  if (ULONG_MAX > 0xffffffffUL)
-#   define MAXLONG_B10_DIGITS	(20)	/* for a 64-bit system: 9,223,372,036,854,775,808 */
+#   define MAXLONG_B10_DIGITS	(20)	/* for a 64-bit long: 9,223,372,036,854,775,808 */
 #  else
-#   define MAXLONG_B10_DIGITS	(10)	/* for a 32-bit system 2,147,483,648 */
+#   define MAXLONG_B10_DIGITS	(10)	/* for a 32-bit long 2,147,483,648 */
 #  endif
 # else
-#  define MAXLONG_B10_DIGITS	(10)	/* assume a 32-bit system */
+#  define MAXLONG_B10_DIGITS	(10)	/* assume a 32-bit long */
 # endif
 #endif
 
 #if (MAXINT_B10_DIGITS == MAXLONG_B10_DIGITS && UINT_MAX != ULONG_MAX)
-# include "ERROR:  ARCH_TYPE assumptions about MAX*_B10_DIGITS are wrong!"
+# include "ERROR:  assumptions about U*_MAX and MAX*_B10_DIGITS are wrong!"
 #endif
 #if (__STDC__ - 0) > 0
 # if (MAXINT_B10_DIGITS <= 5 && UINT_MAX > 0xffffU)
-#  include "ERROR:  assumptions about MAXINT_B10_DIGITS are wrong! (16bit?)"
+#  include "ERROR:  assumptions about MAXINT_B10_DIGITS are wrong! (16bit int?)"
 # endif
 # if (MAXINT_B10_DIGITS <= 10 && UINT_MAX > 0xffffffffU)
-#  include "ERROR:  assumptions about MAXINT_B10_DIGITS are wrong! (32bit?)"
+#  include "ERROR:  assumptions about MAXINT_B10_DIGITS are wrong! (32bit int?)"
 # endif
 # if (MAXLONG_B10_DIGITS <= 10 && ULONG_MAX > 0xffffffffU)
-#  include "ERROR:  assumptions about MAXLONG_B10_DIGITS are wrong! (64bit?)"
+#  include "ERROR:  assumptions about MAXLONG_B10_DIGITS are wrong! (64bit long?)"
 # endif
 #endif
 
@@ -98,7 +98,11 @@
 #endif
 
 #ifndef SIG2STR_MAX
-# define SIG2STR_MAX	32		/* also defined in str2sig.c and strsignal.c */
+# define SIG2STR_MAX	32
+#endif
+/* Note "18" is (sizeof("(unknown signal %d)") - 1) */
+#if (SIG2STR_MAX < (18 + MAXINT_B10_DIGITS))
+# include "ERROR: SIG2STR_MAX has abnormally small value!"
 #endif
 
 /*
