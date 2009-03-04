@@ -7,6 +7,24 @@ Please send bug reports to bugs@robohack.planix.com
 
 * User-visible changes since newsyslog-1.1.
 
+- note that '-m' and '-M' are deprecated and will be removed in the next
+  major release
+
+- added the "/" flag to cause archiving into a ".old" sub-directory.
+
+- fixed a bug that prevented non-existant logs from being created by
+  default
+
+- fixed a bug that caused unnecessary roll-over when creating a missing
+  log file
+
+- fixed a bug that was causing the size to be ignored whenever a
+  time-of-day specification was given as the interval
+
+- improved the interaction of '-v' and '-n' so that the mixed output on
+  stdout can be directly processed by a shell (verbose output now
+  appears as a shell comment)
+
 - fixed a bug that made very large log files impossible to find and roll
   over when using size as the only criteria (verbose output said simply
   "does not exist")
@@ -17,7 +35,7 @@ Please send bug reports to bugs@robohack.planix.com
 
 - add special '-U' option, for NetBSD system build support.
 
-- correct a bug that was causing missing log files to not be created
+- fixed another bug that was causing missing log files to not be created
   even when '-F' was used.
 
 
@@ -205,4 +223,4 @@ from being rolled over unnecessarily).
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.26 2006/09/29 19:57:41 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.27 2009/03/04 21:28:42 woods Exp $"
