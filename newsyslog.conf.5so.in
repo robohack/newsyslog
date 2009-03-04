@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.15 2006/09/29 20:15:28 woods Exp $"
+.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.16 2009/03/04 19:37:53 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -258,6 +258,15 @@ using
 or
 .Nm gzip ,
 depending on which was selected at compile time.
+.It Sy /
+The
+.Ar /
+flag causes
+.Nm newsyslog
+to create and use a sub-directory for the archived logs by appending
+.Dq Pa .old
+to the log file name.  The names of the archived logs will simply be
+their generation numbers.
 .It Sy 0
 The
 .Ar 0
