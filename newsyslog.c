@@ -6,8 +6,8 @@
 /*
  * This file contains changes from Greg A. Woods; Planix, Inc.
  *
- * Copyright for these changes is hereby assigned to MIT under the license
- * given below.
+ * Copyright for these changes is hereby assigned to MIT under the copyright
+ * license given below.
  */
 
 /*
@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.54 2007/07/20 19:42:04 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.55 2009/03/04 21:28:24 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -157,18 +157,13 @@ extern int errno;
 # define MAX_FORK_RETRIES	5	/* a reasonable effort.... */
 #endif
 
-#define CE_COMPACT	001	/* Compact the achived log files */
-#define CE_BINARY	002	/* Logfile is binary, don't add status mesg */
-#define CE_PLAIN0	004	/* Keep .0 file uncompressed */
-#define CE_NOSIGNAL	010	/* Don't send a signal when file is trimmed */
-#define CE_NOCREATE	020	/* Don't create the new log file */
-#define CE_TRIMAT	040	/* we have a valid trim time specification
-				 * XXX we could use the value -1 in the field
-				 * (struct conf_entry *)->trim_at to indicate
-				 * no trim time spec was given, but that means
-				 * adding another place where it's harder to
-				 * change time_t to an unsigned value...
-				 */
+#define CE_COMPACT	(1<<0)	/* Compact the achived log files */
+#define CE_BINARY	(1<<1)	/* Logfile is binary, don't add status mesg */
+#define CE_PLAIN0	(1<<2)	/* Keep .0 file uncompressed */
+#define CE_NOSIGNAL	(1<<3)	/* Don't send a signal when file is trimmed */
+#define CE_NOCREATE	(1<<4)	/* Don't create the new log file */
+#define CE_TRIMAT	(1<<5)	/* we have a valid trim time specification */
+#define CE_SUBDIR	(1<<6)	/* move archived logs in "${logfile}.d" */
 
 #define NO_ID		((uid_t) -1)	/* no UID/GID specified -- preserve */
 
@@ -296,6 +291,24 @@ main(argc, argv)
 		exit(1);
 	}
 
+	/*
+	 * note: if you don't have the setgroupent() and setpassent() functions
+	 * just write replacement stubs that return 1.
+	 */
+	if (setgroupent(1) != 1) {
+		fprintf(stderr,
+			"%s: warning: setgroupent(1) failed: %s\n",
+			argv0,
+			strerror(errno));
+		endgrent();		/* ??? */
+	}
+	if (setpassent(1) != 1) {
+		fprintf(stderr,
+			"%s: warning: setpassent(1) failed: %s\n",
+			argv0,
+			strerror(errno));
+		endpwent();		/* ??? */
+	}
 	if ((pass = getpwuid(geteuid())) == NULL) {
 		fprintf(stderr, "%s: you do not have a valid user name!\n", argv0);
 		exit(1);
@@ -380,6 +393,7 @@ do_entry(ent)
 	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 	if (verbose) {
 		printf("## %s <#%u,%s%s%s%s%s>: ", ent->log, ent->numlogs,
+		       (ent->flags & CE_SUBDIR) ? "subdir," : "",
 		       (ent->flags & CE_NOCREATE) ? "nocreate," : "",
 		       (ent->flags & CE_COMPACT) ? "compact," : "",
 		       (ent->flags & CE_BINARY) ? "binary," : "",
@@ -472,8 +486,8 @@ parse_options(argc, argv)
 	int             argc;
 	char          **argv;
 {
-	int             c;
-	long            l;
+	int             ch;
+	long            ltmp;
 	char           *p;
 	struct tm       tms;
 	int             tms_hour;
@@ -488,8 +502,8 @@ parse_options(argc, argv)
 
 	optind = 1;		/* Start options parsing */
 	opterr = 0;
-	while ((c = getopt(argc, argv, "FMT:UVdf:hi:mnp:qrt:v")) != -1) {
-		switch (c) {
+	while ((ch = getopt(argc, argv, "FMT:UVdf:hi:mnp:qrt:v")) != -1) {
+		switch (ch) {
 		case 'F':
 			force = TRUE;
 			break;
@@ -544,27 +558,27 @@ parse_options(argc, argv)
 			help();
 			/* NOTREACHED */
 		case 'i':		/* run interval in minutes */
-			l = strtol(optarg, (char **) NULL, 10);
-			if (l == LONG_MIN || l == LONG_MAX) {
+			ltmp = strtol(optarg, (char **) NULL, 10);
+			if (ltmp == LONG_MIN || ltmp == LONG_MAX) {
 				fprintf(stderr,
 					"%s: run interval of '%s' is not valid\n",
 					argv0,
 					optarg);
 				exit(2);
-			} else if (l > INT_MAX) {
+			} else if (ltmp > INT_MAX) {
 				fprintf(stderr,
 					"%s: run interval of %ld is too large\n",
 					argv0,
-					l);
+					ltmp);
 				exit(2);
-			} else if (l < 1) {
+			} else if (ltmp < 1) {
 				fprintf(stderr,
 					"%s: run interval of %ld is too small\n",
 					argv0,
-					l);
+					ltmp);
 				exit(2);
 			}
-			run_interval = (int) l;
+			run_interval = (int) ltmp;
 			break;
 		case 'm':
 			domidnight = 1;	/* the midnight run */
@@ -589,7 +603,7 @@ parse_options(argc, argv)
 			usage();
 			/* NOTREACHED */
 		default:
-			fprintf(stderr, "%s: illegal option -- %c", argv0, c);
+			fprintf(stderr, "%s: invalid option -- %c", argv0, ch);
 			usage();
 			/* NOTREACHED */
 		}
@@ -979,7 +993,9 @@ parse_file(files )
 			*parse = '\0';
 		}
 		while (q && *q && !isspace(*q)) {
-			if ((*q == 'D') || (*q == 'd'))
+			if (*q == '/')
+				working->flags |= CE_SUBDIR;
+			else if ((*q == 'D') || (*q == 'd'))
 				working->flags |= CE_NOCREATE;
 			else if ((*q == 'Z') || (*q == 'z'))
 				working->flags |= CE_COMPACT;
@@ -993,7 +1009,7 @@ parse_file(files )
 				working->flags &= ~CE_NOCREATE;
 			else if (*q != '-') {
 				fprintf(stderr,
-					"%s: illegal flag in config file -- %c on line:\n%6d:\t'%s'\n",
+					"%s: invalid flag in config file -- %c on line:\n%6d:\t'%s'\n",
 					argv0,
 					*q,
 					lnum,
@@ -1044,7 +1060,7 @@ parse_file(files )
 		if (q && *q) {
 			if ((working->signum = getsig(q)) < 0) {
 				fprintf(stderr,
-					"%s: illegal signal name/number in config file: %s, on line:\n%6d:\t'%s'\n",
+					"%s: invalid signal name/number in config file: %s, on line:\n%6d:\t'%s'\n",
 					argv0,
 					q,
 					lnum,
@@ -1096,8 +1112,8 @@ static void
 do_trim(ent)
 	struct conf_entry *ent;
 {
-	char            file1[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAXINT_B10_DIGITS - 1];
-	char            file2[PATH_MAX - sizeof(COMPRESS_SUFFIX) - MAXINT_B10_DIGITS - 1];
+	char            file1[PATH_MAX - sizeof(COMPRESS_SUFFIX)];
+	char            file2[PATH_MAX - sizeof(COMPRESS_SUFFIX)];
 	char            zfile1[PATH_MAX];
 	char            zfile2[PATH_MAX];
 	char            newlog[PATH_MAX];
@@ -1182,12 +1198,18 @@ do_trim(ent)
 		}
 	}
 	/* prepare the temporary name for a newly created log file */
-	if (snprintf(newlog, sizeof(newlog), "%s.XXXXXX", ent->log) >= (int) sizeof(file1)) {
+	if (snprintf(newlog, sizeof(newlog),
+		     (ent->flags & CE_SUBDIR) ? "%s.old/%04u.XXXXXX" : "%s.%u.XXXXXX",
+		     ent->log,
+		     0) >= (int) sizeof(file1)) {
 		fprintf(stderr, "%s: filename too long: %s.\n", argv0, ent->log);
 		return;
 	}
 	/* form the uncompressed name of the oldest expected log */
-	if (snprintf(file1, sizeof(file1), "%s.%u", ent->log, ent->numlogs) >= (int) sizeof(file1)) {
+	if (snprintf(file1, sizeof(file1),
+		     (ent->flags & CE_SUBDIR) ? "%s.old/%04u" : "%s.%u",
+		     ent->log,
+		     ent->numlogs) >= (int) sizeof(file1)) {
 		fprintf(stderr, "%s: filename too long: %s.\n", argv0, ent->log);
 		return;
 	}
@@ -1231,7 +1253,10 @@ do_trim(ent)
 		printf("# attempting to rotate %d archives up by one...\n", numlogs);
 	while (numlogs--) {
 		(void) strcpy(file2, file1);
-		(void) sprintf(file1, "%s.%u", ent->log, numlogs); /* sprintf() OK here */
+		(void) snprintf(file1, sizeof(file1),
+				(ent->flags & CE_SUBDIR) ? "%s.old/%04u" : "%s.%u",
+				ent->log,
+				numlogs);
 		(void) strcpy(zfile1, file1);	/* strcpy() OK here */
 		(void) strcpy(zfile2, file2);
 		if (stat(file1, &st) < 0) {	/* is the file uncompressed? */
@@ -1249,7 +1274,7 @@ do_trim(ent)
 		if (show_script)
 			printf("mv %s %s\n", zfile1, zfile2);
 		else if (!debug)
-			(void) rename(zfile1, zfile2); /* XXX error check (non-fatal?) */
+			(void) rename(zfile1, zfile2); /* XXX error check (fatal? -- may lose archive data!) */
 		if (verbose) {
 			printf("# forcing owner/perms of %s to %d:%d/0%o\n",
 			       zfile2, ent->uid, ent->gid, ent->permissions);
@@ -1266,9 +1291,50 @@ do_trim(ent)
 	if (log_exists && st.st_size > 0) {
 		might_need_newlog = TRUE;
 		/*
-		 * are we keeping any aged files at all?
+		 * are we supposed to be keeping any aged files at all?
 		 */
 		if (ent->numlogs) {
+			char            old_dir[PATH_MAX];
+			struct stat     st;
+
+			(void) snprintf(old_dir, sizeof(old_dir), "%s.old", ent->log);
+			if (stat(old_dir, &st) == 0) {
+				if ((st.st_mode & S_IFMT) != S_IFDIR) {
+					errno = ENOTDIR;
+					fprintf(stderr,
+						"%s: invalid archive directory: %s: %s.\n",
+						argv0,
+						old_dir,
+						strerror(errno));
+					return;
+				}
+				/* don't change modes or ownership of old_dir! */
+			} else if ((ent->flags & CE_SUBDIR)) {
+				if (verbose)
+					printf("# creating directory %s for archives\n", old_dir);
+				if (show_script) {
+					printf("mkdir %s\n", old_dir);
+					printf("chmod 0%o %s\n", ent->permissions, old_dir);
+					printf("chown %d:%d %s\n", ent->uid, ent->gid, old_dir);
+				} else if (!debug) {
+					if (mkdir(old_dir, ent->permissions) == -1) {
+						fprintf(stderr,
+							"%s: can't create archive directory: %s: %s.\n",
+							argv0,
+							old_dir,
+							strerror(errno));
+						return;
+					}
+					if (chown(old_dir, ent->uid, ent->gid) && !quiet && !write_metalog) {
+						fprintf(stderr,
+							"%s: can't chown %d:%d archive directory: %s: %s.\n",
+							argv0,
+							ent->uid, ent->gid,
+							old_dir,
+							strerror(errno));
+					}
+				}
+			}
 			if (verbose)
 				printf("# renaming %s to %s\n", ent->log, file1);
 			if (show_script)
@@ -1281,6 +1347,27 @@ do_trim(ent)
 						ent->log,
 						file1,
 						strerror(errno));
+					return;
+				}
+				if ((strcmp(ent->pid_file, _PATH_DEVNULL) == 0 ||
+				    (ent->flags & CE_NOSIGNAL)) &&
+				    !(ent->flags & CE_NOCREATE) &&
+				    verbose) {
+					/*
+					 * If the creator of the log doesn't
+					 * need a signal to roll over to the
+					 * new log, and if we are going to be
+					 * creating the new log ourselves, then
+					 * there's a potential race with the
+					 * log creator!
+					 *
+					 * This is important because some
+					 * programs might actually abort with
+					 * an error if they are not able to
+					 * create their own log file as they
+					 * may expect to have to do.
+					 */
+					printf("# possible race with creator of %s\n", ent->log);
 				}
 			}
 			might_timestamp = TRUE;
@@ -1306,7 +1393,7 @@ do_trim(ent)
 	/* logic is split here to keep indentation sane.... */
 	if (might_need_newlog && !(ent->flags & CE_NOCREATE)) {
 		if (verbose) {
-			printf("# creating new %s as %d:%d, mode 0%o\n",
+			printf("# creating first archive file for %s with owner %d:%d, mode 0%o\n",
 			       ent->log, ent->uid, ent->gid, ent->permissions);
 		}
 		if (show_script) {
@@ -1315,13 +1402,14 @@ do_trim(ent)
 			printf("chown %d:%d $newlog\n", ent->uid, ent->gid);
 			printf("chmod 0%o $newlog\n", ent->permissions);
 			printf("mv $newlog %s\n", ent->log);
-		} else if (!debug && !(ent->flags & CE_NOCREATE)) {
+		} else if (!debug) {
 			if ((fd = mkstemp(newlog)) < 0) {
 				fprintf(stderr,
 					"%s: can't create new log file: %s: %s.\n",
 					argv0,
 					newlog,
 					strerror(errno));
+				return;
 			} else {
 				if (fchown(fd, ent->uid, ent->gid) && !quiet && !write_metalog) {
 					fprintf(stderr,
@@ -1372,6 +1460,16 @@ do_trim(ent)
 							newlog,
 							strerror(errno));
 					}
+					/*
+					 * Non-Fatal!  Don't return here if the
+					 * rename() failed -- it likely failed
+					 * because the new log was already
+					 * created by the process which wants
+					 * to write to it.  In any case we want
+					 * to go on and possibly send a signal
+					 * anyway, as well as do the
+					 * compression of the archived log.
+					 */
 				}
 			}
 			/*
@@ -1460,18 +1558,18 @@ do_trim(ent)
 				}
 			}
 		} else if (verbose)
-			printf("# (no signal)\n");
+			printf("# (no signal sent for %s)\n", ent->log);
 	}
 	if (might_timestamp && !(ent->flags & CE_BINARY))
 		(void) note_trim(file1);
 	if (ent->flags & CE_COMPACT) {
 		int             rt;
 
-		/* sprintf() is OK here */
+		/* sprintf() is safe here */
 		sprintf(zfile1,
-			"%s.%s",
+			(ent->flags & CE_SUBDIR) ? "%s.old/%04u" : "%s.%u",
 			ent->log,
-			(ent->flags & CE_PLAIN0) ? "1" : "0");
+			(ent->flags & CE_PLAIN0) ? 1 : 0);
 		if (!(ent->flags & CE_PLAIN0) && pid && !notified) {
 			fprintf(stderr,
 				"%s: %s (level zero) not compressed because daemon was not notified.\n",
@@ -1504,7 +1602,8 @@ do_trim(ent)
  * Note the fact that the logfile was turned over in the logfile
  *
  * XXX ideally this would try to use the same timestamp format as determined by
- * read_first_timestamp()
+ * read_first_timestamp(), but on the other hand since syslog files are our
+ * primary concern, syslog timestamp format will have to do.
  */
 static int
 note_trim(log)
@@ -1624,7 +1723,8 @@ check_old_log_age(ent)
 	}
 	free(tmp);
 
-	return ((int) (timenow - sb.st_mtime + 1800) / 3600); /* 1/2 hr older than reality */
+	/* 1/2 hr, or run_interval, older than reality */
+	return (int) ((timenow - sb.st_mtime + (run_interval > 0) ? run_interval : 1800) / 3600);
 }
 
 /*
@@ -1670,15 +1770,28 @@ parse_tmstamp(file, line)
 	struct tm       tms;
 
 	bzero((void *) &tms, sizeof(tms));
+
+	/*
+	 * XXX common strptime(3) implementations do not provide built-in
+	 * parsing for time zones.  Things get really messy if we want to try
+	 * to handle timestamps which are not given in local time.
+	 */
 	if (strptime(line, "%b %d %T ", &tms)) /* syslog */
 		;
-	else if (strptime(line, "%m/%d/%Y %T", &tms)) /* smail */
+	else if (strptime(line, "%m/%d/%Y %T", &tms)) /* old smail-3 */
 		;
-	else if (strptime(line, "%Y/%m/%d %T", &tms)) /* ISO */
+#if 0
+	else if (strptime(line, "%Y-%m-%dT%TZ", &tms)) { /* strict ISO 8601 (UTC) */
+		/* XXX adjust back to local time? */
+	}
+#endif
+	else if (strptime(line, "%Y-%m-%dT%T", &tms)) /* strict ISO 8601 (correct separators, but no zone) */
 		;
-	else if (strptime(line, "%Y/%m/%d-%T", &tms)) /* ISO */
+	else if (strptime(line, "%Y/%m/%d %T", &tms)) /* westernized ISO 8601 as used by smail-3 */
 		;
-	else if (strptime(line, "[%d/%b/%Y:%T ", &tms)) /* httpd [DD/Mon/YYYY:HH:MM:SS +/-ZONE] */
+	else if (strptime(line, "%Y/%m/%d-%T", &tms)) /* kinda ISO 8601 ("wrong" separators) */
+		;
+	else if (strptime(line, "[%d/%b/%Y:%T ", &tms)) /* httpd [DD/Mon/YYYY:HH:MM:SS +/-ZONE] ignoring zone */
 		;
 	else if (strptime(line, "%c", &tms)) /* ctime */
 		;
@@ -1707,7 +1820,7 @@ parse_tmstamp(file, line)
 	}
 	if (tmstamp > timenow) {
 		tms.tm_year--;	/* musta been last year! */
-		tmstamp = mktime(&tms);
+		tmstamp = mktime(&tms);	/* XXX and if this fails? */
 	}
 
 	return tmstamp;
@@ -1727,7 +1840,7 @@ get_pid_file(pid_file)
 	pid_t           pid = 0;	/* XXX should we use -1 instead? */
 
 #ifdef notyet
-	char		tmp[MAXPATHLEN];
+	char		tmp[PATH_MAX];
 
 	if (pid_file[0] != '/')
 		snprintf(tmp, sizeof(tmp), "%s%s", _PATH_VARRUN, pid_file);
@@ -1845,8 +1958,12 @@ parse_dwm(s, trim_at)
 
 	tms = *localtime(&timenow);
 
-	/* set up the no. of days per month */
-
+	/*
+	 * set up the number of days per month
+	 *
+	 * in theory this could also be done using strftime(%d, now+24h) to see
+	 * if tomorrow is the first day of the month or not....
+	 */
 	nd = mtab[tms.tm_mon];
 
 	if (tms.tm_mon == 1) {
@@ -1952,10 +2069,6 @@ parse_dwm(s, trim_at)
 			s = t;
 	}
 
-	/*
-	 * XXX mktime() has a broken API that will not easily permit time_t to
-	 * be changed into an unsigned integer type....
-	 */
 	if ((*trim_at = mktime(&tms)) == (time_t) -1) {
 		fprintf(stderr, "%s: mktime() failed!\n", argv0);
 		return (-1);
