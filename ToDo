@@ -4,10 +4,20 @@ Patches to close any of these items will be gratefully accepted!  Other
 suggestions and comments are also encouraged.
 
 - we really need an option (-C) that just makes sure all the logs exist
-  and have the right ownerships and permissions (because '-F' is useless
-  for this purpose on any existing system).  [what about ownerships and
-  permissions of archived logs?  what about extra copies of archived
-  logs that'll never be overwritten, e.g. if the count is reduced?]
+  and have the right ownerships and permissions (because using '-F' for
+  this purpose on any existing system may result in unwanted roll-over,
+  but on the other hand how could it really be "unwanted"?).
+
+- what about changing ownerships and permissions of archived logs?
+
+- what about extra copies of archived logs that'll never be overwritten,
+  e.g. if the count is reduced?
+
+- consider adding a wildcard filename that can stand in for any files in
+  /etc/syslog.conf that are not already mentioned in newsyslog.conf so
+  that the simplest newsyslog.conf could be just the one line:
+
+       _SYSLOG_		root:wheel	640 10 * D/0 HUP
 
 - fix handling of log file timestamps to take into account timezones.
   Note that the common log format actually includes " {+-}TZOFF" after
@@ -15,12 +25,24 @@ suggestions and comments are also encouraged.
   this value.  Syslog timestamps are in local time, so watch out for
   stupid daylight savings confusion too!
 
+- think about what to do with the race between newsyslog and syslogd
+  latter for multiple files:  syslogd can be still processing a previous
+  SIGHUP while newsyslog has gone on to rename the next file leaving it
+  non-existant when syslogd goes to try to open it thus causing spurious
+  errors in the syslog logs about missing files.
+
 - what happens, or should happen, if/when there are multiple PIDs in a
   pidfile?
 
-- support specification of multiple pidfiles for a given log, e.g. as:
+- consider supporting the specification of multiple pidfiles for a given
+  log for the case where multiple long-running daemons write to the same
+  logfile, e.g. as:
 
 	/var/run/named-outside.pid,/var/run/named-inside.pid
+
+  Or teach people to either use a proper syslog daemon which doesn't
+  write directly to any log files, or else use separate log files for
+  each instance!
 
 - Add one more optional field:  the format of the turnover message, with
   the default to be the "syslog" style:
@@ -71,19 +93,22 @@ suggestions and comments are also encouraged.
 
 - add support for specifying size and interval units other than KB & hrs.
 
-- implement an option for historical log file suffixes (suggested by
-  Andy Doran <ad@netbsd.org>) (i.e. ".YYYYMMDDHHMMSS" or
-  ".YYYY-MM-DD.HH:MM:SS" or whatever)
+- With the "/" flag should we keep the ".0" file in the original
+  directory initially if there's a "0" flag too?  This would perhaps
+  help mimic its current purpose of not doing anything to the file until
+  after it's been cleanly closed by all processes logging to it.
 
-  FreeBSD may someday use the Toshihisa Eto <eto@clave.gr.jp> patch with
-  the format ".YYYMMDD-NN", triggered by a negative 'count' field:
+- consider deprecating internal compression once sub-directory archiving
+  is implemented since now a separate processing script can safely go
+  about compressing everything in the directory.
 
-    http://www.clave.gr.jp/~eto/software/newsyslog/newsyslog.diff.gz
-
-- implement FreeBSD's CE_SIGNALGROUP (send signal to negated PID).
+- implement FreeBSD's CE_SIGNALGROUP (send signal to negated PID) (but
+  what purpose could this possibly have?).
 
 - add a '--with-bzip2' configure option (FreeBSD uses 'J' as the flag to
-  indicate bzip2 should be used to compress the log)
+  indicate bzip2 should be used to compress the log -- but that's kinda
+  silly -- there's really no point to using different compression on
+  different logs)
 
 - add a '--with-compress_options=options' option too
 
@@ -91,27 +116,17 @@ suggestions and comments are also encouraged.
                                   compress (or gzip or bzip2)
 
 - think about FreeBSD's 'W' (wait) flag to wait for compression jobs for
-  a given entry.
+  a given entry (but what purpose could this possibly have?).
 
 - think (but not too hard, this is ugly) about supporting the FreeBSD
-  'G' (glob(3)) flag.  Yuck.  But it would make it easier to manage the
-  logs of some RADIUS daemons....
+  'G' (glob(3)) flag.  Yuck.  This could get wildly out of control!  But
+  it would make it easier to manage the logs of some RADIUS daemons....
 
-- think about OpenBSD's "monitor" feature:  an 'M' in the flag field
-  which says the next field is an account name to receive an e-mail
-  notification whenever the log file is rolled over.
-
-- think (briefly) about OpenBSD's optional command-run feature which
-  uses the pid_file field when the signal number is specified '-1' to
-  specify a command to run instead of sending a signal.  Perhaps there's
-  a better syntax that should be used, eg. another new flag letter.
-
-- consider mentioning cronolog (good for things that can pipe to logs,
-  as well as possibly a post-processor for archiving logs):
-
-	http://www.cronolog.org/
-
-  (there, that's done! ;-)
+- get rid of the mtab[] array in parse_dwm() and do something more
+  intelligent that accounts for leap years.  Perhaps if today is not
+  day_of_month==1 then strftime("%d") for "now"+24h to see if tomorrow
+  is == 1.  (need to adjust for interval near midnight because tomorrow
+  might be into the next interval and we'd miss it!)
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.15 2006/09/29 22:59:57 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.16 2009/03/04 19:45:53 woods Exp $"
