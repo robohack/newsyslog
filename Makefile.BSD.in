@@ -4,15 +4,15 @@
 # This file Copyright (C) by Planix, Inc.
 # - see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.16 2007/06/11 00:01:24 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.17 2009/03/05 21:04:15 woods Exp $"
 #
 # NOTE:  It is expected that this file will be processed to create the
-# final version with:
+# final version with something like the following, normally by running
+# the script "@PACKAGE@2netbsd.sh":
 #
 #	./configure --prefix=/usr --mandir=/usr/share/man --bindir=/usr/bin --sysconfdir=/etc --localstatedir=/var --with-newsyslog-conf=/etc/newsyslog.conf --with-syslogd_pid=/var/run/syslogd.pid --with-gzip
 
 # (Remember pre-1.4 systems used /var/run/syslog.pid!)
-#
 
 .include <bsd.own.mk>
 
@@ -36,10 +36,16 @@ __GNULD__ = 2
 
 CPPFLAGS += -DDEBUG
 
-#CPPFLAGS+= -DPATH_COMPRESS="\"@PATH_COMPRESS@\""
-#CPPFLAGS+= -DCOMPRESS_SUFFIX="\"@COMPRESS_SUFFIX@\""
-#CPPFLAGS+= -DPATH_CONFIG="\"@path_config@\""
-#CPPFLAGS+= -DPATH_SYSLOGD_PIDFILE="\"@syslogd_pidfile@\""
+# In the NetBSD source tree we use the standard local "pathnames.h"
+# trick to set these values with the help of <paths.h>
+#
+.if exists(pathnames.h)
+CPPFLAGS+= -DHAVE_PATHNAMES_H
+.else
+CPPFLAGS+= -D_PATH_GZIP="\"/usr/bin/gzip\""
+CPPFLAGS+= -D_PATH_NEWSYSLOGCONF="\"/etc/newsyslog.conf\""
+CPPFLAGS+= -D_PATH_SYSLOGDPID="\"/var/run/syslogd.pid\""
+.endif
 
 CPPFLAGS+= -DRETSIGTYPE=void
 CPPFLAGS+= -DSTDC_HEADERS
@@ -57,7 +63,6 @@ CPPFLAGS+= -DHAVE_MEMORY_H
 CPPFLAGS+= -DHAVE_MEMSET
 CPPFLAGS+= -DHAVE_MKSTEMP
 CPPFLAGS+= -DHAVE_RENAME
-CPPFLAGS+= -DHAVE_PATHNAMES_H
 CPPFLAGS+= -DHAVE_PATHS_H
 CPPFLAGS+= -DHAVE_STRCHR
 CPPFLAGS+= -DHAVE_STRDUP
