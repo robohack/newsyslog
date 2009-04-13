@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.55 2009/03/04 21:28:24 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.56 2009/04/13 23:07:14 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -1349,7 +1349,7 @@ do_trim(ent)
 						strerror(errno));
 					return;
 				}
-				if ((strcmp(ent->pid_file, _PATH_DEVNULL) == 0 ||
+				if (((ent->pid_file && strcmp(ent->pid_file, _PATH_DEVNULL) == 0) ||
 				    (ent->flags & CE_NOSIGNAL)) &&
 				    !(ent->flags & CE_NOCREATE) &&
 				    verbose) {
