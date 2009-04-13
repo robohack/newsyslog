@@ -57,15 +57,27 @@ build because for some unknown reason it tries to update the "source"
 version of "$(DIST_MAKE)" files instead of creating them in the build
 directory.
 
+To clean up after "gmake distcheck" you'll need to give yourself
+permissions on the directory:
+
+	sh
+	. ./VERSION
+	chmod -R u+rw ${PACKAGE}-${VERSION}
+	rm -rf ${PACKAGE}-${VERSION}
+	rm -f ${PACKAGE}-${VERSION}.tar.gz
+	exit
+
 Once you're ready to more widely test your release, and you've commited
 any and all changes you've made, check the "VERSION" identifier in the
-VERSION.  After each release it should have been updated file by setting
-it to the next expected release and then appending a "-Preview.0" suffix
-to it so as to keep any trial distribution copies clearly identifiable.
-Don't forget to check in any change to the VERSION file right away.  You
-may also want to "cvs tag" each trial distribution of your preview
-releases as well, but it's not really necessary unless multiple people
-will be co-operating with the testing.
+file VERSION again.  After each release it should have been updated file
+by setting it to the next expected release and then appending a
+"-Preview.0" suffix to it so as to keep any trial distribution copies
+clearly identifiable.  Don't forget to check in any change to the
+VERSION file right away.  You may also want to "cvs tag" each trial
+distribution of your preview releases as well, but it's not really
+necessary unless multiple people will be co-operating with the testing.
+
+	cat VERSION
 
 Once this is all done run "gmake distcheck" again to create the actual
 preview release distribution.  Immediately afterwards you should
@@ -79,12 +91,29 @@ working on the project -- you want their next update to show an
 unreleased version identifier so as not to confuse anything they build
 with your (trial) distribution.
 
+	gmake distcheck
+	vi VERSION
+	sh
+	. ./VERSION
+	cvs commit -m '- another preview release starts' VERSION
+	mv ${PACKAGE}-${VERSION}.tar.gz ~ftp/pub/preview
+	chmod -R u+rw ${PACKAGE}-${VERSION}
+	rm -rf ${PACKAGE}-${VERSION}
+	exit
+
 You should now copy this preview release distribution to other types of
 machines and platforms and build and check it there too.
 
 Once you think you're ready to try an actual release, update the
 "VERSION" identifier in the VERSION file (see the notes below on release
 numbers), and check this in.
+
+	cat VERSION
+	vi VERSION
+	sh
+	. ./VERSION
+	cvs commit -m '- time to release $VERSION' VERSION
+	exit
 
 To tag, export, and create the final distribution archive you need to
 run the following commands (assuming you've already run the initial
@@ -96,6 +125,7 @@ GNU Auto* commands detailed above):
 	. ./VERSION
 	tag=$(echo $VERSION | tr . _)
 	cvs tag -c ${PACKAGE}-${tag} .
+	export CVSROOT=$(cat CVS/Root)
 	cd $place_to_build_releases
 	cvs export -kv -r ${PACKAGE}-${tag} -d ${PACKAGE}-${VERSION}-export $PACKAGE
 	cd ${PACKAGE}-${VERSION}-export
@@ -111,6 +141,7 @@ GNU Auto* commands detailed above):
 	cd ..
 	pax -rzf ${PACKAGE}-${VERSION}.tar.gz
 	diff -r --brief ${PACKAGE}-${VERSION}-export ${PACKAGE}-${VERSION}
+	exit
 
 The last step ensures that everything in the CVS module is distributed.
 
@@ -120,6 +151,7 @@ back, untag the whole module, fix Makefile.am, and re-test.
 If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access and
 copy the new project page sub-files into place with this command:
 
+	scp ${PACKAGE}-${VERSION}.tar.gz ftp:~ftp/pub/local
 	cd $place_to_build_releases/${PACKAGE}-${VERSION}
 	gmake update-project-web-files
 
@@ -148,7 +180,7 @@ N.N+1.80-Preview.0 on the trunk.
 
 Release Numbers:
 
-We essentially follow the essence of the Berkeley CSRG version numbering
+We essentially follow the basics of the Berkeley CSRG version numbering
 scheme for identifying releases.  That is to say we increment the third
 number (3.7, 3.7.1, 3.7.2, etc.) whenever we generate a release of bug
 fixes (what might traditionally be also known as a "patch" release), and
@@ -439,4 +471,4 @@ alone minor releases.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.16 2006/06/20 21:16:59 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.17 2009/04/13 23:08:45 woods Exp $"
