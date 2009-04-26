@@ -16,9 +16,9 @@ AC_SOURCE_VERSION(./VERSION)
 AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 
 dnl Required Autoconf version.
-AC_PREREQ(2.57)
+AC_PREREQ(2.61)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.47 2009/04/26 03:57:51 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.48 2009/04/26 05:28:09 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -37,9 +37,7 @@ AM_MISSING_PROG(AUTOHEADER, autoheader, $missing_dir)
 AM_MISSING_PROG(MAKEINFO, makeinfo, $missing_dir)
 
 dnl Try to get a POSIX.1 environment.
-dnl we need to call these system-specific macros early...
-AC_AIX
-AC_MINIX
+AC_USE_SYSTEM_EXTENSIONS
 AC_ISC_POSIX
 
 dnl Checks for header files.
