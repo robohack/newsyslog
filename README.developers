@@ -4,8 +4,8 @@
 
 Pre-Requisites:
 
-This package is configured and built with GNU Autoconf 2.53 or newer
-and GNU Automake 1.6 or newer.  They require Perl-5.005 or newer.
+This package is configured and built with GNU Autoconf 2.57 or newer
+and GNU Automake 1.7 or newer.  They require Perl-5.005 or newer.
 
 
 Initial Builds:
@@ -13,10 +13,7 @@ Initial Builds:
 In order to pre-build the necessary config files from a freshly checked
 out repository you must run the following commands in the given order:
 
-	aclocal
-	autoheader && touch config.h.in
-	automake --gnu --add-missing --copy
-	autoreconf --force
+	autoreconf -f -i
 
 Now you can proceed with the normal build process (./configure && gmake).
 
@@ -46,6 +43,8 @@ PR category for the project you should check that there are no absolute
 
 To test the build system and to test the entire package run:
 
+	autoreconf -f -i
+	./configure
 	gmake distcheck
 
 This will create a trial distribution archive, extract it in a
@@ -91,15 +90,17 @@ working on the project -- you want their next update to show an
 unreleased version identifier so as not to confuse anything they build
 with your (trial) distribution.
 
+	autoreconf -f -i
+	./configure
 	gmake distcheck
-	vi VERSION
 	sh
 	. ./VERSION
-	cvs commit -m '- another preview release starts' VERSION
 	mv ${PACKAGE}-${VERSION}.tar.gz ~ftp/pub/preview
 	chmod -R u+rw ${PACKAGE}-${VERSION}
 	rm -rf ${PACKAGE}-${VERSION}
 	exit
+	vi VERSION
+	cvs commit -m '- another preview release starts' VERSION
 
 You should now copy this preview release distribution to other types of
 machines and platforms and build and check it there too.
@@ -471,4 +472,4 @@ alone minor releases.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.17 2009/04/13 23:08:45 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.18 2009/04/26 03:58:33 woods Exp $"
