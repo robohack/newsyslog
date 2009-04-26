@@ -2,7 +2,7 @@
 #
 # a tiny script to set up the VERSION Id for ./configure
 #
-#ident "@(#)newsyslog:$Name:  $:$Id: VERSION,v 1.17 2009/04/26 03:52:14 woods Exp $"
+#ident "@(#)newsyslog:$Name:  $:$Id: VERSION,v 1.18 2009/04/26 19:11:20 woods Exp $"
 
 # NOTE:  only place simply variable assignments in here, using only
 # the most basic Bourne-shell compatible syntax possible under the
@@ -11,5 +11,5 @@
 
 PACKAGE="newsyslog"
 TARNAME="newsyslog"
-VERSION="1.1.0.80"
+VERSION="1.1.0.81"
 BUGREPORT="woods-newsyslog@robohack.planix.com"
