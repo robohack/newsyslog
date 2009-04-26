@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.57 2009/04/26 03:50:36 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.58 2009/04/26 19:10:40 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -234,6 +234,12 @@ extern int              opterr;
 extern int              optind;
 extern char            *optarg;
 
+#if !defined(HAVE_DECL_SETGROUPENT)
+extern int              setgroupent __P((int));
+#endif
+#if !defined(HAVE_DECL_SETPASSENT)
+extern int              setpassent __P((int));
+#endif
 #if !defined(HAVE_DECL_SIG2STR)
 extern int              sig2str __P((int, char *));
 #endif
