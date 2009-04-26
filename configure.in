@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 dnl Required Autoconf version.
 AC_PREREQ(2.57)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.46 2009/04/26 03:52:55 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.47 2009/04/26 03:57:51 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -81,8 +81,7 @@ AC_TYPE_SIGNAL
 
 dnl Checks for library functions.
 # note sys_signame is not a function, but this test works anyway thanks to C....
-AC_REPLACE_FUNCS(setgroupent setpassent sig2str snprintf str2sig strdup strerror
-		 strptime strsignal strtok sys_signame)
+AC_REPLACE_FUNCS(setgroupent setpassent sig2str snprintf str2sig strdup strerror strptime strsignal strtok sys_signame)
 
 AC_DECL_SYS_SIGNAME
 AC_DECL_SYS_NSIG
