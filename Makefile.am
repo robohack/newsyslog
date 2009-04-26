@@ -4,9 +4,9 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.32 2003/07/08 19:00:32 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.33 2009/04/26 05:28:25 woods Exp $"
 
-AUTOMAKE_OPTIONS = gnu no-dependencies 1.7
+AUTOMAKE_OPTIONS = gnu no-dependencies 1.10
 MAINT_CHARSET = latin1
 
 bin_PROGRAMS = newsyslog
@@ -17,13 +17,13 @@ man_MANS = newsyslog.conf.5 newsyslog.8
 
 soelim_MANS = newsyslog.conf.5so newsyslog.8so
 catman_MANS = newsyslog.conf.cat5 newsyslog.cat8
-catman_MANS_dist = newsyslog.conf.cat5-dist newsyslog.cat8-dist
+dist_catman_MANS = newsyslog.conf.cat5-dist newsyslog.cat8-dist
 psman_MANS = newsyslog.conf.5.ps newsyslog.8.ps
-psman_MANS_dist = newsyslog.conf.5.ps-dist newsyslog.8.ps-dist
+dist_psman_MANS = newsyslog.conf.5.ps-dist newsyslog.8.ps-dist
 htmlman_MANS = newsyslog.conf.5.html newsyslog.8.html
-htmlman_MANS_dist = newsyslog.conf.5.html-dist newsyslog.8.html-dist
+dist_htmlman_MANS = newsyslog.conf.5.html-dist newsyslog.8.html-dist
 
-DIST_MANS = $(catman_MANS_dist) $(psman_MANS_dist) $(htmlman_MANS_dist)
+DIST_MANS = $(dist_catman_MANS) $(dist_psman_MANS) $(dist_htmlman_MANSt)
 
 catmandir = @mandir@
 
@@ -60,19 +60,20 @@ GNU_AUTO_MADE_FILES = Makefile.in \
 
 # Mention here files which are created using '--add-missing', as well
 # as files created during 'make dist' and which can be re-created.
-# (Don't list 'Makefile.BSD-dist' because it should be a virgin
-# copy, never locally edited)
+#
+# (Don't list 'Makefile.BSD-dist' because it should always be a virgin
+# copy, never locally edited, and never rebuilt unless the user does
+# "gmake dist", and even if the user is making local changes(?))
 #
 MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL \
 			$(GNU_AUTO_MADE_FILES) \
-			$(catman_MANS_dist) $(psman_MANS) $(htmlman_MANS)
+			$(dist_catman_MANS) $(dist_psman_MANS) $(dist_htmlman_MANS)
 
 # XXX automake still isn't quite current with autoconf it seems....
 # configure makes these so we need to clean them on 'distclean'
 #
-DISTCLEANFILES = configure.lineno
 distclean-local:
-	rm -rf autom4te.cache aclocal.m4~ config.h.in~
+	rm -f aclocal.m4~ config.h.in~
 
 CLEANFILES = sys_signame.c $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
 
@@ -97,10 +98,14 @@ SOELIM = soelim
 SUFFIXES = .5 .8 .5so .8so .cat5 .cat5-dist .cat8 .cat8-dist .5.html .8.html \
 		.5.ps .8.ps .ps .ps-dist .html .html-dist .BSD .BSD-dist
 
+# XXX ignore the stupid automake POSIX warnings about this!
+#
 .5so.5 .8so.8:
 	@rm -f $@
 	($(SOELIM) -I $(srcdir) $< > $@) || (rm -f $@; exit 1)
 
+# XXX ignore the stupid automake POSIX warnings about this!
+#
 .8.cat8 .5.cat5:
 	@rm -f $@
 	($(TBL) $< | $(NROFF) -mdoc > $@) || (rm -f $@; exit 1)
@@ -149,13 +154,22 @@ $(PROGRAMS): Makefile Makefile.BSD
 
 $(man_MANS): config.status
 
-man catman: $(catman_MANS)
-
 all-local: catman psman htmlman
+
+man catman: $(catman_MANS)
 
 psman: $(psman_MANS)
 
 htmlman: $(htmlman_MANS)
+
+# we do distribute files which may not necessarily be rebuildable on
+# all platforms, but we do want them to be built by default if
+# possible....
+#
+# this as per the notes in the "Dist" node of the automake manual:
+#
+distcleancheck_listfiles = \
+	find . -type f -exec sh -c 'test -f $(srcdir)/{} || echo {}' ';'
 
 # install the cat-able manual pages too...
 #
@@ -164,22 +178,22 @@ install-data-local: install-catman-local
 # the unformatted manuals are installed by automake rules
 #
 install-catman-local:
-	$(mkinstalldirs) $(catmandir)/cat5
-	$(mkinstalldirs) $(catmandir)/cat8
-	$(INSTALL_DATA) newsyslog.conf.cat5 $(catmandir)/cat5/newsyslog.conf.0
-	$(INSTALL_DATA) newsyslog.cat8 $(catmandir)/cat8/newsyslog.0
+	$(MKDIR_P) $(DESTDIR)$(catmandir)/cat5
+	$(MKDIR_P) $(DESTDIR)$(catmandir)/cat8
+	$(INSTALL_DATA) newsyslog.conf.cat5 $(DESTDIR)$(catmandir)/cat5/newsyslog.conf.0
+	$(INSTALL_DATA) newsyslog.cat8 $(DESTDIR)$(catmandir)/cat8/newsyslog.0
 
 # automake>=1.6 doesn't have separate uninstalls for "exec" and "data"
 #
 uninstall-local: uninstall-catman-local
 
 uninstall-catman-local:
-	rm -f $(catmandir)/cat5/newsyslog.conf.0
-	rm -f $(catmandir)/cat8/newsyslog.0
+	rm -f $(DESTDIR)$(catmandir)/cat5/newsyslog.conf.0
+	rm -f $(DESTDIR)$(catmandir)/cat8/newsyslog.0
 
 # if you have no mandoc macros you might be able to use this rule, or
 # something similar, to install the distributed versions of the
-# cattable manual pages.  Make this before "make install"
+# cat-able manual pages.  Make this before "make install"
 #
 copy-dist-mans:
 	for distman in $(DIST_MANS) ; do			\
@@ -190,8 +204,8 @@ copy-dist-mans:
 #
 # (expects to be run from within an un-packed distribution directory)
 #
-update-project-web-files: $(htmlman_MANS_dist)
-	for htmlman in $(htmlman_MANS_dist) ; do 					\
+update-project-web-files: $(dist_htmlman_MANS)
+	for htmlman in $(dist_htmlman_MANS) ; do 					\
 		cp $$htmlman ~/public_html/projects/$$(basename $$htmlman -dist); 	\
 	done
 	cp NEWS ~/public_html/projects/newsyslog.NEWS.txt
