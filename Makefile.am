@@ -4,7 +4,7 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.33 2009/04/26 05:28:25 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.34 2009/04/26 19:08:32 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.10
 MAINT_CHARSET = latin1
@@ -71,8 +71,10 @@ MAINTAINERCLEANFILES = install-sh missing mkinstalldirs INSTALL \
 
 # XXX automake still isn't quite current with autoconf it seems....
 # configure makes these so we need to clean them on 'distclean'
+# (autom4te.cache will be removed by maintainer-clean)
 #
 distclean-local:
+	rm -rf autom4te.cache
 	rm -f aclocal.m4~ config.h.in~
 
 CLEANFILES = sys_signame.c $(catman_MANS) $(man_MANS) $(psman_MANS) $(htmlman_MANS)
