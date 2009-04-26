@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.56 2009/04/13 23:07:14 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.57 2009/04/26 03:50:36 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -291,10 +291,6 @@ main(argc, argv)
 		exit(1);
 	}
 
-	/*
-	 * note: if you don't have the setgroupent() and setpassent() functions
-	 * just write replacement stubs that return 1.
-	 */
 	if (setgroupent(1) != 1) {
 		fprintf(stderr,
 			"%s: warning: setgroupent(1) failed: %s\n",
