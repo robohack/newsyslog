@@ -1,9 +1,14 @@
 #! /bin/sh
 :
-#ident	"@(#)newsyslog:$Name:  $:$Id: mksigname.sh,v 1.1 2003/07/08 16:49:42 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: mksigname.sh,v 1.2 2009/04/26 19:10:24 woods Exp $"
 
 #
-# Script to generate signame.c
+# Script to generate sys_signame.c from siglist.in
+#
+# The intput filename can be given as the first parameter, and the
+# output filename given as the second parameter.  If only one
+# parameter is given it is used as the input filename.  By default
+# input and output are STDIN and STDOUT.
 #
 # The technique for doing this comes from the siglist.sh script
 # included in the PD-KSH sources, apparently written by Michael
@@ -76,20 +81,23 @@ __EOF__
 
 $CPP $CPPFLAGS $tmpin > $tmpout
 
-sed -n -e 's|^[ 	]*QwErTy \([0-9]\)[ 	]|/*  \1 */|p' \
-       -e 's|^[ 	]*QwErTy \([0-9][0-9]*\)[ 	]|/* \1 */|p' < $tmpout | \
+sed -n -e 's|"\(..\)", /|"\1",		/|' \
+       -e 's|"\(...\)", /|"\1",		/|' \
+       -e 's|"\(..*\)", /|"\1",	/|' \
+       -e 's|^[ 	]*QwErTy \([0-9]\)[ 	]|/*  \1 */ |p' \
+       -e 's|^[ 	]*QwErTy \([0-9][0-9]*\)[ 	]|/* \1 */ |p' < $tmpout | \
 	sort -n +1 | \
 	awk 'BEGIN {
 		last = 0;
 		nsigs = 0;
 		printf("const char *const sys_signame[] = {\n");
-		printf("/*  0 */\t\"Signal 0\",\t/* Fake value for zero */\n");
+		printf("/*  0 */ \"Signal 0\",\t/* Fake value for zero */\n");
 	}
 	{
 		n = $2;
 		if (n > 0 && n != last) {
 			while (++last < n) {
-				printf("/* %2d */\t\"#%d\",\t\t/* Unknown Signal %d !!! */\n", last, last, last);
+				printf("/* %2d */ \"#%d\",\t\t/* Unknown Signal %d !!! */\n", last, last, last);
 			}
 			last = n;
 			print $0;
