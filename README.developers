@@ -130,10 +130,7 @@ GNU Auto* commands detailed above):
 	cd $place_to_build_releases
 	cvs export -kv -r ${PACKAGE}-${tag} -d ${PACKAGE}-${VERSION}-export $PACKAGE
 	cd ${PACKAGE}-${VERSION}-export
-	aclocal
-	autoheader && touch config.h.in
-	automake --gnu --add-missing --copy
-	autoreconf --force
+	autoreconf -f -i
 	sh ${PACKAGE}2netbsd.sh		# configures best default paths...
 	rm -rf import.d			# clean up after ${PACKAGE}2netbsd.sh
 	gmake dist			# or distcheck
@@ -142,7 +139,6 @@ GNU Auto* commands detailed above):
 	cd ..
 	pax -rzf ${PACKAGE}-${VERSION}.tar.gz
 	diff -r --brief ${PACKAGE}-${VERSION}-export ${PACKAGE}-${VERSION}
-	exit
 
 The last step ensures that everything in the CVS module is distributed.
 
@@ -152,15 +148,21 @@ back, untag the whole module, fix Makefile.am, and re-test.
 If all goes well you can put $PACKAGE-$VERSION.tar.gz up for access and
 copy the new project page sub-files into place with this command:
 
-	scp ${PACKAGE}-${VERSION}.tar.gz ftp:~ftp/pub/local
+	rcp ${PACKAGE}-${VERSION}.tar.gz ftp:~ftp/pub/local # scp doesn't do ~
 	cd $place_to_build_releases/${PACKAGE}-${VERSION}
+	sh ${PACKAGE}2netbsd.sh		# redo -- after distclean
 	gmake update-project-web-files
+
+	# optionally update your NetBSD source trees too!
+	cd import.d
+	cp * /usr/src/usr.bin/${PACKAGE}/
 
 	# if all is OK you can clean up the release directories too:
 	cd $place_to_build_releases
 	rm -rf ${PACKAGE}-${VERSION}-export ${PACKAGE}-${VERSION}
+	exit
 
-Update the actual project page in ~/public_html/projects/$PACKAGE.html
+Now update the actual project page in ~/public_html/projects/$PACKAGE.html
 
 Lastly post an update on http://freshmeat.net/
 
@@ -472,4 +474,4 @@ alone minor releases.
 NOTE:  This file *is* included in distributions so that users and
 contributors can see how all the release magic works!
 
-#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.18 2009/04/26 03:58:33 woods Exp $"
+#ident	   "@(#)newsyslog:$Name:  $:$Id: README.developers,v 1.19 2009/04/26 19:11:00 woods Exp $"
