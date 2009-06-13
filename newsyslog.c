@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.59 2009/06/13 17:04:18 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.60 2009/06/13 17:26:50 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -1304,8 +1304,15 @@ do_trim(ent)
 			char            old_dir[PATH_MAX];
 			struct stat     st;
 
+			/*
+			 * first make sure that the archive directory exists, if we need it
+			 */
 			(void) snprintf(old_dir, sizeof(old_dir), "%s.old", ent->log);
 			if (stat(old_dir, &st) == 0) {
+				/*
+				 * if the pathname exists, make sure it really
+				 * is a directory
+				 */
 				if ((st.st_mode & S_IFMT) != S_IFDIR) {
 					errno = ENOTDIR;
 					fprintf(stderr,
@@ -1315,7 +1322,7 @@ do_trim(ent)
 						strerror(errno));
 					return;
 				}
-				/* don't change modes or ownership of old_dir! */
+				/* don't change modes or ownership of existing old_dir! */
 			} else if ((ent->flags & CE_SUBDIR)) {
 				if (verbose)
 					printf("# creating directory %s for archives\n", old_dir);
@@ -1324,7 +1331,21 @@ do_trim(ent)
 					printf("chmod 0%o %s\n", ent->permissions, old_dir);
 					printf("chown %d:%d %s\n", ent->uid, ent->gid, old_dir);
 				} else if (!debug) {
-					if (mkdir(old_dir, ent->permissions) == -1) {
+					unsigned int dirperms = ent->permissions;
+
+					/*
+					 * for each level of permissions, if
+					 * read permission was granted for the
+					 * log file, then also add search
+					 * permission for the archive directory
+					 */
+					if (dirperms & S_IRUSR)
+						dirperms |= S_IXUSR;
+					if (dirperms & S_IRGRP)
+						dirperms |= S_IXGRP;
+					if (dirperms & S_IROTH)
+						dirperms |= S_IXOTH;
+					if (mkdir(old_dir, dirperms) == -1) {
 						fprintf(stderr,
 							"%s: can't create archive directory: %s: %s.\n",
 							argv0,
