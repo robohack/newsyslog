@@ -7,6 +7,9 @@ Please send bug reports to bugs@robohack.planix.com
 
 * User-visible changes since newsyslog-1.1.
 
+- add "-s" (don't send signals) for compatability with the native NetBSD
+  version.
+
 - note that '-m' and '-M' are deprecated and will be removed in the next
   major release
 
@@ -223,4 +226,4 @@ from being rolled over unnecessarily).
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.27 2009/03/04 21:28:42 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.28 2009/06/13 17:04:18 woods Exp $"

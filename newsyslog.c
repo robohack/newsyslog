@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.58 2009/04/26 19:10:40 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.59 2009/06/13 17:04:18 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -199,6 +199,7 @@ int             debug = FALSE;	/* Don't do anything, don't show script (use with
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
 int             run_interval = -1;/* interval in minutes at which we are run by cron */
 int             force = FALSE;	/* force all files to be trimmed */
+int             send_signals = TRUE;	/* normally we send signals as configured */
 const char     *config_file = PATH_CONFIG;/* Configuration file to use */
 const char     *syslogd_pidfile = PATH_SYSLOGD_PIDFILE;/* syslogd's pid file */
 time_t          timenow;
@@ -504,7 +505,7 @@ parse_options(argc, argv)
 
 	optind = 1;		/* Start options parsing */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "FMT:UVdf:hi:mnp:qrt:v")) != -1) {
+	while ((ch = getopt(argc, argv, "FMT:UVdf:hi:mnp:qrst:v")) != -1) {
 		switch (ch) {
 		case 'F':
 			force = TRUE;
@@ -598,6 +599,9 @@ parse_options(argc, argv)
 		case 'r':
 			needroot = FALSE;
 			break;
+		case 's':
+			send_signals = FALSE;
+			break;
 		case 'v':
 			verbose++;
 			break;
@@ -614,7 +618,7 @@ parse_options(argc, argv)
 	return;
 }
 
-#define USAGE_FMT	"Usage: %s [-V] [-T hh:mm] [-M|-m|-i interval] [-Fdnrv] [-f config-file] [-p syslogd-pidfile] [file ...]\n"
+#define USAGE_FMT	"Usage: %s [-V] [-T hh:mm] [-M|-m|-i interval] [-Fdnrsv] [-f config-file] [-p syslogd-pidfile] [file ...]\n"
 
 static void
 usage()
@@ -644,6 +648,7 @@ help()
 	printf("	-n		show sh-script on stdout instead of doing work\n");
 	printf("	-p syslogd-pid	syslogd PID file [default: %s]\n", syslogd_pidfile);
 	printf("	-r		remove restriction to superuser\n");
+	printf("	-s		do not signal daemon processes\n");
 	printf("	-v		show verbose explanitory messages\n");
 	printf("\n");
 	printf("	file		only trim specified file(s)\n");
@@ -1516,7 +1521,7 @@ do_trim(ent)
 		}
 #endif
 	}
-	if (might_need_newlog && !(ent->flags & CE_NOSIGNAL)) {
+	if (might_need_newlog && !(ent->flags & CE_NOSIGNAL) && send_signals) {
 		if (ent->pid_file)
 			pid = get_pid_file(ent->pid_file);
 		else
@@ -1560,7 +1565,7 @@ do_trim(ent)
 				}
 			}
 		} else if (verbose)
-			printf("# (no signal sent for %s)\n", ent->log);
+			printf("# no signal sent for %s (no PID found)\n", ent->log);
 	}
 	if (might_timestamp && !(ent->flags & CE_BINARY))
 		(void) note_trim(file1);

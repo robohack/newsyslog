@@ -10,7 +10,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.14 2007/07/18 22:12:28 woods Exp $"
+.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.15 2009/06/13 17:04:18 woods Exp $"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 
@@ -26,7 +26,7 @@
 .\" the suitability of this software for any purpose.  It is
 .\" provided "as is" without express or implied warranty.
 .\"
-.Dd June 10, 2007
+.Dd June 11, 2009
 .Dt NEWSYSLOG 8
 .Os BSD
 .\"
@@ -225,6 +225,17 @@ will not be able to send a HUP signal to
 .Nm syslogd
 or most other daemons so this option is probably only useful for
 debugging unless an alternate configuration file is specified.
+.It Fl s
+Do not send any signals.  This is useful if you wish to trim log files
+at boot time before any of the daemon processes to be signaled will be
+running.  This options is primarily provided for compatibility with
+the native
+.Nx
+version of
+.Nm
+where it is used in the optional
+.Pa /etc/rc.d/newsyslog
+script.
 .It Fl T Ar HH:MM
 Pretend the current time is
 .Ar HH:MM
