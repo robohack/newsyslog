@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.60 2009/06/13 17:26:50 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.61 2009/06/23 18:11:49 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -561,6 +561,11 @@ parse_options(argc, argv)
 			help();
 			/* NOTREACHED */
 		case 'i':		/* run interval in minutes */
+			/*
+			 * note: we don't currently care about trailing chars,
+			 * but maybe we should as someday we might want to
+			 * extend this to allow unit suffixes to be specified.
+			 */
 			ltmp = strtol(optarg, (char **) NULL, 10);
 			if (ltmp == LONG_MIN || ltmp == LONG_MAX) {
 				fprintf(stderr,
