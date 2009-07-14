@@ -1,4 +1,4 @@
-#ident "@(#)newsyslog:$Name:  $:$Id: newsyslog.h,v 1.2 2007/07/24 18:25:43 woods Exp $"
+#ident "@(#)newsyslog:$Name:  $:$Id: newsyslog.h,v 1.3 2009/07/14 22:40:30 woods Exp $"
 
 /*
  * various portability related defintions
@@ -126,4 +126,11 @@
 
 #ifndef HAVE_MKSTEMP
 # include "ERROR: mkstemp() not available!"
+#endif
+
+#ifndef MAX
+# define MAX(a, b)	((a >= b) ? a : b)
+#endif
+#ifndef MIN
+# define MIN(a, b)	((a <= b) ? a : b)
 #endif
