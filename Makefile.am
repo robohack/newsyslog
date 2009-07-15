@@ -4,7 +4,7 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.34 2009/04/26 19:08:32 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.35 2009/07/15 00:15:52 woods Exp $"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.10
 MAINT_CHARSET = latin1
@@ -210,9 +210,10 @@ update-project-web-files: $(dist_htmlman_MANS)
 	for htmlman in $(dist_htmlman_MANS) ; do 					\
 		cp $$htmlman ~/public_html/projects/$$(basename $$htmlman -dist); 	\
 	done
-	cp NEWS ~/public_html/projects/newsyslog.NEWS.txt
+	cp -f NEWS ~/public_html/projects/newsyslog.NEWS.txt
+	cp -f ToDo ~/public_html/projects/newsyslog.ToDo.txt
+	@echo "NOTE: now make sure to run ~/public_html/publish.sh"
 
-#
 # miscellaneous dependencies follow....
 #
 
