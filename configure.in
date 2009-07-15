@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 dnl Required Autoconf version.
 AC_PREREQ(2.61)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.49 2009/04/26 19:10:07 woods Exp $"])
+AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.50 2009/07/15 00:15:20 woods Exp $"])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -78,32 +78,52 @@ AC_CHECK_TYPES(unsigned long long)
 AC_TYPE_SIGNAL
 
 dnl Checks for library functions.
-# note sys_signame is not a function, but this test works anyway
-# thanks to C and the way the tests are written for this check....
-AC_REPLACE_FUNCS([setgroupent setpassent sig2str snprintf str2sig strdup \
-	          strerror strptime strsignal strtok sys_signame])dnl
 
 AC_DECL_SYS_SIGNAME
 AC_DECL_SYS_NSIG
 
-AC_CHECK_DECLS([setgroupent], [], [], [#include <grp.h>])
-AC_CHECK_DECLS([setpassent], [], [], [#include <pwd.h>])
-
-AC_CHECK_DECLS([sig2str, str2sig, strsignal], [], [], [#include <signal.h>
+AC_CHECK_DECLS([getopt, optind, opterr, optarg, optopt], [], [], [
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif])dnl
 
-AC_CHECK_DECLS([strchr, strdup, strrchr, strtok], [], [], [#ifdef HAVE_STRING_H
+AC_CHECK_DECLS([setgroupent], [], [], [#include <grp.h>])
+AC_CHECK_DECLS([setpassent], [], [], [#include <pwd.h>])
+
+AC_CHECK_DECLS([sig2str, str2sig, strsignal], [], [], [
+#include <signal.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif])dnl
+
+AC_CHECK_DECLS([strchr, strdup, strrchr, strtok], [], [], [
+#ifdef HAVE_STRING_H
 # include <string.h>
 #endif
 #ifdef HAVE_STRINGS_H
 # include <strings.h>
 #endif])dnl
 
+AC_CHECK_DECLS([exit, strtol, strtoul], [], [], [
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#include <limits.h>])dnl
+
+
 dnl STUPID GNU/Linux and/or glibc only declares strptime()
 dnl if _XOPEN_SOURCE is defined!
 AC_CHECK_DECLS(strptime, [], [], [#include <time.h>])
+
+# note sys_signame is not a function, but this test works anyway
+# thanks to C and the way the tests are written for this check....
+AC_REPLACE_FUNCS([setgroupent setpassent sig2str snprintf str2sig strdup \
+	          strerror strptime strsignal strtok sys_signame])dnl
 
 dnl Note that although bzero() is deprectated and non-standard we only
 dnl need its capabilities, not those of the fancier and more standard
@@ -119,7 +139,8 @@ dnl renamed by a macro to a private identifier.  However on SunOS-5
 dnl there's no sys_signame so we'll end up using our own sys_nsigname
 dnl and we won't need sys_nsig because SunOS-5 does have strsignal().
 
-AC_CHECK_FUNCS(bzero flock isnan isinf memset mkstemp rename strchr strrchr sys_nsig)
+AC_CHECK_FUNCS([bzero flock getopt isnan isinf memset mkstemp rename strchr \
+		strrchr strtol strtoul sys_nsig])dnl
 
 AM_WITH_DMALLOC
 
