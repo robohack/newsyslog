@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.61 2009/06/23 18:11:49 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.62 2009/07/16 00:30:29 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -55,8 +55,11 @@ static const char rcsid[] =
 
 #ifdef STDC_HEADERS
 # include <stdlib.h>
+# include <stddef.h>
 #else
-extern void exit();
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
 #endif
 
 #include <sys/types.h>
@@ -175,7 +178,7 @@ struct conf_entry {
 	char           *group;		/* Group name of log */
 	uid_t           gid;		/* Group ID of log */
 	unsigned int    numlogs;	/* Number of logs to keep */
-	long            size;		/* maximum log size in KB */
+	unsigned long   size;		/* maximum log size in KB */
 	int             hours;		/* maximum hours between log trimming */
 	time_t          trim_at;	/* time to trim log at */
 	unsigned int    permissions;	/* File permissions on the log */
@@ -231,10 +234,25 @@ static pid_t            get_pid_file __P((const char *));
 static int              getsig __P((char *));
 static int              parse_dwm __P((char *, time_t *));
 
+#if !defined(HAVE_DECL_OPTERR)
 extern int              opterr;
+#endif
+#if !defined(HAVE_DECL_OPTIND)
 extern int              optind;
+#endif
+#if !defined(HAVE_DECL_OPTOPT)
+extern int              optopt;
+#endif
+#if !defined(HAVE_DECL_OPTARG)
 extern char            *optarg;
+#endif
 
+#if !defined(HAVE_DECL_EXIT)
+extern void             exit __P((int));
+#endif
+#if !defined(HAVE_DECL_GETOPT)
+extern int              getopt __P((int, char * const [], const char *));
+#endif
 #if !defined(HAVE_DECL_SETGROUPENT)
 extern int              setgroupent __P((int));
 #endif
@@ -261,6 +279,12 @@ extern char            *strrchr __P((const char *, int));
 #endif
 #if !defined(HAVE_DECL_STRTOK)
 extern char            *strtok __P((char *, const char *));
+#endif
+#if !defined(HAVE_DECL_STRTOL)
+extern long            *strtol __P((const char *, char **, int));
+#endif
+#if !defined(HAVE_DECL_STRTOL)
+extern unsigned long   *strtoul __P((const char *, char **, int));
 #endif
 
 int
@@ -371,7 +395,7 @@ main(argc, argv)
 				argv0, cpid, signm, strsignal(WSTOPSIG(cstatus)));
 			kill(cpid, SIGCONT);
 		} else {
-			fprintf(stderr, "%s: child process[%d] died with bad status \\0%o\n",
+			fprintf(stderr, "%s: child process[%d] died with bad status \\0%03o\n",
 				argv0, cpid, cstatus);
 		}
 		errno = 0;
@@ -395,7 +419,14 @@ do_entry(ent)
 
 	assert(domidnight == -1 || domidnight == 1 || domidnight == 0);
 	if (verbose) {
-		printf("## %s <#%u,%s%s%s%s%s>: ", ent->log, ent->numlogs,
+		printf("## %s [%s(%lu):%s(%lu)] 0%03o <#%u,%s%s%s%s%s>: ",
+		       ent->log,
+		       ent->user ? ent->user : "",
+		       (unsigned long) (ent->uid == NO_ID) ? (write_metalog ? 0 : geteuid()) : ent->uid,
+		       ent->group ? ent->group : "",
+		       (unsigned long) (ent->gid == NO_ID) ? (write_metalog ? 0 : getegid()) : ent->gid,
+		       ent->permissions,
+		       ent->numlogs,
 		       (ent->flags & CE_SUBDIR) ? "subdir," : "",
 		       (ent->flags & CE_NOCREATE) ? "nocreate," : "",
 		       (ent->flags & CE_COMPACT) ? "compact," : "",
@@ -514,6 +545,7 @@ parse_options(argc, argv)
 			domidnight = 0;
 			break;
 		case 'T':		/* reset current time, mostly for testing */
+			/* assert(optarg != NULL); */
 			p = strptime(optarg, "%H:%M", &tms);
 			tms_hour = tms.tm_hour;
 			tms_min = tms.tm_min;
@@ -555,31 +587,53 @@ parse_options(argc, argv)
 			needroot = FALSE;	/* don't need root */
 			break;
 		case 'f':
+			/* assert(optarg != NULL); */
 			config_file = optarg;
 			break;
 		case 'h':
 			help();
 			/* NOTREACHED */
 		case 'i':		/* run interval in minutes */
-			/*
-			 * note: we don't currently care about trailing chars,
-			 * but maybe we should as someday we might want to
-			 * extend this to allow unit suffixes to be specified.
-			 */
-			ltmp = strtol(optarg, (char **) NULL, 10);
-			if (ltmp == LONG_MIN || ltmp == LONG_MAX) {
+			/* assert(optarg != NULL); */
+			if (optarg[0] == '\0') {
 				fprintf(stderr,
-					"%s: run interval of '%s' is not valid\n",
+					"%s: an empty run interval value is not permitted\n",
+					argv0);
+				usage();
+				/* NOTREACHED */
+			}
+			errno = 0;
+			ltmp = strtol(optarg, &p, 0);
+			if (p == optarg) {
+				fprintf(stderr,
+					"%s: run interval of '%s' is not a valid number\n",
 					argv0,
 					optarg);
 				exit(2);
-			} else if (ltmp > INT_MAX) {
+			}
+			if (*p) {
+				fprintf(stderr,
+					"%s: run interval of '%s' has unsupported trailing unit specification characters\n",
+					argv0,
+					optarg);
+				exit(2);
+			}
+			if (errno != 0) {
+				fprintf(stderr,
+					"%s: run interval of '%s' is not convertible: %s\n",
+					argv0,
+					optarg,
+					strerror(errno));
+				exit(2);
+			}
+			if (ltmp > INT_MAX) {
 				fprintf(stderr,
 					"%s: run interval of %ld is too large\n",
 					argv0,
 					ltmp);
 				exit(2);
-			} else if (ltmp < 1) {
+			}
+			if (ltmp < 1) {
 				fprintf(stderr,
 					"%s: run interval of %ld is too small\n",
 					argv0,
@@ -596,6 +650,7 @@ parse_options(argc, argv)
 			needroot = FALSE;	/* don't need root */
 			break;
 		case 'p':
+			/* assert(optarg != NULL); */
 			syslogd_pidfile = optarg;
 			break;
 		case 'q':
@@ -611,10 +666,12 @@ parse_options(argc, argv)
 			verbose++;
 			break;
 		case '?':
+		case ':':
+			fprintf(stderr, "%s: invalid option -- %c\n", argv0, optopt);
 			usage();
 			/* NOTREACHED */
 		default:
-			fprintf(stderr, "%s: invalid option -- %c", argv0, ch);
+			fprintf(stderr, "%s: invalid option -- %c\n", argv0, ch);
 			usage();
 			/* NOTREACHED */
 		}
@@ -741,6 +798,7 @@ parse_file(files )
 	}
 	while (fgets(line, BUFSIZ, fp)) {
 		struct conf_entry *tmpentry;
+		char *ep;
 
 		lnum++;
 
@@ -802,10 +860,17 @@ parse_file(files )
 			exit(1);
 		}
 		*parse = '\0';
+
+		/*
+		 * the next field is optional....
+		 *
+		 * if it contains a colon, then it is a uid:gid specification,
+		 * otherwise there is no uid:gid specifiction.
+		 */ 
 		if ((group = strchr(q, ':')) != NULL) {
 			*group++ = '\0';
 			if (*q) {
-				if (!(isdigit(*q))) {
+				if (!(isdigit(*q)) && *q != '-') {
 					working->user = strdup(q);
 					working->uid = NO_ID;
 					if (!write_metalog) {
@@ -821,8 +886,19 @@ parse_file(files )
 						working->uid = pass->pw_uid;
 					}
 				} else {
-					working->user = NULL; /* XXX look up name!!! */
-					working->uid = atoi(q);	/* XXX use strtol()? */
+					errno = 0;
+					working->uid = strtol(q, &ep, 10);
+					if (*ep || errno != 0) {
+						fprintf(stderr,
+							"%s: error in config file; invalid UID number: '%s', in line:\n%6d:\t'%s'\n",
+							argv0,
+							q,
+							lnum,
+							errline);
+						exit(1);
+					}
+					/* XXX should try to look up the username for this ID!!! */
+					working->user = NULL;
 				}
 			} else {
 				working->user = NULL;
@@ -830,7 +906,7 @@ parse_file(files )
 			}
 			q = group;
 			if (*q) {
-				if (!(isdigit(*q))) {
+				if (!(isdigit(*q)) && *q != '-') {
 					working->group = strdup(q);
 					working->gid = NO_ID;
 					if (!write_metalog) {
@@ -846,8 +922,19 @@ parse_file(files )
 						working->gid = grp->gr_gid;
 					}
 				} else {
-					working->user = NULL; /* XXX look up name!!! */
-					working->gid = atoi(q);	/* XXX use strtol()? */
+					errno = 0;
+					working->gid = strtol(q, &ep, 10);
+					if (*ep || errno != 0) {
+						fprintf(stderr,
+							"%s: error in config file; invalid GID number: '%s', in line:\n%6d:\t'%s'\n",
+							argv0,
+							q,
+							lnum,
+							errline);
+						exit(1);
+					}
+					/* XXX should try to look up the groupname for this ID!!! */
+					working->group = NULL;
 				}
 			} else {
 				working->group = NULL;
@@ -868,7 +955,12 @@ parse_file(files )
 			working->user = working->group = NULL;
 			working->uid = working->gid = NO_ID;
 		}
-		if (!sscanf(q, "%o", &working->permissions)) {
+
+		/* XXX someday support "rwxrwxrwx" style permissions? */
+		/* XXX use *BSD setmode(3)??? */
+		errno = 0;
+		working->permissions = strtoul(q, &ep, 8);
+		if (*ep || errno != 0) {
 			fprintf(stderr,
 				"%s: error in config file; %s: '%s', in line:\n%6d:\t'%s'\n",
 				argv0,
@@ -878,21 +970,9 @@ parse_file(files )
 				errline);
 			exit(1);
 		}
-
-		q = parse = missing_field(strsob(++parse), lnum, errline);
-		parse = strson(parse);
-		if (!*parse) {
+		if (working->permissions & ~(S_IRWXU|S_IRWXG|S_IRWXO)) {
 			fprintf(stderr,
-				"%s: malformed line (missing fields):\n%6d:\t'%s'\n",
-				argv0,
-				lnum,
-				errline);
-			exit(1);
-		}
-		*parse = '\0';
-		if (!sscanf(q, "%u", &working->numlogs)) {
-			fprintf(stderr,
-				"%s: error in config file; bad number: '%s', in line\n%6d:\t'%s'\n",
+				"%s: error in config file; inappropriate permissions specification: '%s', in line:\n%6d:\t'%s'\n",
 				argv0,
 				q,
 				lnum,
@@ -911,9 +991,53 @@ parse_file(files )
 			exit(1);
 		}
 		*parse = '\0';
-		if (isdigit(*q))
-			working->size = atoi(q);
-		else
+
+		if (*q == '-') {
+			fprintf(stderr,
+				"%s: error in config file; negative log count is impossible: '%s', in line\n%6d:\t'%s'\n",
+				argv0,
+				q,
+				lnum,
+				errline);
+			exit(1);
+		}
+		errno = 0;
+		working->numlogs = strtoul(q, &ep, 10);
+		if (*ep || errno != 0) {
+			fprintf(stderr,
+				"%s: error in config file; invalid number: '%s', in line\n%6d:\t'%s'\n",
+				argv0,
+				q,
+				lnum,
+				errline);
+			exit(1);
+		}
+
+		q = parse = missing_field(strsob(++parse), lnum, errline);
+		parse = strson(parse);
+		if (!*parse) {
+			fprintf(stderr,
+				"%s: malformed line (missing fields):\n%6d:\t'%s'\n",
+				argv0,
+				lnum,
+				errline);
+			exit(1);
+		}
+		*parse = '\0';
+
+		if (isdigit(*q)) {
+			errno = 0;
+			working->size = strtoul(q, &ep, 10);
+			if (*ep || errno != 0) {
+				fprintf(stderr,
+					"%s: error in config file; invalid size: '%s', in line:\n%6d:\t'%s'\n",
+					argv0,
+					q,
+					lnum,
+					errline);
+				exit(1);
+			}
+		} else
 			working->size = -1;
 
 		q = parse = missing_field(strsob(++parse), lnum, errline);
@@ -933,7 +1057,18 @@ parse_file(files )
 			u_long ul;
 
 			if (isdigit(*q)) {
-				if ((ul = strtol(q, &q, 10)) > INT_MAX) {
+				errno = 0;
+				ul = strtoul(q, &ep, 10);
+				if (errno != 0) {
+					fprintf(stderr,
+						"%s: interval value of '%s' is not convertible, in line\n%6d:\t'%s'\n",
+						argv0,
+						q,
+						lnum,
+						errline);
+					exit(1);
+				}
+				if (ul > INT_MAX) {
 					fprintf(stderr,
 						"%s: error in config file; interval too large: '%s', in line\n%6d:\t'%s'\n",
 						argv0,
@@ -942,6 +1077,7 @@ parse_file(files )
 						errline);
 					exit(1);
 				}
+				q = ep;
 				working->hours = (int) ul;
 			}
 			/*
@@ -1210,10 +1346,7 @@ do_trim(ent)
 		}
 	}
 	/* prepare the temporary name for a newly created log file */
-	if (snprintf(newlog, sizeof(newlog),
-		     (ent->flags & CE_SUBDIR) ? "%s.old/%04u.XXXXXX" : "%s.%u.XXXXXX",
-		     ent->log,
-		     0) >= (int) sizeof(file1)) {
+	if (snprintf(newlog, sizeof(newlog), "%s.%u.XXXXXX", ent->log, 0) >= (int) sizeof(file1)) {
 		fprintf(stderr, "%s: filename too long: %s.\n", argv0, ent->log);
 		return;
 	}
@@ -1288,11 +1421,11 @@ do_trim(ent)
 		else if (!debug)
 			(void) rename(zfile1, zfile2); /* XXX error check (fatal? -- may lose archive data!) */
 		if (verbose) {
-			printf("# forcing owner/perms of %s to %d:%d/0%o\n",
+			printf("# forcing owner/perms of %s to %d:%d/0%03o\n",
 			       zfile2, ent->uid, ent->gid, ent->permissions);
 		}
 		if (show_script) {
-			printf("chmod %o %s\n", ent->permissions, zfile2);
+			printf("chmod 0%03o %s\n", ent->permissions, zfile2);
 			printf("chown %d:%d %s\n",
 			       ent->uid, ent->gid, zfile2);
 		} else if (!debug) {
@@ -1333,7 +1466,7 @@ do_trim(ent)
 					printf("# creating directory %s for archives\n", old_dir);
 				if (show_script) {
 					printf("mkdir %s\n", old_dir);
-					printf("chmod 0%o %s\n", ent->permissions, old_dir);
+					printf("chmod 0%03o %s\n", ent->permissions, old_dir);
 					printf("chown %d:%d %s\n", ent->uid, ent->gid, old_dir);
 				} else if (!debug) {
 					unsigned int dirperms = ent->permissions;
@@ -1373,7 +1506,7 @@ do_trim(ent)
 			if (show_script)
 				printf("mv %s %s\n", ent->log, file1);
 			else if (!debug) {
-				if (rename(ent->log, file1) < 0) {
+				if (rename(ent->log, file1) < 0 && !write_metalog) {
 					fprintf(stderr,
 						"%s: can't rename file: %s to %s: %s.\n",
 						argv0,
@@ -1426,17 +1559,17 @@ do_trim(ent)
 	/* logic is split here to keep indentation sane.... */
 	if (might_need_newlog && !(ent->flags & CE_NOCREATE)) {
 		if (verbose) {
-			printf("# creating first archive file for %s with owner %d:%d, mode 0%o\n",
+			printf("# creating first archive file for %s with owner %d:%d, mode 0%03o\n",
 			       ent->log, ent->uid, ent->gid, ent->permissions);
 		}
 		if (show_script) {
 			printf("newlog=$(mktemp %s)\n", newlog);
 			printf("touch $newlog\n");
 			printf("chown %d:%d $newlog\n", ent->uid, ent->gid);
-			printf("chmod 0%o $newlog\n", ent->permissions);
+			printf("chmod 0%03o $newlog\n", ent->permissions);
 			printf("mv $newlog %s\n", ent->log);
 		} else if (!debug) {
-			if ((fd = mkstemp(newlog)) < 0) {
+			if ((fd = mkstemp(newlog)) < 0 && !write_metalog) {
 				fprintf(stderr,
 					"%s: can't create new log file: %s: %s.\n",
 					argv0,
@@ -1454,7 +1587,7 @@ do_trim(ent)
 				}
 				if (fchmod(fd, ent->permissions) && !quiet && !write_metalog) {
 					fprintf(stderr,
-						"%s: can't chmod 0%o new log file: %s: %s.\n",
+						"%s: can't chmod 0%03o new log file: %s: %s.\n",
 						argv0,
 						ent->permissions,
 						newlog,
@@ -1862,7 +1995,7 @@ parse_tmstamp(file, line)
 /*
  * Read a process ID from the specified file.
  *
- * Reports errors to stderr, and then return zero.
+ * Reports any errors to stderr, and then returns zero.
  */
 static pid_t
 get_pid_file(pid_file)
@@ -1881,7 +2014,7 @@ get_pid_file(pid_file)
 		strlcpy(tmp, pid_file, sizeof(tmp));
 #endif
 	if ((fp = fopen(pid_file, "r")) == NULL) {
-		fprintf(stderr, "%s: can't open pid file: %s: %s.\n",
+		fprintf(stderr, "%s: can't open PID file: %s: %s.\n",
 			argv0, pid_file, strerror(errno));
 		return 0;
 	}
@@ -1893,17 +2026,23 @@ get_pid_file(pid_file)
 		errno = 0;
 		ulval = strtoul(line, &ep, 10);
 		if (line[0] == '\0')
-			errmsg = "does not start with a valid number";
+			errmsg = "empty file";
+		else if (line[0] == '-')
+			errmsg = "process numbers should not be negated";
+		else if (ep == line)
+			errmsg = "first line does not start with a valid number";
 		else if (*ep != '\0' && *ep != '\n')
-			errmsg = "not a valid BASE-10 integer";
+			errmsg = "not a valid BASE-10 integer (trailing non-digit characters)";
 		else if (errno == ERANGE && ulval == ULONG_MAX)
-			errmsg = "number out of range";
-		else if (ulval == 0)
+			errmsg = "number out of range for conversion";
+		else if (ulval == 0 /* && errno == 0 */)
 			errmsg = "zero is never a valid process number";
 		else if (ulval < MIN_PID || ulval > MAX_PID)
 			errmsg = "preposterous process number";
 		if (errmsg)
-			fprintf(stderr, "%s: %s: %s: %s", argv0, pid_file, errmsg, line);
+			fprintf(stderr, "%s: %s: %s: in '%s'", argv0, pid_file, errmsg, line);
+		else if (errno != 0)
+			fprintf(stderr, "%s: %s: strtoul(): %s: converting '%s'", argv0, pid_file, strerror(errno), line);
 		else
 			pid = (pid_t) ulval;
 	} else {
@@ -2027,8 +2166,9 @@ parse_dwm(s, trim_at)
 			}
 			Dseen = TRUE;
 			s++;
+			errno = 0;
 			ul = strtoul(s, &t, 10);
-			if (ul > 23) {
+			if (errno != 0 || ul > 23) {
 				fprintf(stderr, "%s: nonsensical hour-of-the-day (D) value: %lu!\n", argv0, ul);
 				return (-1);
 			}
@@ -2043,8 +2183,9 @@ parse_dwm(s, trim_at)
 			}
 			WMseen = TRUE;
 			s++;
+			errno = 0;
 			ul = strtoul(s, &t, 10);
-			if (ul > 6) {
+			if (errno != 0 || ul > 6) {
 				fprintf(stderr, "%s: nonsensical day-of-the-week (W) value: %lu!\n", argv0, ul);
 				return (-1);
 			}
@@ -2078,14 +2219,20 @@ parse_dwm(s, trim_at)
 				s++;
 				t = s;
 			} else {
+				errno = 0;
 				ul = strtoul(s, &t, 10);
-				if (ul < 1 || ul > 31) {
+				/* if (s == t) then (ul == 0 && errno == ERANGE) */
+				if (ul < 1 || ul > 31 || errno != 0) {
 					fprintf(stderr, "%s: nonsensical day-of-the-month (M) value: %lu!\n", argv0, ul);
 					return (-1);
 				}
+				/*
+				 * XXX should we warn about any number > 28,
+				 * not just if it's too large for this month?
+				 */
 				if (ul > (unsigned long) nd) {
-					fprintf(stderr, "%s: day-of-the-week (M) value out of range for month %d: %lu!\n", argv0, tms.tm_mon, ul);
-					return (-1);
+					fprintf(stderr, "%s: day-of-the-month (M) value out of range for month %d: %lu, using %d\n", argv0, tms.tm_mon, ul, nd);
+					ul = nd;
 				}
 				tms.tm_mday = (int) ul;
 			}
