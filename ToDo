@@ -9,6 +9,8 @@ suggestions and comments are also encouraged.
   but on the other hand how could it really be "unwanted"?).
 
 - what about changing ownerships and permissions of archived logs?
+  (i.e. if the permissions are changed in the config file after some
+  archived log files exist)
 
 - what about extra copies of archived logs that'll never be overwritten,
   e.g. if the count is reduced?
@@ -21,12 +23,12 @@ suggestions and comments are also encouraged.
 
 - fix handling of log file timestamps to take into account timezones.
   Note that the common log format actually includes " {+-}TZOFF" after
-  the time, but strptime() doesn't seem to have a way to parse and use
-  this value.  Syslog timestamps are in local time, so watch out for
-  stupid daylight savings confusion too!
+  the time, but most strptime() implementations don't seem to have a way
+  to parse and use this value.  Syslog timestamps are in local time, so
+  watch out for stupid daylight savings confusion too!
 
 - think about what to do with the race between newsyslog and syslogd
-  latter for multiple files:  syslogd can be still processing a previous
+  latter for multiple files:  syslogd can still be processing a previous
   SIGHUP while newsyslog has gone on to rename the next file leaving it
   non-existant when syslogd goes to try to open it thus causing spurious
   errors in the syslog logs about missing files.
@@ -40,9 +42,9 @@ suggestions and comments are also encouraged.
 
 	/var/run/named-outside.pid,/var/run/named-inside.pid
 
-  Or teach people to either use a proper syslog daemon which doesn't
-  write directly to any log files, or else use separate log files for
-  each instance!
+  Or teach people to either use a proper syslog daemon instead of
+  allowing/configuring their daemons to write directly to any log files,
+  or else use separate log files for each instance!
 
 - Add one more optional field:  the format of the turnover message, with
   the default to be the "syslog" style:
@@ -93,10 +95,16 @@ suggestions and comments are also encouraged.
 
 - add support for specifying size and interval units other than KB & hrs.
 
+- consider adding a "-/" (or "-a"?) command that forces CE_SUBDIR for
+  all log files.
+
 - With the "/" flag should we keep the ".0" file in the original
   directory initially if there's a "0" flag too?  This would perhaps
   help mimic its current purpose of not doing anything to the file until
-  after it's been cleanly closed by all processes logging to it.
+  after it's been cleanly closed by all processes logging to it (not
+  that moving a file into a directory instead of just renaming it in the
+  same directory should ever cause any problems on any normal POSIX
+  system).
 
 - consider deprecating internal compression once sub-directory archiving
   is implemented since now a separate processing script can safely go
@@ -129,4 +137,4 @@ suggestions and comments are also encouraged.
   might be into the next interval and we'd miss it!)
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.16 2009/03/04 19:45:53 woods Exp $"
+#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.17 2009/07/16 00:32:03 woods Exp $"
