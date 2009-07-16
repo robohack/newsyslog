@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.62 2009/07/16 00:30:29 woods Exp $";
+	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.63 2009/07/16 02:07:41 woods Exp $";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H
@@ -866,7 +866,7 @@ parse_file(files )
 		 *
 		 * if it contains a colon, then it is a uid:gid specification,
 		 * otherwise there is no uid:gid specifiction.
-		 */ 
+		 */
 		if ((group = strchr(q, ':')) != NULL) {
 			*group++ = '\0';
 			if (*q) {
@@ -1971,7 +1971,7 @@ parse_tmstamp(file, line)
 	tms.tm_isdst = -1;	/* make mktime() guess the right time */
 	if ((tmstamp = mktime(&tms)) < 0) {
 		struct tm *tmy;
-		
+
 		/* some formats don't include the current year, so we
 		 * try to provide it....
 		 */
