@@ -67,3 +67,5 @@ newsyslog.core
 stamp-h
 stamp-h.in
 stamp-h1
+sys_signame.c
+/compile
