@@ -304,12 +304,13 @@ main(argc, argv)
 	/* Let's get our hostname */
 	(void) gethostname(hostname, sizeof(hostname));
 
-	/* and truncate the domain part off */
+	/* and truncate any domain part off */
 	if ((s = strchr(hostname, '.'))) {
 		*s++ = '\0';
-		localdomain = s;
-	} else
+		localdomain = strdup(s);
+	} else {
 		localdomain = strdup("");
+	}
 
 	parse_options(argc, argv);
 
@@ -404,6 +405,8 @@ main(argc, argv)
 		fprintf(stderr, "%s: wait() failed: %s\n", argv0, strerror(errno));
 		exit(1);
 	}
+
+	free(localdomain);
 
 	exit (0);
 	/* NOTREACHED */
