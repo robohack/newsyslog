@@ -3,23 +3,52 @@ NEWSYSLOG ToDo -- Things that could be fixed/improved/added.
 Patches to close any of these items will be gratefully accepted!  Other
 suggestions and comments are also encouraged.
 
-- we really need an option (-C) that just makes sure all the logs exist
-  and have the right ownerships and permissions (because using '-F' for
-  this purpose on any existing system may result in unwanted roll-over,
-  but on the other hand how could it really be "unwanted"?).
+- think about loading alternate config files (FreeBSD has this now?)
 
 - what about changing ownerships and permissions of archived logs?
   (i.e. if the permissions are changed in the config file after some
   archived log files exist)
 
 - what about extra copies of archived logs that'll never be overwritten,
-  e.g. if the count is reduced?
+  eg. if the count is reduced?  Use glob(3) to find all matching ones?
 
 - consider adding a wildcard filename that can stand in for any files in
   /etc/syslog.conf that are not already mentioned in newsyslog.conf so
   that the simplest newsyslog.conf could be just the one line:
 
        _SYSLOG_		root:wheel	640 10 * D/0 HUP
+
+- also think (but not too hard, this is ugly) about supporting the
+  FreeBSD 'G' (glob(3)) flag.  Yuck.  This could get wildly out of
+  control!  But it would make it easier to manage the logs of some
+  of those poorly designed RADIUS daemons....
+
+- consider using date&time stamps for archive names.  This helps sites
+  which do normal incremental backups that include their log directories
+  since by using date&time stamps instead of sequence numbers the old
+  files remain static and don't have to be backed up multiple times
+  (though the live data may of course).
+
+  Presumably we use the time of roll-over to create the new name, thus
+  avoiding the issue of archive files that are still being written to
+  after they are rolled over.  Do we use UTC/GMT, or system local time,
+  or allow a command-line option for the user to choose?  (syslogd
+  normally uses system local time, assuming it has access to
+  /etc/localtime, should newsyslog just do the same?)
+
+  How do we count the number of archive files and remove the oldest
+  extra one(s)?  Do we use glob(3) to match the name pattern we
+  generate?  Then we need to sort them by age, using the filename (will
+  glob(3) effectively always do that for us?).  Would this effectively
+  solve the problem of removing stale archives if the count has been
+  reduced?
+
+  With CE_COMPACT do we still compress just the most "recent" archive
+  file (i.e. the equivalent of the new .0 or .1 depending on CE_PLAIN0).
+
+  Does the CE_PLAIN0 flag no longer rename the most recent file to have
+  an actual .0 suffix, but rather just skip compressing the most recent
+  log, leaving it named with its roll-over time?
 
 - fix handling of log file timestamps to take into account timezones.
   Note that the common log format actually includes " {+-}TZOFF" after
@@ -28,23 +57,25 @@ suggestions and comments are also encouraged.
   watch out for stupid daylight savings confusion too!
 
 - think about what to do with the race between newsyslog and syslogd
-  latter for multiple files:  syslogd can still be processing a previous
-  SIGHUP while newsyslog has gone on to rename the next file leaving it
-  non-existant when syslogd goes to try to open it thus causing spurious
-  errors in the syslog logs about missing files.
+  when rolling multiple files:  syslogd can still be processing a
+  previous SIGHUP while newsyslog has gone on to rename the next file
+  leaving it non-existant when syslogd goes to try to open it thus
+  causing spurious errors in the syslog logs about missing files.
+  Probably newsyslog should group logfile processing by PID file and
+  only signal each server once after all its files are rolled.
 
 - what happens, or should happen, if/when there are multiple PIDs in a
   pidfile?
 
 - consider supporting the specification of multiple pidfiles for a given
   log for the case where multiple long-running daemons write to the same
-  logfile, e.g. as:
+  logfile, eg. as:
 
 	/var/run/named-outside.pid,/var/run/named-inside.pid
 
   Or teach people to either use a proper syslog daemon instead of
   allowing/configuring their daemons to write directly to any log files,
-  or else use separate log files for each instance!
+  or else teach them to always use separate log files for each instance!
 
 - Add one more optional field:  the format of the turnover message, with
   the default to be the "syslog" style:
@@ -126,15 +157,12 @@ suggestions and comments are also encouraged.
 - think about FreeBSD's 'W' (wait) flag to wait for compression jobs for
   a given entry (but what purpose could this possibly have?).
 
-- think (but not too hard, this is ugly) about supporting the FreeBSD
-  'G' (glob(3)) flag.  Yuck.  This could get wildly out of control!  But
-  it would make it easier to manage the logs of some RADIUS daemons....
-
 - get rid of the mtab[] array in parse_dwm() and do something more
   intelligent that accounts for leap years.  Perhaps if today is not
   day_of_month==1 then strftime("%d") for "now"+24h to see if tomorrow
   is == 1.  (need to adjust for interval near midnight because tomorrow
   might be into the next interval and we'd miss it!)
+  (alternately just always warn about Mxx > 28 and be done with it!)
 
 
 #ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.17 2009/07/16 00:32:03 woods Exp $"
