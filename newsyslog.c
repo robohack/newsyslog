@@ -234,56 +234,56 @@ static pid_t            get_pid_file __P((const char *));
 static int              getsig __P((char *));
 static int              parse_dwm __P((char *, time_t *));
 
-#if !defined(HAVE_DECL_OPTERR)
+#if ! HAVE_DECL_OPTERR
 extern int              opterr;
 #endif
-#if !defined(HAVE_DECL_OPTIND)
+#if ! HAVE_DECL_OPTIND
 extern int              optind;
 #endif
-#if !defined(HAVE_DECL_OPTOPT)
+#if ! HAVE_DECL_OPTOPT
 extern int              optopt;
 #endif
-#if !defined(HAVE_DECL_OPTARG)
+#if ! HAVE_DECL_OPTARG
 extern char            *optarg;
 #endif
 
-#if !defined(HAVE_DECL_EXIT)
+#if ! HAVE_DECL_EXIT
 extern void             exit __P((int));
 #endif
-#if !defined(HAVE_DECL_GETOPT)
+#if ! HAVE_DECL_GETOPT
 extern int              getopt __P((int, char * const [], const char *));
 #endif
-#if !defined(HAVE_DECL_SETGROUPENT)
+#if ! HAVE_DECL_SETGROUPENT
 extern int              setgroupent __P((int));
 #endif
-#if !defined(HAVE_DECL_SETPASSENT)
+#if ! HAVE_DECL_SETPASSENT
 extern int              setpassent __P((int));
 #endif
-#if !defined(HAVE_DECL_SIG2STR)
+#if ! HAVE_DECL_SIG2STR
 extern int              sig2str __P((int, char *));
 #endif
-#if !defined(HAVE_DECL_STR2SIG)
+#if ! HAVE_DECL_STR2SIG
 extern int              str2sig __P((const char *, int *));
 #endif
-#if !defined(HAVE_DECL_STRCHR)
+#if ! HAVE_DECL_STRCHR
 extern char            *strchr __P((const char *, int));
 #endif
-#if !defined(HAVE_DECL_STRDUP)
+#if ! HAVE_DECL_STRDUP
 extern char            *strdup __P((const char *));
 #endif
-#if !defined(HAVE_DECL_STRPTIME)		/* STUPID GNU/Linux/glibc */
+#if ! HAVE_DECL_STRPTIME		/* STUPID GNU/Linux/glibc */
 extern char            *strptime __P((const char *, const char *, struct tm *));
 #endif
-#if !defined(HAVE_DECL_STRRCHR)
+#if ! HAVE_DECL_STRRCHR
 extern char            *strrchr __P((const char *, int));
 #endif
-#if !defined(HAVE_DECL_STRTOK)
+#if ! HAVE_DECL_STRTOK
 extern char            *strtok __P((char *, const char *));
 #endif
-#if !defined(HAVE_DECL_STRTOL)
+#if ! HAVE_DECL_STRTOL
 extern long            *strtol __P((const char *, char **, int));
 #endif
-#if !defined(HAVE_DECL_STRTOL)
+#if ! HAVE_DECL_STRTOL
 extern unsigned long   *strtoul __P((const char *, char **, int));
 #endif
 
