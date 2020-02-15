@@ -536,7 +536,7 @@ parse_options(argc, argv)
 
 	optind = 1;		/* Start options parsing */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "FMT:UVdf:hi:mnp:qrst:v")) != -1) {
+	while ((ch = getopt(argc, argv, ":FMT:UVdf:hi:mnp:qrst:v")) != -1) {
 		switch (ch) {
 		case 'F':
 			force = TRUE;
@@ -666,13 +666,22 @@ parse_options(argc, argv)
 			verbose++;
 			break;
 		case '?':
+			fprintf(stderr, "%s: invalid option: '-%c'\n", argv0, optopt);
+			usage();
+			/* NOTREACHED */
+		/*
+		 * "If optstring has a leading ':' then a missing option
+		 * argument causes ':' to be returned instead of '?'." ... "in
+		 * addition to suppressing any error messages" ... "the variable
+		 * optopt is set to the character that caused the error."
+		 */
 		case ':':
-			fprintf(stderr, "%s: invalid option -- %c\n", argv0, optopt);
+			fprintf(stderr, "%s: missing parameter for -%c\n", argv0, optopt);
 			usage();
 			/* NOTREACHED */
 		default:
-			fprintf(stderr, "%s: invalid option -- %c\n", argv0, ch);
-			usage();
+			fprintf(stderr, "%s: internal error: -%c not handled\n", argv0, ch);
+			abort();
 			/* NOTREACHED */
 		}
 	}
