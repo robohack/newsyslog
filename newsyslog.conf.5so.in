@@ -280,7 +280,7 @@ flag is given.  (This flag may also be specified as
 for compatability with
 .Nx . )
 This flag is necessary when managing log files written
-directly to by long-running processes (e.g.\ 
+directly to by long-running processes (e.g.\ \"
 .Nm smail ,
 .Nm httpd ,
 etc.).  This flag also makes it more convenient to browse through the
