@@ -201,6 +201,7 @@ int             show_script = FALSE;/* Show sh-script on stdout instead of doing
 int             debug = FALSE;	/* Don't do anything, don't show script (use with -v) */
 int             domidnight = -1;/* ignore(-1) do(1) don't(0) do midnight run */
 int             run_interval = -1;/* interval in minutes at which we are run by cron */
+int             create_only = FALSE;	/* make sure all files exist */
 int             force = FALSE;	/* force all files to be trimmed */
 int             send_signals = TRUE;	/* normally we send signals as configured */
 const char     *config_file = PATH_CONFIG;/* Configuration file to use */
@@ -501,7 +502,7 @@ do_entry(ent)
 			printf("(not the daily trim, -M set) ");
 		we_trim_it = FALSE;
 	}
-	if (force & !we_trim_it) {
+	if ((force || create_only) && !we_trim_it) {
 		if (verbose)
 			printf("(forced )");
 		we_trim_it = TRUE;
@@ -539,8 +540,11 @@ parse_options(argc, argv)
 
 	optind = 1;		/* Start options parsing */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, ":FMT:UVdf:hi:mnp:qrst:v")) != -1) {
+	while ((ch = getopt(argc, argv, ":CFMT:UVdf:hi:mnp:qrst:v")) != -1) {
 		switch (ch) {
+		case 'C':
+			create_only = TRUE;
+			break;
 		case 'F':
 			force = TRUE;
 			break;
@@ -1374,7 +1378,7 @@ do_trim(ent)
 	(void) strcpy(zfile1, file1);
 	(void) strcat(zfile1, COMPRESS_SUFFIX);
 
-	if (log_exists)
+	if (log_exists && ! create_only)
 		numlogs = ent->numlogs;	/* we don't modify ent's contents */
 	else
 		numlogs = 0;
@@ -1427,7 +1431,7 @@ do_trim(ent)
 		if ((ent->flags & CE_COMPACT) && (numlogs == (ent->flags & CE_PLAIN0) ? 1 : 0))
 			need_compress = TRUE;	/* expect to compress 'file1'... */
 		if (verbose)
-			printf("# renaming %s to %s\n", zfile1, zfile2);
+			printf("# renaming archived %s to %s\n", zfile1, zfile2);
 		if (show_script)
 			printf("mv %s %s\n", zfile1, zfile2);
 		else if (!debug)
@@ -1444,13 +1448,18 @@ do_trim(ent)
 			(void) chmod(zfile2, ent->permissions); /* XXX error check (non-fatal?) */
 			(void) chown(zfile2, ent->uid, ent->gid); /* XXX error check (non-fatal?) */
 		}
+	} else {
+		(void) snprintf(file1, sizeof(file1),
+				(ent->flags & CE_SUBDIR) ? "%s.old/%04u" : "%s.%u",
+				ent->log,
+				0);
 	}
 	if (log_exists && st.st_size > 0) {
 		might_need_newlog = TRUE;
 		/*
 		 * are we supposed to be keeping any aged files at all?
 		 */
-		if (ent->numlogs) {
+		if (! create_only && ent->numlogs > 0) {
 			char            old_dir[PATH_MAX];
 			struct stat     st;
 
@@ -1571,9 +1580,21 @@ do_trim(ent)
 	/* logic is split here to keep indentation sane.... */
 	if (might_need_newlog && !(ent->flags & CE_NOCREATE)) {
 		if (verbose) {
-			printf("# creating first archive file for %s with owner %d:%d, mode 0%03o\n",
+			printf("# %screating first archive file for %s with owner %d:%d, mode 0%03o\n",
+			       create_only ? "(re)" : "",
 			       ent->log, ent->uid, ent->gid, ent->permissions);
 		}
+		/*
+		 * N.B.:  Getting the CE_NOCREATE flag right is (currently)
+		 * critical given how the new log file is created as a uniqe
+		 * temporary file and then renamed to have its final name -- if
+		 * the log writer does happen to create it first then the
+		 * initial, and possibly all (if the log writer keeps it open)
+		 * log entries will be lost!!!
+		 *
+		 * XXX So, this is probably a bad idea, and the file should be
+		 * created with its final name only.
+		 */
 		if (show_script) {
 			printf("newlog=$(mktemp %s)\n", newlog);
 			printf("touch $newlog\n");
@@ -1740,26 +1761,26 @@ do_trim(ent)
 	}
 	if (might_timestamp && !(ent->flags & CE_BINARY))
 		(void) note_trim(file1);
-	if (ent->flags & CE_COMPACT) {
+	if (! create_only && ent->flags & CE_COMPACT) {
 		int             rt;
 
 		/* sprintf() is safe here */
-		sprintf(zfile1,
+		sprintf(file1,
 			(ent->flags & CE_SUBDIR) ? "%s.old/%04u" : "%s.%u",
 			ent->log,
 			(ent->flags & CE_PLAIN0) ? 1 : 0);
 		if (!(ent->flags & CE_PLAIN0) && pid && !notified) {
 			fprintf(stderr,
 				"%s: %s (level zero) not compressed because daemon was not notified.\n",
-				argv0, zfile1);
+				argv0, file1);
 		} else if (debug || show_script ||
-			   ((rt = stat(zfile1, &st)) >= 0 && (st.st_size > 0))) {
+			   ((rt = stat(file1, &st)) >= 0 && (st.st_size > 0))) {
 			/*
 			 * We'll compress the file if it's there to be
 			 * compressed even if we didn't just do the rename
 			 * (i.e. even if not need_compress)....
 			 */
-			compress_log(zfile1);	/* do the deed (or say how to) */
+			compress_log(file1);	/* do the deed (or say how to) */
 		} else if (need_compress || verbose) {
 			/*
 			 * .... but we'll only complain if we really expected
@@ -1768,7 +1789,7 @@ do_trim(ent)
 			 */
 			fprintf(stderr, "%s: %s not compressed: %s.\n",
 				argv0,
-				zfile1,
+				file1,
 				(rt < 0) ? "no such file" : "is empty");
 		}
 	}
