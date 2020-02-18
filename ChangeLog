@@ -1,8 +1,7 @@
 This file is effectively empty on purpose.  It exists merely to satisfy
-automake, and as a pointer to the real code change documentation.
+GNU Automake, and as a pointer to the real code change documentation.
 
-If you want to see all the code change comments, please use the
-annonymous CVS server access at robohack.planix.com.  Oh, wait, it doesn't
-exist yet!  I guess you'll have to bug me about it.
+If you want to see all the code change comments, please clone the
+repository at https://github.com/robohack/newsyslog.
 
 #ident	"@(#)newsyslog:ChangeLog:$Format:%D:%ci:%cN:%h$"
