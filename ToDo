@@ -5,7 +5,7 @@ suggestions and comments are also encouraged.
 
 - think about loading alternate config files (FreeBSD has this now?)
 
-- what about changing ownerships and permissions of archived logs?
+- what about changing the ownerships and permissions of archived logs?
   (i.e. if the permissions are changed in the config file after some
   archived log files exist)
 
@@ -63,6 +63,9 @@ suggestions and comments are also encouraged.
   causing spurious errors in the syslog logs about missing files.
   Probably newsyslog should group logfile processing by PID file and
   only signal each server once after all its files are rolled.
+
+  (for one, don't create log files with a temp file that's renamed into
+  place.... -- but there's still the permission changing race...)
 
 - what happens, or should happen, if/when there are multiple PIDs in a
   pidfile?
@@ -153,6 +156,12 @@ suggestions and comments are also encouraged.
 
   --with-compress_options=options pass these additional options to
                                   compress (or gzip or bzip2)
+
+  [ XXX maybe not -- this could/should be a runtime option? ]
+
+- what about allowing newsyslog to do other processing of log files, or
+  at least triggering some other subsystem to do it.  Include the whole
+  compression procedure as part of it too?
 
 - think about FreeBSD's 'W' (wait) flag to wait for compression jobs for
   a given entry (but what purpose could this possibly have?).
