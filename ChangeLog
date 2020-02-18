@@ -5,4 +5,4 @@ If you want to see all the code change comments, please use the
 annonymous CVS server access at robohack.planix.com.  Oh, wait, it doesn't
 exist yet!  I guess you'll have to bug me about it.
 
-#ident  "@(#)newsyslog:$Name:  $:$Id: ChangeLog,v 1.2 2003/07/08 16:56:10 woods Exp $"
+#ident	"@(#)newsyslog:ChangeLog:$Format:%D:%ci:%cN:%h$"

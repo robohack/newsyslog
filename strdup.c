@@ -1,4 +1,4 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: strdup.c,v 1.2 2003/07/08 16:51:38 woods Exp $"
+#ident	"@(#)newsyslog:strdup.c:$Format:%D:%ci:%cN:%h$"
 
 /* strdup.c -- return a newly allocated copy of a string
    Copyright (C) 1990 Free Software Foundation, Inc.

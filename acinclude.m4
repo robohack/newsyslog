@@ -5,7 +5,7 @@ dnl
 dnl This file:  Copyright (C) by Planix, Inc.
 dnl             see COPYING for details
 
-dnl #ident "@(#)newsyslog:$Name:  $:$Id: acinclude.m4,v 1.8 2007/07/18 23:30:48 woods Exp $"
+dnl #ident "@(#)newsyslog:acinclude.m4:$Format:%D:%ci:%cN:%h$"
 
 AC_DEFUN([AC_SOURCE_VERSION], [. $srcdir/$1])
 

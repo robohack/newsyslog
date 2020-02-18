@@ -2,7 +2,7 @@
 #
 # a tiny script to set up the VERSION Id for ./configure
 #
-#ident "@(#)newsyslog:$Name:  $:$Id: VERSION,v 1.19 2009/07/16 00:57:23 woods Exp $"
+#ident	"@(#)newsyslog:VERSION:$Format:%D:%ci:%cN:%h$"
 
 # NOTE:  only place simply variable assignments in here, using only
 # the most basic Bourne-shell compatible syntax possible under the

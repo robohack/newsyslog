@@ -1,4 +1,4 @@
-#ident "@(#)newsyslog:$Name:  $:$Id: siglist.in,v 1.1 2003/07/08 16:52:42 woods Exp $"
+#ident	"@(#)newsyslog:siglist.in:$Format:%D:%ci:%cN:%h$"
 #
 # List of all possible known signals from all types of systems.
 #

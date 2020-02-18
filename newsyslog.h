@@ -1,4 +1,4 @@
-#ident "@(#)newsyslog:$Name:  $:$Id: newsyslog.h,v 1.3 2009/07/14 22:40:30 woods Exp $"
+#ident	"@(#)newsyslog:newsyslog.h:$Format:%D:%ci:%cN:%h$"
 
 /*
  * various portability related defintions

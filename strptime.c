@@ -1,4 +1,4 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: strptime.c,v 1.2 2000/12/01 20:48:58 woods Exp $"
+#ident	"@(#)newsyslog:strptime.c:$Format:%D:%ci:%cN:%h$"
 /*	$NetBSD: strptime.c,v 1.19 2000/01/22 22:19:22 mycroft Exp $	*/
 
 /*-

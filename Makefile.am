@@ -4,7 +4,7 @@
 # Copyright (C) by Planix, Inc.
 # - All rights reserved.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.am,v 1.35 2009/07/15 00:15:52 woods Exp $"
+#ident	"@(#)newsyslog:Makefile.am:$Format:%D:%ci:%cN:%h$"
 
 AUTOMAKE_OPTIONS = gnu no-dependencies 1.10
 MAINT_CHARSET = latin1

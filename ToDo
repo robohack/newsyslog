@@ -165,4 +165,4 @@ suggestions and comments are also encouraged.
   (alternately just always warn about Mxx > 28 and be done with it!)
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: ToDo,v 1.17 2009/07/16 00:32:03 woods Exp $"
+#ident	"@(#)newsyslog:ToDo:$Format:%D:%ci:%cN:%h$"

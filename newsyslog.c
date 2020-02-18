@@ -46,7 +46,7 @@
 static const char orig_rcsid[] =
 	"FreeBSD: newsyslog.c,v 1.14 1997/10/06 07:46:08 charnier Exp";
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: newsyslog.c,v 1.63 2009/07/16 02:07:41 woods Exp $";
+	"@(#)newsyslog:newsyslog.c:$Format:%D:%ci:%cN:%h$";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H

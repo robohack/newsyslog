@@ -4,7 +4,7 @@
 # This file Copyright (C) by Planix, Inc.
 # - see COPYING for details.
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: Makefile.BSD.in,v 1.18 2009/07/16 02:08:41 woods Exp $"
+#ident	"@(#)newsyslog:Makefile.BSD.in:$Format:%D:%ci:%cN:%h$"
 #
 # NOTE:  It is expected that this file will be processed to create the
 # final version with something like the following, normally by running

@@ -7,7 +7,7 @@
 #
 # NOTE: needs a fully POSIX /bin/sh to run properly....
 #
-#ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog2netbsd.sh,v 1.10 2003/07/08 18:49:31 woods Exp $"
+#ident	"@(#)newsyslog:newsyslog2netbsd.sh:$Format:%D:%ci:%cN:%h$"
 
 # The following variables can be adjusted as necessary
 #

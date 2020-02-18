@@ -18,7 +18,7 @@ AM_INIT_AUTOMAKE("$PACKAGE", "$VERSION")
 dnl Required Autoconf version.
 AC_PREREQ(2.61)
 
-AC_REVISION([#ident "@(#)newsyslog:$Name:  $:$Id: configure.in,v 1.50 2009/07/15 00:15:20 woods Exp $"])
+AC_REVISION([#ident	"@(#)newsyslog:configure.in:$Format:%D:%ci:%cN:%h$"])
 
 AM_CONFIG_HEADER(config.h)
 

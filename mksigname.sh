@@ -1,6 +1,6 @@
 #! /bin/sh
 :
-#ident	"@(#)newsyslog:$Name:  $:$Id: mksigname.sh,v 1.2 2009/04/26 19:10:24 woods Exp $"
+#ident	"@(#)newsyslog:mksigname.sh:$Format:%D:%ci:%cN:%h$"
 
 #
 # Script to generate sys_signame.c from siglist.in

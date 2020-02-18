@@ -231,4 +231,4 @@ from being rolled over unnecessarily).
 - improved documentation
 
 
-#ident	"@(#)newsyslog:$Name:  $:$Id: NEWS,v 1.29 2009/07/16 00:33:18 woods Exp $"
+#ident	"@(#)newsyslog:NEWS:$Format:%D:%ci:%cN:%h$"
