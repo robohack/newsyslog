@@ -740,11 +740,11 @@ help()
 }
 
 /* Parse a configuration file and return a linked list of all the logs
- * to process
+ * to process, possibly restricted to just the specified files.
  */
 static struct conf_entry *
-parse_file(files )
-	char          **files;
+parse_file(files)
+	char          **files;	/* pointer into argv[] at first non-option */
 {
 	FILE           *fp = NULL;
 	char            line[BUFSIZ];
@@ -812,6 +812,10 @@ parse_file(files )
 			strerror(errno));
 		exit(1);
 	}
+	/*
+	 * xxx NetBSD now uses fparseln() to handle "logical lines", i.e. to
+	 * support continuations, escapes, and comments
+	 */
 	while (fgets(line, BUFSIZ, fp)) {
 		struct conf_entry *tmpentry;
 		char *ep;
@@ -1409,6 +1413,10 @@ do_trim(ent)
 	 * file and look at it in place, and then later recompress it, so long
 	 * as the manual (un)compress isn't running when the next rotation
 	 * happens.
+	 *
+	 * (Note:  NetBSD's implementation of the '0' flag (as 'p'), as was
+	 * inspired by this package, re-compresses any uncompressed log files,
+	 * and since 6.0 (~2009) does so before the rotation.)
 	 */
 	if (numlogs && verbose)
 		printf("# attempting to rotate %d archives up by one...\n", numlogs);
