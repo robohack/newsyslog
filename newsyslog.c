@@ -1418,8 +1418,14 @@ do_trim(ent)
 	 * inspired by this package, re-compresses any uncompressed log files,
 	 * and since 6.0 (~2009) does so before the rotation.)
 	 */
-	if (numlogs && verbose)
+	if (numlogs > 0 && verbose)
 		printf("# attempting to rotate %d archives up by one...\n", numlogs);
+	if (numlogs == 0) {
+		(void) snprintf(file1, sizeof(file1),
+				(ent->flags & CE_SUBDIR) ? "%s.old/%04u" : "%s.%u",
+				ent->log,
+				0);
+	} /* else */
 	while (numlogs--) {
 		(void) strcpy(file2, file1);
 		(void) snprintf(file1, sizeof(file1),
@@ -1456,11 +1462,6 @@ do_trim(ent)
 			(void) chmod(zfile2, ent->permissions); /* XXX error check (non-fatal?) */
 			(void) chown(zfile2, ent->uid, ent->gid); /* XXX error check (non-fatal?) */
 		}
-	} else {
-		(void) snprintf(file1, sizeof(file1),
-				(ent->flags & CE_SUBDIR) ? "%s.old/%04u" : "%s.%u",
-				ent->log,
-				0);
 	}
 	if (log_exists && st.st_size > 0) {
 		might_need_newlog = TRUE;
