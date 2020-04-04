@@ -11,5 +11,5 @@
 
 PACKAGE="newsyslog"
 TARNAME="newsyslog"
-VERSION="1.1.0.90-Preview.0"
+VERSION="1.2.0.90"
 BUGREPORT="woods-newsyslog@robohack.planix.com"
