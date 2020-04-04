@@ -2,6 +2,9 @@
 #
 # a tiny script to set up the VERSION Id for ./configure
 #
+# N.B.:  Change the VERSION value, commit that change, then "git tag v$VERSION"
+# to make a release.
+#
 #ident	"@(#)newsyslog:VERSION:$Format:%D:%ci:%cN:%h$"
 
 # NOTE:  only place simply variable assignments in here, using only
