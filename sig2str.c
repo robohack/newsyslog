@@ -1,3 +1,5 @@
+#ident	"@(#)newsyslog:sig2str.c:$Format:%D:%ci:%cN:%h$"
+
 /*
  * This implementation is somewhat tied to newsyslog.c
  *
@@ -6,7 +8,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: sig2str.c,v 1.6 2004/10/02 18:03:24 woods Exp $";
+	"@(#)newsyslog:sig2str.c:$Format:%D:%ci:%cN:%h$";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H

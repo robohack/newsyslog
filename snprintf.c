@@ -1,3 +1,5 @@
+#ident	"@(#)newsyslog:snprintf.c:$Format:%D:%ci:%cN:%h$"
+
 /* ====================================================================
  * Copyright (c) 1995-1998 The Apache Group.  All rights reserved.
  *

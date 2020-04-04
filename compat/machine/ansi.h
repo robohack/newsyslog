@@ -1,4 +1,5 @@
-/*	$NetBSD: ansi.h,v 1.3 1994/11/20 20:52:50 deraadt Exp $ */
+#ident	"@(#)newsyslog:ansi.h:$Format:%D:%ci:%cN:%h$"
+/*	@(#)$NetBSD: ansi.h,v 1.3 1994/11/20 20:52:50 deraadt Exp $ */
 
 /*-
  * Copyright (c) 1990, 1993

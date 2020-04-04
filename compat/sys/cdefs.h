@@ -1,4 +1,5 @@
-/*	$NetBSD: cdefs.h,v 1.15 1995/01/19 01:54:52 jtc Exp $	*/
+#ident	"@(#)newsyslog:cdefs.h:$Format:%D:%ci:%cN:%h$"
+/*	@(#)$NetBSD: cdefs.h,v 1.15 1995/01/19 01:54:52 jtc Exp $	*/
 
 /*
  * Copyright (c) 1991, 1993

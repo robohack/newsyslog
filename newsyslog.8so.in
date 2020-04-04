@@ -10,7 +10,7 @@
 .\"	from: @(#)newsyslog.8
 .\"	FreeBSD: newsyslog.8,v 1.9 1997/10/06 07:46:06 charnier Exp
 .\"
-.\"ident	"@(#)newsyslog:$Name:  $:$Id: newsyslog.8so.in,v 1.15 2009/06/13 17:04:18 woods Exp $"
+.\"#ident	"@(#)newsyslog:newsyslog.8so.in:$Format:%D:%ci:%cN:%h$"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 

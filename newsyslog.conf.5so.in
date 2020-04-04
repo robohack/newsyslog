@@ -6,7 +6,7 @@
 .\"
 .\" This file contains changes from Greg A. Woods; Planix, Inc.
 .\"
-.\"ident	"@(#)$Name:  $:$Id: newsyslog.conf.5so.in,v 1.16 2009/03/04 19:37:53 woods Exp $"
+.\"#ident	"@(#)newsyslog:newsyslog.conf.5so.in:$Format:%D:%ci:%cN:%h$"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
 .\" 

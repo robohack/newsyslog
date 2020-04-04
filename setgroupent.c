@@ -1,4 +1,4 @@
-#ident	"@(#)newsyslog:$Name:  $:$Id: setgroupent.c,v 1.1 2009/04/26 03:50:11 woods Exp $"
+#ident	"@(#)newsyslog:setgroupent.c:$Format:%D:%ci:%cN:%h$"
 
 /*
  * setgroupent() -- a replacement stub

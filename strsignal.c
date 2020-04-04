@@ -1,3 +1,5 @@
+#ident	"@(#)newsyslog:strsignal.c:$Format:%D:%ci:%cN:%h$"
+
 /*
  * a portable implementation of strsignal(3)
  */
@@ -6,7 +8,7 @@
 
 #ifndef lint
 static const char rcsid[] =
-	"@(#)newsyslog:$Name:  $:$Id: strsignal.c,v 1.2 2003/07/08 18:02:13 woods Exp $";
+	"@(#)newsyslog:strsignal.c:$Format:%D:%ci:%cN:%h$";
 #endif /* not lint */
 
 #ifdef HAVE_CONFIG_H

@@ -1,3 +1,5 @@
+#ident	"@(#)newsyslog:strtok.c:$Format:%D:%ci:%cN:%h$"
+
 /*
  * Copyright (c) 1988 Regents of the University of California.
  * All rights reserved.
@@ -33,7 +35,7 @@
 
 #if defined(LIBC_SCCS) && !defined(lint)
 /*static char *sccsid = "from: @(#)strtok.c	5.8 (Berkeley) 2/24/91";*/
-static char *rcsid = "$Id: strtok.c,v 1.1 2002/01/04 00:49:13 woods Exp $";
+static char *rcsid = "@(#)newsyslog:strtok.c:$Format:%D:%ci:%cN:%h$";
 #endif /* LIBC_SCCS and not lint */
 
 #if HAVE_STRING_H
