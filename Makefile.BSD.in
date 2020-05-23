@@ -7,10 +7,12 @@
 #ident	"@(#)newsyslog:Makefile.BSD.in:$Format:%D:%ci:%cN:%h$"
 #
 # NOTE:  It is expected that this file will be processed to create the
-# final version with something like the following, normally by running
-# the script "@PACKAGE@2netbsd.sh":
+# final version with something like the following:
 #
-#	./configure --prefix=/usr --mandir=/usr/share/man --bindir=/usr/bin --sysconfdir=/etc --localstatedir=/var --with-newsyslog-conf=/etc/newsyslog.conf --with-syslogd_pid=/var/run/syslogd.pid --with-gzip
+#	mkdir build && cd build
+#	../configure --prefix=/usr --mandir=/usr/share/man --bindir=/usr/bin --sysconfdir=/etc --localstatedir=/var --with-newsyslog-conf=/etc/newsyslog.conf --with-syslogd_pid=/var/run/syslogd.pid --with-gzip
+#
+# Normally this can be done by simply by running the script "sh @PACKAGE@2netbsd.sh"
 
 # (Remember pre-1.4 systems used /var/run/syslog.pid!)
 
