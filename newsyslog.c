@@ -288,6 +288,8 @@ extern long            *strtol __P((const char *, char **, int));
 extern unsigned long   *strtoul __P((const char *, char **, int));
 #endif
 
+static int exitstatus = 0;
+
 int
 main(argc, argv)
 	int             argc;
@@ -409,7 +411,7 @@ main(argc, argv)
 
 	free(localdomain);
 
-	exit (0);
+	exit(exitstatus);
 	/* NOTREACHED */
 }
 
@@ -1610,6 +1612,7 @@ do_trim(ent)
 			printf("chown %d:%d $newlog\n", ent->uid, ent->gid);
 			printf("chmod 0%03o $newlog\n", ent->permissions);
 			printf("mv $newlog %s\n", ent->log);
+			exitstatus = 1;	/* a missing log -- let postinstall know! */
 		} else if (!debug) {
 			if ((fd = mkstemp(newlog)) < 0 && !write_metalog) {
 				fprintf(stderr,

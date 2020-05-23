@@ -209,6 +209,11 @@ were it to be run without the
 flag.  Use of this option implies
 .Fl r
 too.
+.Pp
+Note also that the exit status will be non-zero if anything needs
+doing.  This can be used by system configuration scripts, such as
+.Nx ' s
+.Xr postinstall 8 .
 .It Fl p Ar syslogd_pidfile
 Instruct newsyslog to use 
 .Ar syslogd_pidfile
