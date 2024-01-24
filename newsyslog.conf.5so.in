@@ -9,7 +9,7 @@
 .\"#ident	"@(#)newsyslog:newsyslog.conf.5so.in:$Format:%D:%ci:%cN:%h$"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
-.\" 
+.\"
 .\" Permission to use, copy, modify, and distribute this software
 .\" and its documentation for any purpose and without fee is
 .\" hereby granted, provided that the above copyright notice
@@ -56,7 +56,7 @@ or
 respectively.  Either of the file's user-id or group-id may be left
 unchanged from the ownership of the current file by specifying it as
 .Dq Li -1.
-.It Ar mode 
+.It Ar mode
 Specifies the file permissions of the log file and its archival copies
 in the standard three-digit octal format.
 .It Ar count
@@ -134,7 +134,7 @@ The daily, weekly, and/or monthly specification is given as:
 . Bo
 .  Va D\&hh
 . Bc
-.Bc 
+.Bc
 and
 .Bo
 . Va M\&dd

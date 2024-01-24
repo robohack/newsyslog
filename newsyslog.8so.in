@@ -13,7 +13,7 @@
 .\"#ident	"@(#)newsyslog:newsyslog.8so.in:$Format:%D:%ci:%cN:%h$"
 .\"
 .\" Copyright 1988, 1989 by the Massachusetts Institute of Technology
-.\" 
+.\"
 .\" Permission to use, copy, modify, and distribute this software
 .\" and its documentation for any purpose and without fee is
 .\" hereby granted, provided that the above copyright notice
@@ -56,7 +56,7 @@
 is a program that should be scheduled to run periodically by
 .Nm cron .
 When it is executed it archives log files if necessary.  If a log file
-is determined to require archiving, 
+is determined to require archiving,
 .Nm
 rearranges the files so that
 .Dq Pa log_file
@@ -87,7 +87,7 @@ files are trimmed by size, and
 .Nm
 may be run as often as every minute without harm to facilitate this need.
 .Pp
-When starting up, 
+When starting up,
 .Nm
 reads in a configuration file to determine which logs should be looked
 at.  By default, this configuration file is
@@ -215,7 +215,7 @@ doing.  This can be used by system configuration scripts, such as
 .Nx ' s
 .Xr postinstall 8 .
 .It Fl p Ar syslogd_pidfile
-Instruct newsyslog to use 
+Instruct newsyslog to use
 .Ar syslogd_pidfile
 instead of
 .Pa @syslogd_pidfile@
@@ -224,7 +224,7 @@ as the PID file for
 .It Fl r
 Remove the restriction that
 .Nm
-must be running as root.  Of course, 
+must be running as root.  Of course,
 .Nm
 will not be able to send a HUP signal to
 .Nm syslogd
@@ -247,7 +247,7 @@ Pretend the current time is
 instead of the current time.  The time given is always treated as a
 future time.  This option is mostly useful for testing configurations.
 .It Fl v
-Place 
+Place
 .Nm
 in verbose mode.  In this mode it will print out each log and its
 reasons for either trimming that log or skipping it.
