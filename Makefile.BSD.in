@@ -207,14 +207,17 @@ LDFLAGS += -Wl,--warn-common
 
 SOELIM = soelim
 
-.SUFFIXES: .5so .5
+.SUFFIXES: .5so .5  .8so .8
 
 # NOTE: on older systems '-I' is not supported by soelim...
 # add the following bad hack before the SOELIM line instead:
 #
 # 	cp ${.CURDIR}/newsyslog.conf .
-# 
+#
 .5so.5:
+	@rm -f ${.TARGET}
+	${SOELIM} -I ${.CURDIR} ${.IMPSRC} > ${.TARGET} || (rm -f ${.TARGET}; exit 1)
+.8so.8:
 	@rm -f ${.TARGET}
 	${SOELIM} -I ${.CURDIR} ${.IMPSRC} > ${.TARGET} || (rm -f ${.TARGET}; exit 1)
 
