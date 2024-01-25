@@ -50,6 +50,17 @@
 .Op Fl f Ar config_file
 .Op Fl p Ar syslogd_pidfile
 .Op Ar log_file ...
+.Nm newsyslog
+.Fl C
+.Oo
+.Fl m
+.Li |
+.Fl M
+.Li |
+.Fl i Ar interval
+.Oc
+.Op Fl dnrv
+.Op Ar log_file ...
 .\"
 .Sh DESCRIPTION
 .Nm Newsyslog
@@ -133,6 +144,10 @@ to use
 instead of
 .Pa @path_config@
 for its configuration file.
+.It Fl C
+Make sure all log files exist.  The
+.Fl i
+parameter may be required.
 .It Fl F
 Force
 .Nm
