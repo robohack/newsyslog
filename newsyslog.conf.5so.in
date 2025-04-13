@@ -230,11 +230,11 @@ The
 .Ar D
 flag prevents the creation of the new empty log file.  This may be
 useful to avoid cluttering log directories with files that'll never be
-used, or when a daemon creates its own log file(s) on demand (failure to
-use this flag in the latter case may result in spurious warnings should
+used, e.g. when a daemon creates its own log file(s) on demand (failure
+to use this flag in this case may result in spurious warnings should
 .Nm newsyslog
-and the daemon both try to create the log file).  Note though this flag
-should not be used with daemons like
+and the daemon both try to create the log file).  This flag must not be
+used with daemons like
 .Nm syslogd
 which require the log file to exist prior to when they start and prior
 to when they're signalled to re-open their log file(s).
