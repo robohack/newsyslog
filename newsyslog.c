@@ -694,6 +694,7 @@ parse_options(argc, argv)
 			/* NOTREACHED */
 		}
 	}
+	/* XXX should create_only and force be exclusive to each other? */
 
 	return;
 }
@@ -731,7 +732,7 @@ help()
 	printf("	-s		do not signal daemon processes\n");
 	printf("	-v		show verbose explanitory messages\n");
 	printf("\n");
-	printf("	file		only trim specified file(s)\n");
+	printf("	file		only trim the specified file(s)\n");
 	printf("\n");
 	printf("Original Copyright (c) 1987, Massachusetts Institute of Technology\n");
 	printf("Package Copyright (c) Planix, Inc.\n");
@@ -855,6 +856,7 @@ parse_file(files)
 					printf("ignoring %s, not on command line...\n", q);
 				continue;
 			}
+			/* XXX mark *p as "done" somehow? */
 		}
 
 		if (!(tmpentry = (struct conf_entry *) malloc(sizeof(struct conf_entry)))) {
@@ -1245,6 +1247,8 @@ parse_file(files)
 		working->next = (struct conf_entry *) NULL;
 
 	/* NOTE: do not fclose(fp) -- it must stay open until the process exits! */
+
+	/* XXX if any of <files> is left unseen in config, complain and set error exit? */
 
 	return (first);
 }
@@ -1645,7 +1649,7 @@ do_trim(ent)
 			} else {
 				if (fchown(fd, ent->uid, ent->gid) && !quiet && !write_metalog) {
 					fprintf(stderr,
-						"%s: can't chown %d:%d new log file: %s: %s.\n",
+						"%s: can't fchown %d:%d new log file: %s: %s.\n",
 						argv0,
 						ent->uid, ent->gid,
 						newlog,
@@ -1653,7 +1657,7 @@ do_trim(ent)
 				}
 				if (fchmod(fd, ent->permissions) && !quiet && !write_metalog) {
 					fprintf(stderr,
-						"%s: can't chmod 0%03o new log file: %s: %s.\n",
+						"%s: can't fchmod 0%03o new log file: %s: %s.\n",
 						argv0,
 						ent->permissions,
 						newlog,
@@ -1681,9 +1685,11 @@ do_trim(ent)
 					 * pointing the newlog pathname at some
 					 * other existing file.  Of course
 					 * we're only removing a file with a
-					 * magic random name so the risk that
-					 * its name matches one we wouldn't
-					 * want to remove is almost zero....
+					 * magic random name, and only in the
+					 * case the rename already failed, so
+					 * the risk that its name matches one we
+					 * wouldn't want to remove is almost
+					 * zero....
 					 */
 					if (unlink(newlog) < 0) {
 						fprintf(stderr,
