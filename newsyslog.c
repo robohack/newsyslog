@@ -1451,9 +1451,16 @@ do_trim(ent)
 		if (show_script)
 			printf("mv %s %s\n", zfile1, zfile2);
 		else if (!debug)
-			(void) rename(zfile1, zfile2); /* XXX error check (fatal? -- may lose archive data!) */
+			if (rename(zfile1, zfile2) && !quiet && !write_metalog) {
+				/* XXX fatal? -- may lose archive data!) */
+				fprintf(stderr,
+					"%s: can't rename archive file: %s to %s: %s.\n",
+					argv0,
+					zfile1, zfile2,
+					strerror(errno));
+			}
 		if (verbose) {
-			printf("# forcing owner/perms of %s to %d:%d/0%03o\n",
+			printf("# forcing/fixing owner/perms of %s to %d:%d/0%03o\n",
 			       zfile2, ent->uid, ent->gid, ent->permissions);
 		}
 		if (show_script) {
@@ -1461,8 +1468,22 @@ do_trim(ent)
 			printf("chown %d:%d %s\n",
 			       ent->uid, ent->gid, zfile2);
 		} else if (!debug) {
-			(void) chmod(zfile2, ent->permissions); /* XXX error check (non-fatal?) */
-			(void) chown(zfile2, ent->uid, ent->gid); /* XXX error check (non-fatal?) */
+			if (chmod(zfile2, ent->permissions) && !quiet && !write_metalog) {
+				fprintf(stderr,
+					"%s: can't chmod 0%03o archive file: %s: %s.\n",
+					argv0,
+					ent->permissions,
+					zfile2,
+					strerror(errno));
+			}
+			if (chown(zfile2, ent->uid, ent->gid) && !quiet && !write_metalog) {
+				fprintf(stderr,
+					"%s: can't chown %d:%d archive file: %s: %s.\n",
+					argv0,
+					ent->uid, ent->gid,
+					zfile2,
+					strerror(errno));
+			}
 		}
 	}
 	if (log_exists && st.st_size > 0) {
