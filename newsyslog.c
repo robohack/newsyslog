@@ -1418,7 +1418,7 @@ do_trim(ent)
 	 * compressed copy, not both.  This allows an admin to uncompress a
 	 * file and look at it in place, and then later recompress it, so long
 	 * as the manual (un)compress isn't running when the next rotation
-	 * happens.
+	 * happens.  (XXX but even that is a race!)
 	 *
 	 * (Note:  NetBSD's implementation of the '0' flag (as 'p'), as was
 	 * inspired by this package, re-compresses any uncompressed log files,
@@ -1588,7 +1588,7 @@ do_trim(ent)
 					 * programs might actually abort with
 					 * an error if they are not able to
 					 * create their own log file as they
-					 * may expect to have to do.
+					 * may expect to have to do so.
 					 */
 					printf("# possible race with creator of %s\n", ent->log);
 				}
@@ -1704,11 +1704,11 @@ do_trim(ent)
 					 * Non-Fatal!  Don't return here if the
 					 * rename() failed -- it likely failed
 					 * because the new log was already
-					 * created by the process which wants
-					 * to write to it.  In any case we want
-					 * to go on and possibly send a signal
-					 * anyway, as well as do the
-					 * compression of the archived log.
+					 * created by the process which wants to
+					 * write to it.  In any case we want to
+					 * go on and possibly send a signal
+					 * anyway, as well as do the compression
+					 * of the archived log.
 					 */
 				}
 			}
@@ -1722,6 +1722,9 @@ do_trim(ent)
 			 * any localisations (e.g. append a "tag=etc" field) by
 			 * a sed filter in the Makefile and then appened to the
 			 * install METALOG file.
+			 *
+			 * XXX this feature requires newsyslog to also be built
+			 * as a host tool!
 			 */
 			if (write_metalog) {
 				printf("%s type=file mode=%#o uname=%s gname=%s\n",
@@ -1833,11 +1836,15 @@ do_trim(ent)
 			/*
 			 * We'll compress the file if it's there to be
 			 * compressed even if we didn't just do the rename
-			 * (i.e. even if not need_compress)....
+			 * (i.e. even if not need_compress), and even if it was
+			 * empty but we just did note_trim()....
 			 */
 			compress_log(file1);	/* do the deed (or say how to) */
 		} else if (need_compress || verbose) {
 			/*
+			 * 'file1' is (probably) empty, so we won't try to
+			 * compress it
+			 *
 			 * .... but we'll only complain if we really expected
 			 * to have to compress it (and we're not in debug mode
 			 * or generating a script).

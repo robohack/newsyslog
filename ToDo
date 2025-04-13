@@ -7,7 +7,7 @@ suggestions and comments are also encouraged.
 
 - what about changing the ownerships and permissions of archived logs?
   (i.e. if the permissions are changed in the config file after some
-  archived log files exist)
+  archived log files exist) [we do this!?]
 
 - what about extra copies of archived logs that'll never be overwritten,
   eg. if the count is reduced?  Use glob(3) to find all matching ones?
@@ -136,7 +136,7 @@ suggestions and comments are also encouraged.
 - add a '--with-bzip2' configure option (FreeBSD uses 'J' as the flag to
   indicate bzip2 should be used to compress the log -- but that's kinda
   silly -- there's really no point to using different compression on
-  different logs)
+  different logs, is there?)
 
 - add a '--with-compress_options=options' option too
 
