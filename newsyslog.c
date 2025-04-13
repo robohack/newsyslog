@@ -1752,6 +1752,9 @@ do_trim(ent)
 		}
 #endif
 	}
+	/*
+	 * send a signal to the log file's owner after creating the new log
+	 */
 	if (might_need_newlog && !(ent->flags & CE_NOSIGNAL) && send_signals) {
 		if (ent->pid_file)
 			pid = get_pid_file(ent->pid_file);
@@ -1772,34 +1775,45 @@ do_trim(ent)
 				notified = TRUE;	/* pretend it works.... */
 				if (show_script)
 					printf("kill -%d %d\n", ent->signum, (int) pid);
-				if (!(ent->flags & CE_PLAIN0)) {
-					if (verbose)
-						puts("# small pause now to allow daemon to close log.");
-					if (show_script)
-						puts("sleep 5");
-				}
+				if (verbose)
+					puts("# small pause now to allow daemon to close and re-open the log.");
+				if (show_script)
+					puts("sleep 2");
 			} else if (kill(pid, ent->signum)) {
 				fprintf(stderr,
-					"%s: cannot notify daemon with SIG%s, pid %d: %s.\n",
+					"%s: kill() failed, cannot notify daemon with SIG%s, pid %d: %s.\n",
 					argv0,
 					signame,
 					(int) pid,
 					strerror(errno));
+				/* note this is not fatal.... */
 			} else {
 				notified = TRUE;
-				if ((ent->flags & CE_COMPACT) && !(ent->flags & CE_PLAIN0)) {
-					if (verbose)
-						printf("...small pause now to allow daemon to close log... ");
-					(void) sleep(5);
-					if (verbose)
-						puts("done.");
-				}
+				/*
+				 * This pause is especially important to some
+				 * versions of syslogd as they also reopen all
+				 * their listening sockets and might also do
+				 * considerable computation for crypto setup for
+				 * any forwarding entries, as well as having to
+				 * fork to restart any filters, etc.
+				 *
+				 * XXX if we are not compressing the just rolled
+				 * file (!CE_COMPACT || CE_PLAIN0) for all
+				 * entries with the same pidfile then we could
+				 * signal only once at the end of processing.
+				 */
+				if (verbose)
+					printf("...small pause now to allow daemon to close and re-open the log... ");
+				(void) sleep(2);
+				if (verbose)
+					puts("done.");
 			}
 		} else if (verbose)
 			printf("# no signal sent for %s (no PID found)\n", ent->log);
 	}
-	if (might_timestamp && !(ent->flags & CE_BINARY))
+	if (might_timestamp && !(ent->flags & CE_BINARY)) {
 		(void) note_trim(file1);
+	}
 	if (! create_only && ent->flags & CE_COMPACT) {
 		int             rt;
 

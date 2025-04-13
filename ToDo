@@ -56,20 +56,6 @@ suggestions and comments are also encouraged.
   to parse and use this value.  Syslog timestamps are in local time, so
   watch out for stupid daylight savings confusion too!
 
-- think about what to do with the race between newsyslog and syslogd
-  when rolling multiple files:  syslogd can still be processing a
-  previous SIGHUP while newsyslog has gone on to rename the next file
-  leaving it non-existant when syslogd goes to try to open it thus
-  causing spurious errors in the syslog logs about missing files.
-  Probably newsyslog should group logfile processing by PID file and
-  only signal each server once after all its files are rolled.
-
-  (for one, don't create log files with a temp file that's renamed into
-  place.... -- but there's still the permission changing race...)
-
-- what happens, or should happen, if/when there are multiple PIDs in a
-  pidfile?
-
 - consider supporting the specification of multiple pidfiles for a given
   log for the case where multiple long-running daemons write to the same
   logfile, eg. as:
@@ -172,6 +158,11 @@ suggestions and comments are also encouraged.
   is == 1.  (need to adjust for interval near midnight because tomorrow
   might be into the next interval and we'd miss it!)
   (alternately just always warn about Mxx > 28 and be done with it!)
+
+- consider adding logic to only signal once at the end of processing
+  (and not sleep after signalling), but this can only be done if we are
+  not compressing the just rolled file (!CE_COMPACT || CE_PLAIN0) for
+  _all_ entries with the same pidfile
 
 
 #ident	"@(#)newsyslog:ToDo:$Format:%D:%ci:%cN:%h$"
